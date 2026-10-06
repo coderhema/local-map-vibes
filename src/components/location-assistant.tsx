@@ -51,14 +51,14 @@ export function LocationAssistant() {
 
   return (
     <>
-      <Button className="absolute right-4 top-[13rem] z-30 size-11 rounded-full bg-background/95 shadow-sm backdrop-blur-xl md:right-6 md:top-[9.8rem]" variant="secondary" size="icon" onClick={() => setOpen(true)} aria-label="Open Yard Guide">
+      <Button className="absolute right-4 top-[13rem] z-30 size-11 rounded-full border border-border bg-secondary/95 backdrop-blur-xl md:right-6 md:top-[9.8rem]" variant="secondary" size="icon" onClick={() => setOpen(true)} aria-label="Open Yard Guide">
         <ChatCircleDots className="size-5" weight="duotone" />
       </Button>
 
       {open && (
-        <section className="absolute bottom-4 right-4 top-[5.2rem] z-50 flex w-[calc(100%-2rem)] max-w-[24rem] flex-col overflow-hidden rounded-xl border border-border bg-card shadow-sm backdrop-blur-xl md:bottom-6 md:right-6" aria-label="Yard Guide location assistant">
+        <section className="absolute bottom-4 right-4 top-[5.2rem] z-50 flex w-[calc(100%-2rem)] max-w-[24rem] flex-col overflow-hidden rounded-[28px] border border-border bg-card backdrop-blur-xl md:bottom-6 md:right-6" aria-label="Yard Guide location assistant">
           <div className="flex h-14 shrink-0 items-center justify-between border-b border-border px-4">
-            <div className="flex items-center gap-2.5"><span className="grid size-8 place-items-center rounded-full bg-accent text-accent-foreground"><Compass className="size-4" weight="fill" /></span><div><p className="font-display text-lg leading-none">Yard Guide</p><p className="mt-1 text-[10px] text-muted-foreground">AI location assistant</p></div></div>
+            <div className="flex items-center gap-2.5"><span className="grid size-8 place-items-center rounded-full bg-accent text-accent-foreground"><Compass className="size-4" weight="fill" /></span><div><p className="font-display text-lg font-semibold leading-none">Yard Guide</p><p className="mt-1 text-[10px] text-muted-foreground">AI location assistant</p></div></div>
             <div className="flex items-center gap-1">{messages.length > 0 && <Button variant="ghost" size="sm" onClick={() => setMessages([])}>Clear</Button>}<Button variant="ghost" size="icon-sm" aria-label="Close Yard Guide" onClick={() => setOpen(false)}><X className="size-4" /></Button></div>
           </div>
 
