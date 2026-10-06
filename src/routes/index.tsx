@@ -110,7 +110,7 @@ function Index() {
           layers: [{ id: "atlas-basemap", type: "raster", source: "atlasBasemap", paint: { "raster-saturation": -0.55, "raster-contrast": -0.08, "raster-brightness-min": 0.18, "raster-brightness-max": 0.96 } }],
         },
         center: [10, 8],
-        zoom: 1.45,
+        zoom: 1.9,
         minZoom: 0.8,
         maxZoom: 14,
         attributionControl: false,
@@ -119,6 +119,7 @@ function Index() {
       mapRef.current = map;
       map.on("style.load", () => {
         map.setProjection({ type: "globe" });
+        map.setPadding({ top: 210, right: 0, bottom: 0, left: 0 });
         map.addSource("event-route", {
           type: "geojson",
           data: { type: "Feature", properties: {}, geometry: { type: "LineString", coordinates: [[3.4219, 6.4281], [18.4241, -33.9249], [13.405, 52.52], [-43.1729, -22.9068]] } },
@@ -130,7 +131,7 @@ function Index() {
         const node = document.createElement("button");
         node.className = `event-marker${event.id === 1 ? " active" : ""}`;
         node.setAttribute("aria-label", `Open ${event.title}`);
-        node.innerHTML = `<span class="pin-head"><span class="pin-core"></span></span><span class="pin-tail"></span>`;
+        node.innerHTML = `<span class="pin-pulse"></span><span class="pin-shape"><span class="pin-core"></span></span><span class="pin-shadow"></span><span class="pin-label">${event.title}</span>`;
         node.addEventListener("click", () => {
           setSelected(event);
           setShowPanel(true);
@@ -180,7 +181,13 @@ function Index() {
     const nextIsGlobe = !isGlobe;
     setIsGlobe(nextIsGlobe);
     mapRef.current?.setProjection({ type: nextIsGlobe ? "globe" : "mercator" });
-    mapRef.current?.easeTo({ center: [10, 8], zoom: nextIsGlobe ? 1.45 : 1.2, duration: 900, essential: true });
+    mapRef.current?.easeTo({
+      center: [10, 8],
+      zoom: nextIsGlobe ? 1.9 : 1.2,
+      padding: { top: nextIsGlobe ? 210 : 0, right: 0, bottom: 0, left: 0 },
+      duration: 900,
+      essential: true,
+    });
   }
 
   function showDirections(event: EventItem) {

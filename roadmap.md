@@ -6,3 +6,6 @@
 - [x] Add globe/flat map switch
 - [x] Add one browser-saved AI location conversation
 - [x] Verify desktop and mobile interactions
+- [x] Audit visible app icons and use Phosphor icons
+- [x] Enlarge and lower the globe composition
+- [x] Refine map pins with labels and selection feedback
