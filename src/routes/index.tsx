@@ -233,7 +233,7 @@ function Index() {
 
       <header className="absolute left-4 right-4 top-4 z-40 flex h-14 items-center justify-between rounded-full border border-border bg-card/90 px-5 backdrop-blur-xl md:left-6 md:right-6 md:px-4">
         <div className="flex items-center">
-          <div><p className="font-display text-2xl font-semibold leading-none">Backyard</p><p className="mt-0.5 text-[9px] font-semibold uppercase text-muted-foreground">Events & jobs, nearby</p></div>
+          <div><p className="font-display text-2xl font-semibold leading-none">Backyard</p></div>
         </div>
         <div className="hidden items-center gap-2 md:flex">
           <Button variant="ghost" size="sm"><CalendarBlank className="size-4" weight="duotone" /> This month</Button>
