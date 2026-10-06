@@ -135,12 +135,7 @@ function Index() {
     const origin: [number, number] = [3.3792, 6.5244];
     const source = map.getSource("event-route") as import("maplibre-gl").GeoJSONSource | undefined;
     source?.setData({ type: "Feature", properties: {}, geometry: { type: "LineString", coordinates: [origin, event.coordinates] } });
-    const bounds = new (map.getCanvas().ownerDocument.defaultView?.maplibregl?.LngLatBounds ?? Object)(origin, event.coordinates);
-    if (typeof bounds?.extend === "function") {
-      map.fitBounds(bounds, { padding: 120, duration: 1400, maxZoom: 7 });
-    } else {
-      map.flyTo({ center: event.coordinates, zoom: 5, duration: 1400 });
-    }
+    map.fitBounds([origin, event.coordinates], { padding: 120, duration: 1400, maxZoom: 7 });
   }
 
   return (
