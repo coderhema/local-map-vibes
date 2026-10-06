@@ -5,6 +5,8 @@ import {
   CaretRight,
   CompassRose,
   Crosshair,
+  ArrowRight,
+  List,
   MagnifyingGlass,
   MapPin,
   Minus,
@@ -62,6 +64,7 @@ function Index() {
   const [query, setQuery] = useState("");
   const [alerts, setAlerts] = useState(false);
   const [showPanel, setShowPanel] = useState(true);
+  const [showBrowse, setShowBrowse] = useState(false);
 
   const filtered = events.filter((event) => {
     const inCategory = category === "All events" || event.category === category;
@@ -78,9 +81,9 @@ function Index() {
       maplibregl.setWorkerUrl("/maplibre/maplibre-gl-worker.mjs");
       const map = new maplibregl.Map({
         container: mapContainer.current,
-        style: "https://tiles.openfreemap.org/styles/liberty",
-        center: [12, 8],
-        zoom: 1.7,
+        style: "https://tiles.openfreemap.org/styles/positron",
+        center: [10, 8],
+        zoom: 1.45,
         minZoom: 0.8,
         maxZoom: 14,
         attributionControl: false,
@@ -93,8 +96,8 @@ function Index() {
           type: "geojson",
           data: { type: "Feature", properties: {}, geometry: { type: "LineString", coordinates: [[3.4219, 6.4281], [18.4241, -33.9249], [13.405, 52.52], [-43.1729, -22.9068]] } },
         });
-        map.addLayer({ id: "event-route-shadow", type: "line", source: "event-route", paint: { "line-color": "rgb(12, 32, 35)", "line-width": 6, "line-opacity": 0.55 } });
-        map.addLayer({ id: "event-route", type: "line", source: "event-route", paint: { "line-color": "rgb(230, 145, 18)", "line-width": 3, "line-opacity": 0.95, "line-dasharray": [2, 1.4] } });
+        map.addLayer({ id: "event-route-shadow", type: "line", source: "event-route", paint: { "line-color": "rgb(255, 255, 255)", "line-width": 5, "line-opacity": 0.82 } });
+        map.addLayer({ id: "event-route", type: "line", source: "event-route", paint: { "line-color": "rgb(65, 161, 207)", "line-width": 2, "line-opacity": 0.95, "line-dasharray": [2, 1.6] } });
       });
       events.forEach((event) => {
         const node = document.createElement("button");
@@ -126,15 +129,28 @@ function Index() {
     mapRef.current?.flyTo({ center: event.coordinates, zoom: 5, duration: 1400 });
   }
 
+  function showDirections(event: EventItem) {
+    const map = mapRef.current;
+    if (!map) return;
+    const origin: [number, number] = [3.3792, 6.5244];
+    const source = map.getSource("event-route") as import("maplibre-gl").GeoJSONSource | undefined;
+    source?.setData({ type: "Feature", properties: {}, geometry: { type: "LineString", coordinates: [origin, event.coordinates] } });
+    const bounds = new (map.getCanvas().ownerDocument.defaultView?.maplibregl?.LngLatBounds ?? Object)(origin, event.coordinates);
+    if (typeof bounds?.extend === "function") {
+      map.fitBounds(bounds, { padding: 120, duration: 1400, maxZoom: 7 });
+    } else {
+      map.flyTo({ center: event.coordinates, zoom: 5, duration: 1400 });
+    }
+  }
+
   return (
     <main className="relative h-dvh min-h-[640px] overflow-hidden bg-background text-foreground">
-      <div ref={mapContainer} className="map-shell absolute inset-x-0 bottom-0 top-[9rem]" aria-label="Interactive globe showing events" />
-      <div className="pointer-events-none absolute inset-x-0 top-[9rem] z-10 h-24 bg-gradient-to-b from-background to-transparent" />
+      <div ref={mapContainer} className="map-shell editorial-map absolute -bottom-[18%] -right-[12%] left-[20%] top-[8.5rem] md:left-[18rem] lg:left-[22rem]" aria-label="Interactive globe showing events" />
 
-      <header className="relative z-20 flex h-20 items-center justify-between border-b border-border/60 bg-background/90 px-5 backdrop-blur-xl md:px-8">
+      <header className="relative z-30 mx-auto mt-4 flex h-14 w-[calc(100%-2rem)] max-w-5xl items-center justify-between rounded-full border border-foreground/80 bg-background/85 px-3 shadow-sm backdrop-blur-xl md:px-4">
         <div className="flex items-center gap-3">
-          <div className="grid size-10 place-items-center rounded-md bg-primary text-primary-foreground"><CompassRose className="size-6" weight="fill" /></div>
-          <div><p className="font-display text-xl font-bold leading-none">ATLAS</p><p className="mt-1 text-[10px] font-semibold uppercase tracking-[0.22em] text-muted-foreground">Events without borders</p></div>
+          <div className="grid size-8 place-items-center rounded-full border border-foreground"><CompassRose className="size-4" weight="duotone" /></div>
+          <div><p className="font-display text-lg font-medium leading-none">Atlas</p><p className="mt-0.5 text-[9px] font-semibold uppercase text-muted-foreground">Events without borders</p></div>
         </div>
         <div className="hidden items-center gap-2 md:flex">
           <Button variant="ghost" size="sm"><CalendarBlank className="size-4" weight="duotone" /> This month</Button>
@@ -142,39 +158,40 @@ function Index() {
         </div>
       </header>
 
-      <section className="absolute left-0 right-0 top-20 z-20 px-4 pt-4 md:px-8">
-        <div className="mx-auto flex max-w-4xl items-center gap-2 rounded-md border border-border bg-surface px-3 shadow-2xl backdrop-blur-xl">
+      <section className="absolute left-0 right-0 top-[5.2rem] z-20 px-4 md:px-8">
+        <div className="mx-auto flex max-w-3xl items-center gap-2 border-b border-foreground bg-input px-3">
           <MagnifyingGlass className="size-5 shrink-0 text-muted-foreground" weight="bold" />
           <input value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Search a city, region or event" className="h-12 w-full bg-transparent text-sm outline-none placeholder:text-muted-foreground" />
+          {query && <Button aria-label="Clear search" variant="ghost" size="icon" className="size-8" onClick={() => setQuery("")}><X className="size-4" /></Button>}
           <Button size="sm" onClick={() => mapRef.current?.flyTo({ center: [3.3792, 6.5244], zoom: 6 })}><Crosshair className="size-4" weight="bold" /><span className="hidden sm:inline">Near me</span></Button>
         </div>
         <div className="mx-auto mt-3 flex max-w-4xl gap-2 overflow-x-auto pb-2 [scrollbar-width:none]">
-          {categories.map((item) => <Button key={item} size="sm" variant={category === item ? "default" : "secondary"} onClick={() => setCategory(item)} className="shrink-0">{item}</Button>)}
+          {categories.map((item) => <Button key={item} size="sm" variant={category === item ? "default" : "ghost"} onClick={() => setCategory(item)} className="h-8 shrink-0" aria-pressed={category === item}>{item}</Button>)}
         </div>
       </section>
 
-      <aside className="absolute bottom-5 left-4 top-[13.5rem] z-20 hidden w-80 flex-col overflow-hidden border border-border bg-surface shadow-2xl backdrop-blur-xl md:flex">
-        <div className="flex items-center justify-between border-b border-border px-4 py-3"><div><p className="text-sm font-bold">Around the world</p><p className="text-xs text-muted-foreground">{filtered.length} upcoming events</p></div><Sparkle className="size-4 text-primary" weight="fill" /></div>
-        <div className="flex-1 overflow-y-auto p-2">
+      <aside className={`absolute bottom-4 left-4 top-[12.8rem] z-30 w-[calc(100%-2rem)] flex-col overflow-hidden rounded-xl border border-border bg-card shadow-sm backdrop-blur-xl md:left-6 md:flex md:w-80 ${showBrowse ? "flex" : "hidden"}`}>
+        <div className="flex items-center justify-between border-b border-border px-4 py-4"><div><p className="font-display text-2xl font-normal">Around the world</p><p className="mt-1 text-xs text-muted-foreground">{filtered.length} upcoming events</p></div><Button className="md:hidden" aria-label="Close events" variant="ghost" size="icon" onClick={() => setShowBrowse(false)}><X className="size-4" /></Button><Sparkle className="hidden size-4 text-primary md:block" weight="duotone" /></div>
+        <div className="paper-scroll flex-1 overflow-y-auto p-2">
           {filtered.map((event) => (
-            <button key={event.id} onClick={() => focusEvent(event)} className={`mb-1 w-full rounded-md border p-3 text-left transition-colors ${selected.id === event.id ? "border-primary bg-primary/10" : "border-transparent hover:bg-accent/60"}`}>
+            <button key={event.id} onClick={() => { focusEvent(event); setShowBrowse(false); }} className={`mb-1 w-full rounded-lg border p-3 text-left transition-colors ${selected.id === event.id ? "border-primary bg-accent" : "border-transparent hover:bg-secondary"}`} aria-pressed={selected.id === event.id}>
               <div className="flex items-start justify-between gap-3"><span className="text-[10px] font-bold uppercase text-primary">{event.category}</span><span className="text-[10px] text-muted-foreground">{event.attendees} going</span></div>
-              <p className="mt-1 text-sm font-bold">{event.title}</p><p className="mt-1 flex items-center gap-1 text-xs text-muted-foreground"><MapPin className="size-3" weight="fill" />{event.place}</p><p className="mt-2 text-xs font-semibold">{event.date}</p>
+               <p className="mt-1 font-display text-lg font-normal leading-tight">{event.title}</p><p className="mt-2 flex items-center gap-1 text-xs text-muted-foreground"><MapPin className="size-3" weight="duotone" />{event.place}</p><p className="mt-2 text-xs font-semibold">{event.date}</p>
             </button>
           ))}
         </div>
       </aside>
 
       {showPanel && (
-        <section className="absolute bottom-4 left-4 right-4 z-30 border border-border bg-card p-4 shadow-2xl backdrop-blur-xl md:bottom-6 md:left-auto md:right-8 md:w-96">
-          <div className="flex items-start justify-between gap-4"><div><p className="text-[10px] font-bold uppercase text-live">Trending in {selected.place.split(",").at(-1)}</p><h1 className="mt-1 font-display text-xl font-bold">{selected.title}</h1></div><Button aria-label="Close event details" variant="ghost" size="icon" onClick={() => setShowPanel(false)}><X className="size-4" /></Button></div>
+         <section className="absolute bottom-4 left-4 right-4 z-30 rounded-xl border border-border bg-card p-4 shadow-sm backdrop-blur-xl md:bottom-6 md:left-auto md:right-8 md:w-[25rem]">
+           <div className="flex items-start justify-between gap-4"><div><p className="text-[10px] font-bold uppercase text-primary">Trending in {selected.place.split(",").at(-1)}</p><h1 className="mt-1 font-display text-2xl font-normal leading-tight">{selected.title}</h1></div><Button aria-label="Close event details" variant="ghost" size="icon" onClick={() => setShowPanel(false)}><X className="size-4" /></Button></div>
            <div className="mt-3 flex items-center gap-4 text-xs text-muted-foreground"><span className="flex items-center gap-1"><CalendarBlank className="size-4 text-primary" weight="duotone" />{selected.date}</span><span className="flex items-center gap-1"><MapPin className="size-4 text-primary" weight="fill" />{selected.place}</span></div>
-           <div className="mt-4 flex gap-2"><Button className="flex-1" onClick={() => mapRef.current?.flyTo({ center: selected.coordinates, zoom: 9 })}><NavigationArrow className="size-4" weight="fill" /> Get directions</Button><Button variant="secondary" onClick={() => setAlerts(true)}><BellRinging className="size-4" weight="duotone" /> Follow</Button></div>
+            <div className="mt-4 flex gap-2"><Button className="flex-1" onClick={() => showDirections(selected)}><NavigationArrow className="size-4" weight="fill" /> Show route <ArrowRight className="size-4" /></Button><Button variant="secondary" onClick={() => setAlerts(true)}><BellRinging className="size-4" weight="duotone" /> Follow</Button></div>
         </section>
       )}
 
       <div className="absolute bottom-5 right-5 z-20 hidden flex-col gap-2 md:flex"><Button variant="secondary" size="icon" onClick={() => mapRef.current?.zoomIn()} aria-label="Zoom in"><Plus className="size-4" weight="bold" /></Button><Button variant="secondary" size="icon" onClick={() => mapRef.current?.zoomOut()} aria-label="Zoom out"><Minus className="size-4" weight="bold" /></Button></div>
-      <Button className="absolute right-4 top-[9.2rem] z-30 md:hidden" variant="secondary" size="sm" onClick={() => setShowPanel(true)}>{filtered.length} events <CaretRight className="size-4" weight="bold" /></Button>
+      <Button className="absolute right-4 top-[10.2rem] z-30 md:hidden" variant="secondary" size="sm" onClick={() => setShowBrowse(true)}><List className="size-4" weight="duotone" />{filtered.length} events <CaretRight className="size-4" weight="bold" /></Button>
     </main>
   );
 }
