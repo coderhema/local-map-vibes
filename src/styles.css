@@ -158,7 +158,7 @@
 .map-shell .maplibregl-canvas-container:active { cursor: grabbing; }
 .map-shell .maplibregl-ctrl-attrib { display: none; }
 .event-marker {
-  position: relative;
+  position: absolute;
   width: 2.6rem;
   height: 2.4rem;
   border: 0;
