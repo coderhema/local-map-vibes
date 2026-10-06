@@ -10,5 +10,5 @@
 <!-- LOVABLE:END -->
 
 - Keep the event discovery experience map-first, with MapLibre loaded client-side to preserve SSR safety.
-- Use OpenFreeMap's vector basemap for globe geography because the previous raster endpoints return blocked or key-required tiles; use the light Liberty style (`https://tiles.openfreemap.org/styles/liberty`) since the app is on the Wise light theme.
+- Use OpenFreeMap's vector basemap for globe geography because the previous raster endpoints return blocked or key-required tiles; use the light Positron style (`https://tiles.openfreemap.org/styles/positron`) since the app is on a light theme.
 - Keep Yard Guide as one browser-persisted conversation because location help should remain lightweight without requiring account history.
