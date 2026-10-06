@@ -75,11 +75,12 @@ function Index() {
       if (!mapContainer.current || mapRef.current) return;
       const maplibregl = await import("maplibre-gl");
       if (disposed || !mapContainer.current) return;
+      maplibregl.setWorkerUrl("/maplibre/maplibre-gl-worker.mjs");
       const map = new maplibregl.Map({
         container: mapContainer.current,
         style: "https://tiles.openfreemap.org/styles/liberty",
         center: [12, 8],
-        zoom: 1.25,
+        zoom: 1.7,
         minZoom: 0.8,
         maxZoom: 14,
         attributionControl: false,
