@@ -81,7 +81,18 @@ function Index() {
       maplibregl.setWorkerUrl("/maplibre/maplibre-gl-worker.mjs");
       const map = new maplibregl.Map({
         container: mapContainer.current,
-        style: "https://tiles.openfreemap.org/styles/positron",
+        style: {
+          version: 8,
+          sources: {
+            atlasBasemap: {
+              type: "raster",
+              tiles: ["https://tile.openstreetmap.org/{z}/{x}/{y}.png"],
+              tileSize: 256,
+              attribution: "© OpenStreetMap contributors",
+            },
+          },
+          layers: [{ id: "atlas-basemap", type: "raster", source: "atlasBasemap", paint: { "raster-saturation": -0.55, "raster-contrast": -0.08, "raster-brightness-min": 0.18, "raster-brightness-max": 0.96 } }],
+        },
         center: [10, 8],
         zoom: 1.45,
         minZoom: 0.8,
