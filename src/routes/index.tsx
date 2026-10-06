@@ -158,9 +158,8 @@ function Index() {
   }
 
   function playNotificationPing() {
-    const AudioContextClass = window.AudioContext ?? window.webkitAudioContext;
-    if (!AudioContextClass) return;
-    const audioContext = new AudioContextClass();
+    if (!window.AudioContext) return;
+    const audioContext = new AudioContext();
     const gain = audioContext.createGain();
     gain.gain.setValueAtTime(0.0001, audioContext.currentTime);
     gain.gain.exponentialRampToValueAtTime(0.16, audioContext.currentTime + 0.015);
