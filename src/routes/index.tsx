@@ -231,7 +231,7 @@ function Index() {
     <main className="relative h-dvh min-h-[640px] overflow-hidden bg-background text-foreground">
       <div ref={mapContainer} className="map-shell absolute inset-0" aria-label="Interactive map showing events and jobs" />
 
-      <header className="absolute left-4 right-4 top-4 z-40 flex h-14 items-center justify-between rounded-full border border-border bg-card/90 px-5 backdrop-blur-xl md:left-6 md:right-6 md:px-4">
+      <header className="absolute left-4 right-4 top-4 z-40 flex h-14 items-center justify-between rounded-[1.25rem] border border-border bg-card/90 px-5 backdrop-blur-xl md:left-6 md:right-6 md:px-4">
         <div className="flex items-center">
           <div><p className="font-display text-2xl font-semibold leading-none">Backyard</p></div>
         </div>
