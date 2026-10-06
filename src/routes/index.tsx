@@ -125,6 +125,7 @@ function Index() {
       map.on("style.load", () => {
         map.setProjection({ type: "globe" });
         map.setPadding({ top: 210, right: 0, bottom: 0, left: 0 });
+        tintBasemap(map);
         map.addSource("event-route", {
           type: "geojson",
           data: { type: "Feature", properties: {}, geometry: { type: "LineString", coordinates: [[3.4219, 6.4281], [18.4241, -33.9249], [13.405, 52.52], [-43.1729, -22.9068]] } },
@@ -145,7 +146,7 @@ function Index() {
           map.easeTo({ center: event.coordinates, zoom: Math.max(map.getZoom(), 4.5), duration: 950, essential: true });
         });
         markerRefs.current.set(event.id, node);
-        new maplibregl.Marker({ element: node, anchor: "bottom" }).setLngLat(event.coordinates).addTo(map);
+        new maplibregl.Marker({ element: node, anchor: "bottom", subpixelPositioning: true }).setLngLat(event.coordinates).addTo(map);
       });
       const observer = new ResizeObserver(() => map.resize());
       observer.observe(mapContainer.current);
@@ -296,4 +297,28 @@ function Index() {
       <LocationAssistant />
     </main>
   );
+}
+
+// Duotone lilac/white recolor of the Positron basemap.
+function tintBasemap(map: { getStyle: () => { layers?: { id: string; type: string }[] }; setPaintProperty: (id: string, prop: string, value: unknown) => void }) {
+  const layers = map.getStyle().layers ?? [];
+  const set = (id: string, prop: string, value: unknown) => { try { map.setPaintProperty(id, prop, value); } catch { /* ignore */ } };
+  for (const layer of layers) {
+    const id = layer.id.toLowerCase();
+    if (id.startsWith("event-route")) continue;
+    if (layer.type === "background") set(layer.id, "background-color", "#fbf8ff");
+    else if (layer.type === "fill") {
+      if (id.includes("water")) set(layer.id, "fill-color", "#dccbfb");
+      else if (id.includes("park") || id.includes("landcover") || id.includes("wood") || id.includes("grass")) set(layer.id, "fill-color", "#f3ecfd");
+      else if (id.includes("building")) set(layer.id, "fill-color", "#eee6fb");
+      else set(layer.id, "fill-color", "#fbf8ff");
+    } else if (layer.type === "line") {
+      if (id.includes("water") || id.includes("river")) set(layer.id, "line-color", "#cdb6f7");
+      else if (id.includes("boundary") || id.includes("admin")) set(layer.id, "line-color", "#b79ae8");
+      else set(layer.id, "line-color", "#ece2fb");
+    } else if (layer.type === "symbol") {
+      set(layer.id, "text-color", id.includes("water") ? "#7c4ddb" : "#4a2d72");
+      set(layer.id, "text-halo-color", "#ffffff");
+    }
+  }
 }
