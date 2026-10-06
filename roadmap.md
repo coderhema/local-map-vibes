@@ -1,6 +1,6 @@
 # Roadmap
 
-- [ ] Apply uploaded Apple dark visual system and verify map controls
+- [x] Apply uploaded Apple dark visual system and verify map controls
 
 - [x] Add collapsible desktop discovery panel
 - [x] Replace Near me label with person icon and tooltip
