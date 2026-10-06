@@ -80,7 +80,7 @@ const pinIconPaths: Record<string, string> = {
 };
 
 function pinIconSvg(category: string) {
-  const path = pinIconPaths[category] ?? pinIconPaths.Briefcase;
+  const path = pinIconPaths[category] ?? pinIconPaths["Briefcase"];
   return `<svg class="pin-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" fill="currentColor" aria-hidden="true"><path d="${path}"/></svg>`;
 }
 
@@ -127,7 +127,7 @@ function Index() {
       map.on("style.load", () => {
         map.setProjection({ type: "globe" });
         map.setPadding({ top: 210, right: 0, bottom: 0, left: 0 });
-        tintBasemap(map);
+        tintBasemap(map as unknown as Parameters<typeof tintBasemap>[0]);
         map.addSource("event-route", {
           type: "geojson",
           data: { type: "FeatureCollection", features: [] },
@@ -245,7 +245,7 @@ function Index() {
     markerRefs.current.forEach((node, id) => {
       const index = tour.findIndex((stop) => stop.id === id);
       node.classList.toggle("in-tour", index >= 0);
-      node.dataset.stop = index >= 0 ? String(index + 1) : "";
+      node.dataset["stop"] = index >= 0 ? String(index + 1) : "";
     });
     if (tour.length) drawRoute(tour.map((stop) => stop.coordinates), tour.length > 1);
     else if (mapRef.current?.getSource("event-route")) drawRoute([], false);
