@@ -164,6 +164,7 @@
   50% { transform: translateY(-5px); }
 }
 
+.map-shell { position: absolute !important; }
 .map-shell .maplibregl-canvas { outline: none; }
 .map-shell .maplibregl-ctrl-attrib { display: none; }
 .event-marker { animation: float-pin 2.8s ease-in-out infinite; }
