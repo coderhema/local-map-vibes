@@ -61,7 +61,9 @@ function Index() {
     async function mountMap() {
       if (!mapContainer.current || mapRef.current) return;
       const maplibregl = await import("maplibre-gl");
+      const mapWorker = await import("maplibre-gl/dist/maplibre-gl-csp-worker?worker");
       if (disposed || !mapContainer.current) return;
+      maplibregl.setWorkerClass(mapWorker.default);
       const map = new maplibregl.Map({
         container: mapContainer.current,
         style: "https://basemaps.cartocdn.com/gl/dark-matter-gl-style/style.json",
@@ -74,12 +76,11 @@ function Index() {
       mapRef.current = map;
       map.on("style.load", () => {
         map.setProjection({ type: "globe" });
-        const routeColor = getComputedStyle(document.documentElement).getPropertyValue("--primary").trim();
         map.addSource("event-route", {
           type: "geojson",
           data: { type: "Feature", properties: {}, geometry: { type: "LineString", coordinates: [[3.4219, 6.4281], [18.4241, -33.9249], [13.405, 52.52], [-43.1729, -22.9068]] } },
         });
-        map.addLayer({ id: "event-route", type: "line", source: "event-route", paint: { "line-color": routeColor, "line-width": 2, "line-opacity": 0.72, "line-dasharray": [2, 2] } });
+        map.addLayer({ id: "event-route", type: "line", source: "event-route", paint: { "line-color": "rgb(243, 173, 72)", "line-width": 2, "line-opacity": 0.72, "line-dasharray": [2, 2] } });
       });
       events.forEach((event) => {
         const node = document.createElement("button");
