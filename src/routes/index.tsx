@@ -97,20 +97,9 @@ function Index() {
       maplibregl.setWorkerUrl("/maplibre/maplibre-gl-worker.mjs");
       const map = new maplibregl.Map({
         container: mapContainer.current,
-        style: {
-          version: 8,
-          sources: {
-            atlasBasemap: {
-              type: "raster",
-              tiles: ["https://basemaps.cartocdn.com/dark_all/{z}/{x}/{y}.png"],
-              tileSize: 256,
-              attribution: "© OpenStreetMap contributors © CARTO",
-            },
-          },
-          layers: [{ id: "atlas-basemap", type: "raster", source: "atlasBasemap", paint: { "raster-saturation": -1, "raster-contrast": 0.1, "raster-brightness-min": 0, "raster-brightness-max": 0.85 } }],
-        },
+        style: "https://tiles.openfreemap.org/styles/dark",
         center: [10, 8],
-        zoom: 1.9,
+        zoom: 2.65,
         minZoom: 0.8,
         maxZoom: 14,
         attributionControl: false,
@@ -183,7 +172,7 @@ function Index() {
     mapRef.current?.setProjection({ type: nextIsGlobe ? "globe" : "mercator" });
     mapRef.current?.easeTo({
       center: [10, 8],
-      zoom: nextIsGlobe ? 1.9 : 1.2,
+      zoom: nextIsGlobe ? 2.65 : 1.2,
       padding: { top: nextIsGlobe ? 210 : 0, right: 0, bottom: 0, left: 0 },
       duration: 900,
       essential: true,
