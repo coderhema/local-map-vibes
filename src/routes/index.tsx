@@ -6,6 +6,8 @@ import {
   CompassRose,
   Crosshair,
   ArrowRight,
+  Briefcase,
+  Confetti,
   List,
   MagnifyingGlass,
   MapPin,
@@ -22,10 +24,10 @@ import { Button } from "@/components/ui/button";
 export const Route = createFileRoute("/")({
   head: () => ({
     meta: [
-      { title: "Atlas — Discover events around the world" },
-      { name: "description", content: "Explore live music, culture, technology and community events near you or anywhere on Earth." },
-      { property: "og:title", content: "Atlas — Global Event Finder" },
-      { property: "og:description", content: "Your world, happening now. Discover events by map, region and interest." },
+      { title: "Backyard — Events and jobs around you" },
+      { name: "description", content: "Discover events and job opportunities in your city, region, and around the world." },
+      { property: "og:title", content: "Backyard — Events and jobs around you" },
+      { property: "og:description", content: "Find what is happening and where your next opportunity is." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },
     ],
@@ -41,25 +43,31 @@ type EventItem = {
   category: string;
   attendees: string;
   coordinates: [number, number];
+  kind: "Events" | "Jobs";
 };
 
-const initialEvent: EventItem = { id: 1, title: "Lagos Art & Culture Week", place: "Victoria Island, Lagos", date: "Oct 10 · 18:00", category: "Culture", attendees: "2.4k", coordinates: [3.4219, 6.4281] };
+const initialEvent: EventItem = { id: 1, title: "Lagos Art & Culture Week", place: "Victoria Island, Lagos", date: "Oct 10 · 18:00", category: "Culture", attendees: "2.4k going", coordinates: [3.4219, 6.4281], kind: "Events" };
 
 const events: EventItem[] = [
   initialEvent,
-  { id: 2, title: "Cape Town Jazz Nights", place: "Waterfront, Cape Town", date: "Oct 12 · 20:00", category: "Music", attendees: "860", coordinates: [18.4241, -33.9249] },
-  { id: 3, title: "Berlin Future Forum", place: "Kreuzberg, Berlin", date: "Oct 16 · 09:00", category: "Technology", attendees: "1.1k", coordinates: [13.405, 52.52] },
-  { id: 4, title: "Rio Street Food Festival", place: "Copacabana, Rio", date: "Oct 19 · 12:00", category: "Food", attendees: "3.8k", coordinates: [-43.1729, -22.9068] },
-  { id: 5, title: "Tokyo Design Assembly", place: "Shibuya, Tokyo", date: "Oct 24 · 10:30", category: "Design", attendees: "940", coordinates: [139.6917, 35.6895] },
-  { id: 6, title: "New York Run Club", place: "Central Park, New York", date: "Oct 26 · 07:00", category: "Sports", attendees: "530", coordinates: [-73.9654, 40.7829] },
+  { id: 2, title: "Cape Town Jazz Nights", place: "Waterfront, Cape Town", date: "Oct 12 · 20:00", category: "Music", attendees: "860 going", coordinates: [18.4241, -33.9249], kind: "Events" },
+  { id: 3, title: "Berlin Future Forum", place: "Kreuzberg, Berlin", date: "Oct 16 · 09:00", category: "Technology", attendees: "1.1k going", coordinates: [13.405, 52.52], kind: "Events" },
+  { id: 4, title: "Rio Street Food Festival", place: "Copacabana, Rio", date: "Oct 19 · 12:00", category: "Food", attendees: "3.8k going", coordinates: [-43.1729, -22.9068], kind: "Events" },
+  { id: 5, title: "Tokyo Design Assembly", place: "Shibuya, Tokyo", date: "Oct 24 · 10:30", category: "Design", attendees: "940 going", coordinates: [139.6917, 35.6895], kind: "Events" },
+  { id: 6, title: "New York Run Club", place: "Central Park, New York", date: "Oct 26 · 07:00", category: "Sports", attendees: "530 going", coordinates: [-73.9654, 40.7829], kind: "Events" },
+  { id: 7, title: "Product Designer", place: "Yaba, Lagos", date: "Full-time · Hybrid", category: "Design", attendees: "New role", coordinates: [3.3792, 6.5244], kind: "Jobs" },
+  { id: 8, title: "Frontend Engineer", place: "Kreuzberg, Berlin", date: "Full-time · Remote", category: "Technology", attendees: "2 days ago", coordinates: [13.3889, 52.517], kind: "Jobs" },
+  { id: 9, title: "Community Lead", place: "Brooklyn, New York", date: "Contract · Hybrid", category: "Community", attendees: "New role", coordinates: [-73.9442, 40.6782], kind: "Jobs" },
 ];
 
-const categories = ["All events", "Music", "Culture", "Technology", "Food", "Sports"];
+const eventCategories = ["All", "Music", "Culture", "Technology", "Food", "Sports"];
+const jobCategories = ["All", "Design", "Technology", "Community"];
 
 function Index() {
   const mapContainer = useRef<HTMLDivElement>(null);
   const mapRef = useRef<import("maplibre-gl").Map | null>(null);
-  const [category, setCategory] = useState("All events");
+  const [category, setCategory] = useState("All");
+  const [kind, setKind] = useState<"Events" | "Jobs">("Events");
   const [selected, setSelected] = useState<EventItem>(initialEvent);
   const [query, setQuery] = useState("");
   const [alerts, setAlerts] = useState(false);
@@ -67,9 +75,9 @@ function Index() {
   const [showBrowse, setShowBrowse] = useState(false);
 
   const filtered = events.filter((event) => {
-    const inCategory = category === "All events" || event.category === category;
+    const inCategory = category === "All" || event.category === category;
     const matches = `${event.title} ${event.place}`.toLowerCase().includes(query.toLowerCase());
-    return inCategory && matches;
+    return event.kind === kind && inCategory && matches;
   });
 
   useEffect(() => {
@@ -151,12 +159,12 @@ function Index() {
 
   return (
     <main className="relative h-dvh min-h-[640px] overflow-hidden bg-background text-foreground">
-      <div ref={mapContainer} className="map-shell editorial-map absolute -bottom-[18%] -right-[12%] left-[20%] top-[8.5rem] md:left-[18rem] lg:left-[22rem]" aria-label="Interactive globe showing events" />
+      <div ref={mapContainer} className="map-shell absolute inset-0" aria-label="Interactive map showing events and jobs" />
 
-      <header className="relative z-30 mx-auto mt-4 flex h-14 w-[calc(100%-2rem)] max-w-5xl items-center justify-between rounded-full border border-foreground/80 bg-background/85 px-3 shadow-sm backdrop-blur-xl md:px-4">
+      <header className="absolute left-4 right-4 top-4 z-40 flex h-14 items-center justify-between rounded-full border border-foreground/80 bg-background/90 px-3 shadow-sm backdrop-blur-xl md:left-6 md:right-6 md:px-4">
         <div className="flex items-center gap-3">
           <div className="grid size-8 place-items-center rounded-full border border-foreground"><CompassRose className="size-4" weight="duotone" /></div>
-          <div><p className="font-display text-lg font-medium leading-none">Atlas</p><p className="mt-0.5 text-[9px] font-semibold uppercase text-muted-foreground">Events without borders</p></div>
+          <div><p className="font-display text-lg font-medium leading-none">Backyard</p><p className="mt-0.5 text-[9px] font-semibold uppercase text-muted-foreground">Events & jobs, nearby</p></div>
         </div>
         <div className="hidden items-center gap-2 md:flex">
           <Button variant="ghost" size="sm"><CalendarBlank className="size-4" weight="duotone" /> This month</Button>
@@ -164,24 +172,24 @@ function Index() {
         </div>
       </header>
 
-      <section className="absolute left-0 right-0 top-[5.2rem] z-20 px-4 md:px-8">
-        <div className="mx-auto flex max-w-3xl items-center gap-2 border-b border-foreground bg-input px-3">
+      <section className="absolute left-4 right-4 top-[5.2rem] z-30 md:left-[23rem] md:right-6">
+        <div className="mx-auto flex max-w-3xl items-center gap-2 rounded-lg border border-border bg-background/90 px-3 shadow-sm backdrop-blur-xl">
           <MagnifyingGlass className="size-5 shrink-0 text-muted-foreground" weight="bold" />
-          <input value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Search a city, region or event" className="h-12 w-full bg-transparent text-sm outline-none placeholder:text-muted-foreground" />
+          <input value={query} onChange={(event) => setQuery(event.target.value)} placeholder={`Search ${kind.toLowerCase()}, cities or regions`} className="h-12 w-full bg-transparent text-sm outline-none placeholder:text-muted-foreground" />
           {query && <Button aria-label="Clear search" variant="ghost" size="icon" className="size-8" onClick={() => setQuery("")}><X className="size-4" /></Button>}
           <Button size="sm" onClick={() => mapRef.current?.flyTo({ center: [3.3792, 6.5244], zoom: 6 })}><Crosshair className="size-4" weight="bold" /><span className="hidden sm:inline">Near me</span></Button>
         </div>
-        <div className="mx-auto mt-3 flex max-w-4xl gap-2 overflow-x-auto pb-2 [scrollbar-width:none]">
-          {categories.map((item) => <Button key={item} size="sm" variant={category === item ? "default" : "ghost"} onClick={() => setCategory(item)} className="h-8 shrink-0" aria-pressed={category === item}>{item}</Button>)}
+        <div className="mx-auto mt-2 flex max-w-3xl gap-2 overflow-x-auto pb-2 [scrollbar-width:none]">
+          {(kind === "Events" ? eventCategories : jobCategories).map((item) => <Button key={item} size="sm" variant={category === item ? "default" : "secondary"} onClick={() => setCategory(item)} className="h-8 shrink-0 bg-background/90 backdrop-blur-xl" aria-pressed={category === item}>{item}</Button>)}
         </div>
       </section>
 
-      <aside className={`absolute bottom-4 left-4 top-[12.8rem] z-30 w-[calc(100%-2rem)] flex-col overflow-hidden rounded-xl border border-border bg-card shadow-sm backdrop-blur-xl md:left-6 md:flex md:w-80 ${showBrowse ? "flex" : "hidden"}`}>
-        <div className="flex items-center justify-between border-b border-border px-4 py-4"><div><p className="font-display text-2xl font-normal">Around the world</p><p className="mt-1 text-xs text-muted-foreground">{filtered.length} upcoming events</p></div><Button className="md:hidden" aria-label="Close events" variant="ghost" size="icon" onClick={() => setShowBrowse(false)}><X className="size-4" /></Button><Sparkle className="hidden size-4 text-primary md:block" weight="duotone" /></div>
+      <aside className={`absolute bottom-4 left-4 top-[5.2rem] z-30 w-[calc(100%-2rem)] flex-col overflow-hidden rounded-xl border border-border bg-card/95 shadow-sm backdrop-blur-xl md:left-6 md:flex md:w-80 ${showBrowse ? "flex" : "hidden"}`}>
+        <div className="border-b border-border px-4 py-4"><div className="mb-4 grid grid-cols-2 gap-1 rounded-lg bg-secondary p-1"><Button variant={kind === "Events" ? "secondary" : "ghost"} size="sm" className="border-0 bg-card" onClick={() => { setKind("Events"); setCategory("All"); setSelected(initialEvent); }}><Confetti className="size-4" weight="duotone" />Events</Button><Button variant={kind === "Jobs" ? "secondary" : "ghost"} size="sm" className="border-0 bg-card" onClick={() => { const firstJob = events.find((item) => item.kind === "Jobs"); setKind("Jobs"); setCategory("All"); if (firstJob) setSelected(firstJob); }}><Briefcase className="size-4" weight="duotone" />Jobs</Button></div><div className="flex items-center justify-between"><div><p className="font-display text-2xl font-normal">In your backyard</p><p className="mt-1 text-xs text-muted-foreground">{filtered.length} {kind.toLowerCase()} to explore</p></div><Button className="md:hidden" aria-label="Close discovery" variant="ghost" size="icon" onClick={() => setShowBrowse(false)}><X className="size-4" /></Button><Sparkle className="hidden size-4 text-primary md:block" weight="duotone" /></div></div>
         <div className="paper-scroll flex-1 overflow-y-auto p-2">
           {filtered.map((event) => (
             <button key={event.id} onClick={() => { focusEvent(event); setShowBrowse(false); }} className={`mb-1 w-full rounded-lg border p-3 text-left transition-colors ${selected.id === event.id ? "border-primary bg-accent" : "border-transparent hover:bg-secondary"}`} aria-pressed={selected.id === event.id}>
-              <div className="flex items-start justify-between gap-3"><span className="text-[10px] font-bold uppercase text-primary">{event.category}</span><span className="text-[10px] text-muted-foreground">{event.attendees} going</span></div>
+               <div className="flex items-start justify-between gap-3"><span className="text-[10px] font-bold uppercase text-primary">{event.category}</span><span className="text-[10px] text-muted-foreground">{event.attendees}</span></div>
                <p className="mt-1 font-display text-lg font-normal leading-tight">{event.title}</p><p className="mt-2 flex items-center gap-1 text-xs text-muted-foreground"><MapPin className="size-3" weight="duotone" />{event.place}</p><p className="mt-2 text-xs font-semibold">{event.date}</p>
             </button>
           ))}
@@ -190,14 +198,14 @@ function Index() {
 
       {showPanel && (
          <section className="absolute bottom-4 left-4 right-4 z-30 rounded-xl border border-border bg-card p-4 shadow-sm backdrop-blur-xl md:bottom-6 md:left-auto md:right-8 md:w-[25rem]">
-           <div className="flex items-start justify-between gap-4"><div><p className="text-[10px] font-bold uppercase text-primary">Trending in {selected.place.split(",").at(-1)}</p><h1 className="mt-1 font-display text-2xl font-normal leading-tight">{selected.title}</h1></div><Button aria-label="Close event details" variant="ghost" size="icon" onClick={() => setShowPanel(false)}><X className="size-4" /></Button></div>
+           <div className="flex items-start justify-between gap-4"><div><p className="text-[10px] font-bold uppercase text-primary">{selected.kind === "Jobs" ? "Opportunity" : "Trending"} in {selected.place.split(",").at(-1)}</p><h1 className="mt-1 font-display text-2xl font-normal leading-tight">{selected.title}</h1></div><Button aria-label="Close details" variant="ghost" size="icon" onClick={() => setShowPanel(false)}><X className="size-4" /></Button></div>
            <div className="mt-3 flex items-center gap-4 text-xs text-muted-foreground"><span className="flex items-center gap-1"><CalendarBlank className="size-4 text-primary" weight="duotone" />{selected.date}</span><span className="flex items-center gap-1"><MapPin className="size-4 text-primary" weight="fill" />{selected.place}</span></div>
-            <div className="mt-4 flex gap-2"><Button className="flex-1" onClick={() => showDirections(selected)}><NavigationArrow className="size-4" weight="fill" /> Show route <ArrowRight className="size-4" /></Button><Button variant="secondary" onClick={() => setAlerts(true)}><BellRinging className="size-4" weight="duotone" /> Follow</Button></div>
+             <div className="mt-4 flex gap-2"><Button className="flex-1" onClick={() => showDirections(selected)}><NavigationArrow className="size-4" weight="fill" /> Show route <ArrowRight className="size-4" /></Button><Button variant="secondary" onClick={() => setAlerts(true)}>{selected.kind === "Jobs" ? <Briefcase className="size-4" weight="duotone" /> : <BellRinging className="size-4" weight="duotone" />} {selected.kind === "Jobs" ? "Save" : "Follow"}</Button></div>
         </section>
       )}
 
       <div className="absolute bottom-5 right-5 z-20 hidden flex-col gap-2 md:flex"><Button variant="secondary" size="icon" onClick={() => mapRef.current?.zoomIn()} aria-label="Zoom in"><Plus className="size-4" weight="bold" /></Button><Button variant="secondary" size="icon" onClick={() => mapRef.current?.zoomOut()} aria-label="Zoom out"><Minus className="size-4" weight="bold" /></Button></div>
-      <Button className="absolute right-4 top-[10.2rem] z-30 md:hidden" variant="secondary" size="sm" onClick={() => setShowBrowse(true)}><List className="size-4" weight="duotone" />{filtered.length} events <CaretRight className="size-4" weight="bold" /></Button>
+      <Button className="absolute right-4 top-[9.8rem] z-30 bg-background/90 backdrop-blur-xl md:hidden" variant="secondary" size="sm" onClick={() => setShowBrowse(true)}><List className="size-4" weight="duotone" />Explore <CaretRight className="size-4" weight="bold" /></Button>
     </main>
   );
 }
