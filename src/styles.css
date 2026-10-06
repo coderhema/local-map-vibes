@@ -161,7 +161,7 @@
 
 @keyframes float-pin {
   0%, 100% { transform: translateY(0); }
-  50% { transform: translateY(-5px); }
+  50% { transform: translateY(-3px); }
 }
 
 @keyframes notification-ring {
@@ -189,19 +189,38 @@
 .map-shell .maplibregl-canvas-container:active { cursor: grabbing; }
 .map-shell .maplibregl-ctrl-attrib { display: none; }
 .event-marker {
-  width: 2.25rem;
-  height: 2.25rem;
+  position: relative;
+  width: 2rem;
+  height: 2.6rem;
+  border: 0;
+  background: transparent;
+  cursor: pointer;
+  transition: filter 180ms ease;
+}
+.event-marker:hover { filter: drop-shadow(0 5px 8px color-mix(in oklab, var(--foreground) 25%, transparent)); }
+.event-marker .pin-head {
+  position: absolute;
+  left: 0.18rem;
+  top: 0;
+  z-index: 1;
   display: grid;
+  width: 1.65rem;
+  height: 1.65rem;
   place-items: center;
   border-radius: 999px;
-  background: var(--card);
-  color: var(--foreground);
   border: 1px solid var(--foreground);
-  box-shadow: 0 3px 10px color-mix(in oklab, var(--foreground) 20%, transparent);
-  cursor: pointer;
+  background: var(--card);
+  box-shadow: 0 4px 12px color-mix(in oklab, var(--foreground) 18%, transparent);
+  animation: float-pin 2.8s ease-in-out infinite;
+  transition: transform 180ms ease, background-color 180ms ease;
 }
-.event-marker > span { font-weight: 700; font-size: 0.62rem; animation: float-pin 2.8s ease-in-out infinite; }
-.event-marker.active { background: var(--primary); color: var(--background); border-color: var(--primary); }
+.event-marker .pin-core { width: 0.42rem; height: 0.42rem; border-radius: 999px; background: var(--primary); }
+.event-marker .pin-tail { position: absolute; left: 0.91rem; top: 1.38rem; width: 1px; height: 1.12rem; background: var(--foreground); transform-origin: top; transition: height 180ms ease; }
+.event-marker:hover .pin-head,
+.event-marker:focus-visible .pin-head { transform: translateY(-3px) scale(1.08); }
+.event-marker.active .pin-head { background: var(--primary); border-color: var(--primary); }
+.event-marker.active .pin-core { background: var(--background); }
+.event-marker.active .pin-tail { height: 1.35rem; background: var(--primary); }
 .maplibregl-popup-content {
   background: var(--popover);
   color: var(--popover-foreground);
@@ -213,7 +232,7 @@
 .maplibregl-popup-tip { border-top-color: var(--popover) !important; }
 .maplibregl-popup-close-button { color: var(--muted-foreground); padding: 0.2rem 0.4rem; }
 @media (prefers-reduced-motion: reduce) {
-  .event-marker > span,
+  .event-marker .pin-head,
   .notification-bell { animation: none; }
 }
 

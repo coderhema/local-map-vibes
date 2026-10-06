@@ -3,16 +3,19 @@ import {
   BellRinging,
   CalendarBlank,
   CaretRight,
-  Crosshair,
   ArrowRight,
   Briefcase,
   Confetti,
+  GlobeHemisphereWest,
   List,
   MagnifyingGlass,
+  MapTrifold,
   MapPin,
   Minus,
   NavigationArrow,
+  PersonSimple,
   Plus,
+  SidebarSimple,
   Sparkle,
   X,
 } from "@phosphor-icons/react";
@@ -20,6 +23,8 @@ import { useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
 
 import { Button } from "@/components/ui/button";
+import { LocationAssistant } from "@/components/location-assistant";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 
 export const Route = createFileRoute("/")({
   head: () => ({
@@ -66,6 +71,7 @@ const jobCategories = ["All", "Design", "Technology", "Community"];
 function Index() {
   const mapContainer = useRef<HTMLDivElement>(null);
   const mapRef = useRef<import("maplibre-gl").Map | null>(null);
+  const markerRefs = useRef(new Map<number, HTMLButtonElement>());
   const [category, setCategory] = useState("All");
   const [kind, setKind] = useState<"Events" | "Jobs">("Events");
   const [selected, setSelected] = useState<EventItem>(initialEvent);
@@ -73,6 +79,8 @@ function Index() {
   const [alerts, setAlerts] = useState(false);
   const [showPanel, setShowPanel] = useState(true);
   const [showBrowse, setShowBrowse] = useState(false);
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
+  const [isGlobe, setIsGlobe] = useState(true);
 
   const filtered = events.filter((event) => {
     const inCategory = category === "All" || event.category === category;
@@ -122,12 +130,15 @@ function Index() {
         const node = document.createElement("button");
         node.className = `event-marker${event.id === 1 ? " active" : ""}`;
         node.setAttribute("aria-label", `Open ${event.title}`);
-        node.innerHTML = `<span>${event.category.slice(0, 2).toUpperCase()}</span>`;
+        node.innerHTML = `<span class="pin-head"><span class="pin-core"></span></span><span class="pin-tail"></span>`;
         node.addEventListener("click", () => {
           setSelected(event);
           setShowPanel(true);
-          map.flyTo({ center: event.coordinates, zoom: 5, duration: 1400 });
+          markerRefs.current.forEach((marker) => marker.classList.remove("active"));
+          node.classList.add("active");
+          map.easeTo({ center: event.coordinates, zoom: Math.max(map.getZoom(), 4.5), duration: 950, essential: true });
         });
+        markerRefs.current.set(event.id, node);
         new maplibregl.Marker({ element: node, anchor: "bottom" }).setLngLat(event.coordinates).addTo(map);
       });
       const observer = new ResizeObserver(() => map.resize());
@@ -139,13 +150,37 @@ function Index() {
       disposed = true;
       mapRef.current?.remove();
       mapRef.current = null;
+      markerRefs.current.clear();
     };
   }, []);
 
   function focusEvent(event: EventItem) {
     setSelected(event);
     setShowPanel(true);
-    mapRef.current?.flyTo({ center: event.coordinates, zoom: 5, duration: 1400 });
+    markerRefs.current.forEach((marker, id) => marker.classList.toggle("active", id === event.id));
+    mapRef.current?.easeTo({ center: event.coordinates, zoom: 5, duration: 950, essential: true });
+  }
+
+  function locateUser() {
+    if (!navigator.geolocation) {
+      toast.error("Location is unavailable in this browser");
+      return;
+    }
+    navigator.geolocation.getCurrentPosition(
+      ({ coords }) => mapRef.current?.easeTo({ center: [coords.longitude, coords.latitude], zoom: 9, duration: 1100, essential: true }),
+      () => {
+        mapRef.current?.easeTo({ center: [3.3792, 6.5244], zoom: 6, duration: 950, essential: true });
+        toast("Showing Lagos", { description: "Allow location access to center on your position." });
+      },
+      { enableHighAccuracy: true, timeout: 6000 },
+    );
+  }
+
+  function toggleProjection() {
+    const nextIsGlobe = !isGlobe;
+    setIsGlobe(nextIsGlobe);
+    mapRef.current?.setProjection({ type: nextIsGlobe ? "globe" : "mercator" });
+    mapRef.current?.easeTo({ center: [10, 8], zoom: nextIsGlobe ? 1.45 : 1.2, duration: 900, essential: true });
   }
 
   function showDirections(event: EventItem) {
@@ -210,21 +245,23 @@ function Index() {
         </div>
       </header>
 
-      <section className="absolute left-4 right-4 top-[5.2rem] z-30 md:left-[23rem] md:right-6">
+      <section className={`absolute left-4 right-4 top-[5.2rem] z-30 transition-[left] duration-300 md:right-6 ${sidebarCollapsed ? "md:left-[6.5rem]" : "md:left-[23rem]"}`}>
         <div className="mx-auto flex max-w-3xl items-center gap-2 rounded-lg border border-border bg-background/90 px-3 shadow-sm backdrop-blur-xl">
           <MagnifyingGlass className="size-5 shrink-0 text-muted-foreground" weight="bold" />
           <input value={query} onChange={(event) => setQuery(event.target.value)} placeholder={`Search ${kind.toLowerCase()}, cities or regions`} className="h-12 w-full bg-transparent text-sm outline-none placeholder:text-muted-foreground" />
           {query && <Button aria-label="Clear search" variant="ghost" size="icon" className="size-8" onClick={() => setQuery("")}><X className="size-4" /></Button>}
-          <Button size="sm" onClick={() => mapRef.current?.flyTo({ center: [3.3792, 6.5244], zoom: 6 })}><Crosshair className="size-4" weight="bold" /><span className="hidden sm:inline">Near me</span></Button>
+          <TooltipProvider><Tooltip><TooltipTrigger asChild><Button size="icon-sm" onClick={locateUser} aria-label="Near me"><PersonSimple className="size-4" weight="fill" /></Button></TooltipTrigger><TooltipContent>Near me</TooltipContent></Tooltip></TooltipProvider>
         </div>
         <div className="mx-auto mt-2 flex max-w-3xl gap-2 overflow-x-auto pb-2 [scrollbar-width:none]">
           {(kind === "Events" ? eventCategories : jobCategories).map((item) => <Button key={item} size="sm" variant={category === item ? "default" : "secondary"} onClick={() => setCategory(item)} className="h-8 shrink-0 bg-background/90 backdrop-blur-xl" aria-pressed={category === item}>{item}</Button>)}
         </div>
       </section>
 
-      <aside className={`absolute bottom-4 left-4 top-[5.2rem] z-30 w-[calc(100%-2rem)] flex-col overflow-hidden rounded-xl border border-border bg-card/95 shadow-sm backdrop-blur-xl md:left-6 md:flex md:w-80 ${showBrowse ? "flex" : "hidden"}`}>
-        <div className="border-b border-border px-4 py-4"><div className="mb-4 grid grid-cols-2 gap-1 rounded-lg bg-secondary p-1"><Button variant={kind === "Events" ? "secondary" : "ghost"} size="sm" className="border-0 bg-card" onClick={() => { setKind("Events"); setCategory("All"); setSelected(initialEvent); }}><Confetti className="size-4" weight="duotone" />Events</Button><Button variant={kind === "Jobs" ? "secondary" : "ghost"} size="sm" className="border-0 bg-card" onClick={() => { const firstJob = events.find((item) => item.kind === "Jobs"); setKind("Jobs"); setCategory("All"); if (firstJob) setSelected(firstJob); }}><Briefcase className="size-4" weight="duotone" />Jobs</Button></div><div className="flex items-center justify-between"><div><p className="font-display text-2xl font-normal">In your backyard</p><p className="mt-1 text-xs text-muted-foreground">{filtered.length} {kind.toLowerCase()} to explore</p></div><Button className="md:hidden" aria-label="Close discovery" variant="ghost" size="icon" onClick={() => setShowBrowse(false)}><X className="size-4" /></Button><Sparkle className="hidden size-4 text-primary md:block" weight="duotone" /></div></div>
-        <div className="paper-scroll flex-1 overflow-y-auto p-2">
+      <aside className={`absolute bottom-4 left-4 top-[5.2rem] z-30 w-[calc(100%-2rem)] flex-col overflow-hidden rounded-xl border border-border bg-card/95 shadow-sm backdrop-blur-xl transition-[width] duration-300 md:left-6 md:flex ${sidebarCollapsed ? "md:w-14" : "md:w-80"} ${showBrowse ? "flex" : "hidden"}`}>
+        <div className={`border-b border-border ${sidebarCollapsed ? "hidden md:flex md:flex-col md:items-center md:gap-2 md:p-2" : "px-4 py-4"}`}>
+          {sidebarCollapsed ? <><TooltipProvider><Tooltip><TooltipTrigger asChild><Button variant="ghost" size="icon-sm" onClick={() => setSidebarCollapsed(false)} aria-label="Expand discovery panel"><SidebarSimple className="size-4" weight="duotone" /></Button></TooltipTrigger><TooltipContent side="right">Expand panel</TooltipContent></Tooltip><Tooltip><TooltipTrigger asChild><Button variant={kind === "Events" ? "secondary" : "ghost"} size="icon-sm" onClick={() => { setKind("Events"); setCategory("All"); }} aria-label="Events"><Confetti className="size-4" weight="duotone" /></Button></TooltipTrigger><TooltipContent side="right">Events</TooltipContent></Tooltip><Tooltip><TooltipTrigger asChild><Button variant={kind === "Jobs" ? "secondary" : "ghost"} size="icon-sm" onClick={() => { setKind("Jobs"); setCategory("All"); }} aria-label="Jobs"><Briefcase className="size-4" weight="duotone" /></Button></TooltipTrigger><TooltipContent side="right">Jobs</TooltipContent></Tooltip></TooltipProvider></> : <><div className="mb-4 grid grid-cols-2 gap-1 rounded-lg bg-secondary p-1"><Button variant={kind === "Events" ? "secondary" : "ghost"} size="sm" className="border-0 bg-card" onClick={() => { setKind("Events"); setCategory("All"); setSelected(initialEvent); }}><Confetti className="size-4" weight="duotone" />Events</Button><Button variant={kind === "Jobs" ? "secondary" : "ghost"} size="sm" className="border-0 bg-card" onClick={() => { const firstJob = events.find((item) => item.kind === "Jobs"); setKind("Jobs"); setCategory("All"); if (firstJob) setSelected(firstJob); }}><Briefcase className="size-4" weight="duotone" />Jobs</Button></div><div className="flex items-center justify-between"><div><p className="font-display text-2xl font-normal">In your backyard</p><p className="mt-1 text-xs text-muted-foreground">{filtered.length} {kind.toLowerCase()} to explore</p></div><Button className="md:hidden" aria-label="Close discovery" variant="ghost" size="icon" onClick={() => setShowBrowse(false)}><X className="size-4" /></Button><Button className="hidden md:inline-flex" aria-label="Collapse discovery panel" variant="ghost" size="icon-sm" onClick={() => setSidebarCollapsed(true)}><SidebarSimple className="size-4" weight="duotone" /></Button></div></>}
+        </div>
+        <div className={`paper-scroll flex-1 overflow-y-auto p-2 ${sidebarCollapsed ? "hidden" : "block"}`}>
           {filtered.map((event) => (
             <button key={event.id} onClick={() => { focusEvent(event); setShowBrowse(false); }} className={`mb-1 w-full rounded-lg border p-3 text-left transition-colors ${selected.id === event.id ? "border-primary bg-accent" : "border-transparent hover:bg-secondary"}`} aria-pressed={selected.id === event.id}>
                <div className="flex items-start justify-between gap-3"><span className="text-[10px] font-bold uppercase text-primary">{event.category}</span><span className="text-[10px] text-muted-foreground">{event.attendees}</span></div>
@@ -242,8 +279,9 @@ function Index() {
         </section>
       )}
 
-      <div className="absolute bottom-5 right-5 z-20 hidden flex-col gap-2 md:flex"><Button variant="secondary" size="icon" onClick={() => mapRef.current?.zoomIn()} aria-label="Zoom in"><Plus className="size-4" weight="bold" /></Button><Button variant="secondary" size="icon" onClick={() => mapRef.current?.zoomOut()} aria-label="Zoom out"><Minus className="size-4" weight="bold" /></Button></div>
+      <div className="absolute right-6 top-[13rem] z-20 hidden flex-col gap-2 md:flex"><TooltipProvider><Tooltip><TooltipTrigger asChild><Button variant="secondary" size="icon" onClick={toggleProjection} aria-label={isGlobe ? "Use flat map" : "Use globe"}>{isGlobe ? <MapTrifold className="size-4" weight="duotone" /> : <GlobeHemisphereWest className="size-4" weight="duotone" />}</Button></TooltipTrigger><TooltipContent side="left">{isGlobe ? "Flat map" : "Globe view"}</TooltipContent></Tooltip></TooltipProvider><Button variant="secondary" size="icon" onClick={() => mapRef.current?.zoomIn()} aria-label="Zoom in"><Plus className="size-4" weight="bold" /></Button><Button variant="secondary" size="icon" onClick={() => mapRef.current?.zoomOut()} aria-label="Zoom out"><Minus className="size-4" weight="bold" /></Button></div>
       <Button className="absolute right-4 top-[9.8rem] z-30 bg-background/90 backdrop-blur-xl md:hidden" variant="secondary" size="sm" onClick={() => setShowBrowse(true)}><List className="size-4" weight="duotone" />Explore <CaretRight className="size-4" weight="bold" /></Button>
+      <LocationAssistant />
     </main>
   );
 }
