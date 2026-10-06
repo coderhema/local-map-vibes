@@ -220,3 +220,7 @@
   scrollbar-width: thin;
   scrollbar-color: var(--border) transparent;
 }
+
+.event-marker.in-tour .pin-shape { background: var(--primary); border-color: var(--primary); }
+.event-marker.in-tour .pin-icon { color: var(--primary-foreground); }
+.event-marker.in-tour::after { content: attr(data-stop); position: absolute; right: -0.1rem; top: -0.35rem; z-index: 2; display: grid; place-items: center; width: 1.05rem; height: 1.05rem; border: 1.5px solid var(--background); border-radius: 999px; background: var(--plum); color: var(--primary); font: 800 0.6rem/1 var(--font-sans); }
