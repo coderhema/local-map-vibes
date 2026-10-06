@@ -273,7 +273,7 @@ function Index() {
             <Button variant="ghost" key={event.id} onClick={() => { focusEvent(event); setShowBrowse(false); }} className={`mb-2 block h-auto w-full whitespace-normal rounded-2xl border p-4 text-left transition-colors ${selected.id === event.id ? "border-primary bg-accent" : "border-transparent hover:bg-secondary"}`} aria-pressed={selected.id === event.id}>
                <div className="flex items-start justify-between gap-3"><span className="text-[10px] font-semibold uppercase text-accent-foreground">{event.category}</span><span className="text-[10px] text-muted-foreground">{event.attendees}</span></div>
                <p className="mt-1 font-display text-base font-semibold leading-tight">{event.title}</p><p className="mt-2 flex items-center gap-1 text-xs text-muted-foreground"><MapPin className="size-3" weight="duotone" />{event.place}</p><p className="mt-2 text-xs font-semibold">{event.date}</p>
-            </button>
+            </Button>
           ))}
         </div>
       </aside>
