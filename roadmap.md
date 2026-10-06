@@ -1,8 +1,8 @@
 # Roadmap
 
-- [ ] Add collapsible desktop discovery panel
-- [ ] Replace Near me label with person icon and tooltip
-- [ ] Refine map pins and selection motion
-- [ ] Add globe/flat map switch
-- [ ] Add one browser-saved AI location conversation
+- [x] Add collapsible desktop discovery panel
+- [x] Replace Near me label with person icon and tooltip
+- [x] Refine map pins and selection motion
+- [x] Add globe/flat map switch
+- [x] Add one browser-saved AI location conversation
 - [ ] Verify desktop and mobile interactions
