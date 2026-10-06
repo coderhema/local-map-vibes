@@ -251,6 +251,13 @@ function Index() {
     else if (mapRef.current?.getSource("event-route")) drawRoute([], false);
   }, [tour]);
 
+  useEffect(() => {
+    markerRefs.current.forEach((node, id) => {
+      const item = events.find((e) => e.id === id);
+      node.style.display = item && filtered.some((f) => f.id === id) ? "" : "none";
+    });
+  });
+
   function playNotificationPing() {
     if (!window.AudioContext) return;
     const audioContext = new AudioContext();
