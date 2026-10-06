@@ -164,8 +164,14 @@
   50% { transform: translateY(-5px); }
 }
 
-.map-shell { position: absolute !important; }
+.map-shell {
+  position: absolute !important;
+  background: var(--background);
+  overflow: hidden;
+}
 .map-shell .maplibregl-canvas { outline: none; }
+.map-shell .maplibregl-canvas-container { cursor: grab; }
+.map-shell .maplibregl-canvas-container:active { cursor: grabbing; }
 .map-shell .maplibregl-ctrl-attrib { display: none; }
 .event-marker { animation: float-pin 2.8s ease-in-out infinite; }
 .event-marker {
