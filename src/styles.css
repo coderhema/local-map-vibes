@@ -6,9 +6,9 @@
 @custom-variant dark (&:is(.dark *));
 
 /*
- * Design system: Wise-inspired — deep forest green with lime voltage.
- * Light theme. Pills everywhere, blocky 900 display type, hairline borders.
- * All colors in oklch.
+ * Design system: Wise-inspired shapes, lilac palette — deep plum ink with
+ * lilac voltage. Light theme. Pills everywhere, blocky 900 display type,
+ * hairline borders. All colors in oklch.
  */
 
 @theme inline {
@@ -56,8 +56,8 @@
   --color-surface-strong: var(--surface-strong);
   --color-live: var(--live);
   --color-live-foreground: var(--live-foreground);
-  --color-forest: var(--forest);
-  --color-lime-glow: var(--lime-glow);
+  --color-plum: var(--plum);
+  --color-lilac: var(--lilac);
   --font-sans: "Inter", ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
   --font-display: "Inter", ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
 }
@@ -68,33 +68,33 @@
   /* Paper */
   --background: oklch(1 0 0);
   --foreground: oklch(0.395 0.004 145.5); /* Charcoal */
-  /* Forest Ink #163300 */
-  --forest: oklch(0.287 0.084 135.1);
-  /* Lime Voltage #9fe870 */
-  --lime-glow: oklch(0.857 0.170 134.6);
+  /* Plum Ink #2a1546 */
+  --plum: oklch(0.300 0.095 305);
+  /* Lilac Voltage #d8b4fe */
+  --lilac: oklch(0.820 0.130 310);
   --card: oklch(1 0 0 / 92%);
   --card-foreground: var(--foreground);
   --popover: oklch(1 0 0);
   --popover-foreground: var(--foreground);
-  --primary: oklch(0.857 0.170 134.6); /* Lime Voltage */
-  --primary-foreground: oklch(0.287 0.084 135.1); /* Forest Ink */
-  --secondary: oklch(0.936 0.007 132.4); /* Fog */
-  --secondary-foreground: oklch(0.287 0.084 135.1);
-  --muted: oklch(0.936 0.007 132.4);
-  --muted-foreground: oklch(0.529 0.004 145.5); /* Slate */
-  --accent: oklch(0.950 0.048 133.0); /* Linen Mist */
-  --accent-foreground: oklch(0.287 0.084 135.1);
+  --primary: oklch(0.820 0.130 310); /* Lilac Voltage */
+  --primary-foreground: oklch(0.300 0.095 305); /* Plum Ink */
+  --secondary: oklch(0.950 0.014 305); /* Lavender Fog */
+  --secondary-foreground: oklch(0.300 0.095 305);
+  --muted: oklch(0.950 0.014 305);
+  --muted-foreground: oklch(0.529 0.010 300); /* Slate */
+  --accent: oklch(0.955 0.035 310); /* Lilac Mist */
+  --accent-foreground: oklch(0.300 0.095 305);
   --destructive: oklch(0.548 0.198 24.8); /* Alarm Red */
   --destructive-foreground: oklch(1 0 0);
-  --border: oklch(0.62 0.001 106.4 / 45%); /* Pebble hairline */
-  --input: oklch(0.62 0.001 106.4 / 60%);
-  --ring: oklch(0.370 0.091 153.7); /* Spruce */
+  --border: oklch(0.62 0.02 300 / 45%); /* Pebble hairline */
+  --input: oklch(0.62 0.02 300 / 60%);
+  --ring: oklch(0.450 0.140 305); /* Violet */
   --surface: oklch(1 0 0 / 88%);
   --surface-strong: oklch(1 0 0);
-  --live: oklch(0.857 0.170 134.6);
-  --live-foreground: oklch(0.287 0.084 135.1);
+  --live: oklch(0.820 0.130 310);
+  --live-foreground: oklch(0.300 0.095 305);
   --chart-1: var(--primary);
-  --chart-2: oklch(0.370 0.091 153.7); /* Spruce */
+  --chart-2: oklch(0.450 0.140 305); /* Violet */
   --chart-3: oklch(0.399 0.088 241.4); /* Signal Blue */
   --chart-4: var(--foreground);
   --chart-5: var(--muted-foreground);
