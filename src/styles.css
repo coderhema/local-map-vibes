@@ -64,83 +64,49 @@
   --color-surface-strong: var(--surface-strong);
   --color-live: var(--live);
   --color-live-foreground: var(--live-foreground);
-  --font-sans: "Manrope", "Segoe UI", sans-serif;
-  --font-display: "Fraunces", Georgia, serif;
+  --font-sans: "SF Pro Text", -apple-system, BlinkMacSystemFont, "Inter", sans-serif;
+  --font-display: "SF Pro Display", -apple-system, BlinkMacSystemFont, "Inter", sans-serif;
 }
 
-:root {
-  --radius: 0.5rem;
-  --background: oklch(0.997 0.004 110);
-  --foreground: oklch(0.20 0.005 286);
-  --card: oklch(1 0 0 / 94%);
-  --card-foreground: oklch(0.20 0.005 286);
-  --popover: oklch(1 0 0);
-  --popover-foreground: oklch(0.20 0.005 286);
-  --primary: oklch(0.67 0.12 226);
-  --primary-foreground: oklch(0.20 0.005 286);
-  --secondary: oklch(0.98 0.006 120);
-  --secondary-foreground: oklch(0.31 0.005 286);
-  --muted: oklch(0.98 0.006 120);
-  --muted-foreground: oklch(0.50 0.008 286);
-  --accent: oklch(0.95 0.025 225);
-  --accent-foreground: oklch(0.33 0.06 226);
-  --destructive: oklch(0.64 0.22 25);
-  --destructive-foreground: oklch(0.98 0.01 94);
-  --border: oklch(0.90 0.01 150);
-  --input: oklch(0.97 0.006 120);
-  --ring: oklch(0.67 0.12 226);
-  --surface: oklch(1 0 0 / 86%);
-  --surface-strong: oklch(1 0 0);
-  --live: oklch(0.67 0.12 226);
-  --live-foreground: oklch(0.20 0.005 286);
-  --chart-1: oklch(0.646 0.222 41.116);
-  --chart-2: oklch(0.6 0.118 184.704);
-  --chart-3: oklch(0.398 0.07 227.392);
-  --chart-4: oklch(0.828 0.189 84.429);
-  --chart-5: oklch(0.769 0.188 70.08);
-  --sidebar: oklch(0.984 0.003 247.858);
-  --sidebar-foreground: oklch(0.129 0.042 264.695);
-  --sidebar-primary: oklch(0.208 0.042 265.755);
-  --sidebar-primary-foreground: oklch(0.984 0.003 247.858);
-  --sidebar-accent: oklch(0.968 0.007 247.896);
-  --sidebar-accent-foreground: oklch(0.208 0.042 265.755);
-  --sidebar-border: oklch(0.929 0.013 255.508);
-  --sidebar-ring: oklch(0.704 0.04 256.788);
-}
-
-.dark {
-  --background: oklch(0.129 0.042 264.695);
-  --foreground: oklch(0.984 0.003 247.858);
-  --card: oklch(0.208 0.042 265.755);
-  --card-foreground: oklch(0.984 0.003 247.858);
-  --popover: oklch(0.208 0.042 265.755);
-  --popover-foreground: oklch(0.984 0.003 247.858);
-  --primary: oklch(0.929 0.013 255.508);
-  --primary-foreground: oklch(0.208 0.042 265.755);
-  --secondary: oklch(0.279 0.041 260.031);
-  --secondary-foreground: oklch(0.984 0.003 247.858);
-  --muted: oklch(0.279 0.041 260.031);
-  --muted-foreground: oklch(0.704 0.04 256.788);
-  --accent: oklch(0.279 0.041 260.031);
-  --accent-foreground: oklch(0.984 0.003 247.858);
-  --destructive: oklch(0.704 0.191 22.216);
-  --destructive-foreground: oklch(0.984 0.003 247.858);
-  --border: oklch(1 0 0 / 10%);
-  --input: oklch(1 0 0 / 15%);
-  --ring: oklch(0.551 0.027 264.364);
-  --chart-1: oklch(0.488 0.243 264.376);
-  --chart-2: oklch(0.696 0.17 162.48);
-  --chart-3: oklch(0.769 0.188 70.08);
-  --chart-4: oklch(0.627 0.265 303.9);
-  --chart-5: oklch(0.645 0.246 16.439);
-  --sidebar: oklch(0.208 0.042 265.755);
-  --sidebar-foreground: oklch(0.984 0.003 247.858);
-  --sidebar-primary: oklch(0.488 0.243 264.376);
-  --sidebar-primary-foreground: oklch(0.984 0.003 247.858);
-  --sidebar-accent: oklch(0.279 0.041 260.031);
-  --sidebar-accent-foreground: oklch(0.984 0.003 247.858);
-  --sidebar-border: oklch(1 0 0 / 10%);
-  --sidebar-ring: oklch(0.551 0.027 264.364);
+:root, .dark {
+  color-scheme: dark;
+  --radius: 1.75rem;
+  --background: oklch(0 0 0);
+  --foreground: oklch(0.972 0.003 286);
+  --card: oklch(0.178 0 0 / 96%);
+  --card-foreground: var(--foreground);
+  --popover: oklch(0.235 0.004 286);
+  --popover-foreground: var(--foreground);
+  --primary: oklch(0.557 0.196 256);
+  --primary-foreground: oklch(1 0 0);
+  --secondary: oklch(0.321 0.005 286);
+  --secondary-foreground: oklch(0.845 0 0);
+  --muted: oklch(0.235 0.004 286);
+  --muted-foreground: oklch(0.64 0.008 286);
+  --accent: oklch(0.557 0.196 256 / 16%);
+  --accent-foreground: oklch(0.8 0.11 256);
+  --destructive: oklch(0.7 0.19 25);
+  --destructive-foreground: var(--foreground);
+  --border: oklch(0.46 0.006 286 / 45%);
+  --input: oklch(0.321 0.005 286);
+  --ring: var(--primary);
+  --surface: oklch(0.178 0 0 / 82%);
+  --surface-strong: oklch(0.178 0 0);
+  --live: oklch(0.72 0.18 48);
+  --live-foreground: var(--background);
+  --chart-1: var(--primary);
+  --chart-2: oklch(0.78 0.24 150);
+  --chart-3: var(--live);
+  --chart-4: var(--foreground);
+  --chart-5: var(--muted-foreground);
+  --sidebar: var(--card);
+  --sidebar-foreground: var(--foreground);
+  --sidebar-primary: var(--primary);
+  --sidebar-primary-foreground: var(--primary-foreground);
+  --sidebar-accent: var(--secondary);
+  --sidebar-accent-foreground: var(--foreground);
+  --sidebar-border: var(--border);
+  --sidebar-ring: var(--ring);
 }
 
 @layer base {
@@ -184,10 +150,9 @@
 
 .map-shell {
   position: absolute !important;
-  background: var(--secondary);
+  background: var(--background);
   overflow: hidden;
-  border: 1px solid var(--border);
-  box-shadow: 0 20px 70px color-mix(in oklab, var(--foreground) 9%, transparent);
+  border: 0;
 }
 .map-shell .maplibregl-canvas { outline: none; }
 .map-shell .maplibregl-canvas-container { cursor: grab; }
@@ -201,9 +166,9 @@
   background: transparent;
   cursor: pointer;
   overflow: visible;
-  transition: filter 180ms ease, transform 180ms ease;
+  transition: filter 180ms ease;
 }
-.event-marker:hover { filter: drop-shadow(0 7px 10px color-mix(in oklab, var(--foreground) 28%, transparent)); transform: translateY(-2px); }
+.event-marker:hover { filter: drop-shadow(0 7px 10px color-mix(in oklab, var(--foreground) 28%, transparent)); }
 .event-marker .pin-shape {
   position: absolute;
   left: 0.34rem;
@@ -214,10 +179,10 @@
   height: 1.92rem;
   place-items: center;
   border-radius: 50% 50% 50% 10%;
-  border: 2px solid var(--card);
-  background: var(--card);
-  outline: 1px solid var(--foreground);
-  box-shadow: 0 5px 14px color-mix(in oklab, var(--foreground) 24%, transparent);
+  border: 2px solid var(--primary-foreground);
+  background: var(--foreground);
+  outline: 1px solid var(--background);
+  box-shadow: none;
   transform: rotate(-45deg);
   animation: float-pin 2.8s ease-in-out infinite;
   transition: background-color 180ms ease, outline-color 180ms ease;
@@ -229,7 +194,7 @@
 .event-marker:hover .pin-label,
 .event-marker:focus-visible .pin-label { opacity: 1; transform: translate(-50%, 0); }
 .event-marker.active .pin-shape { background: var(--primary); outline-color: var(--primary); }
-.event-marker.active .pin-core { border-color: var(--background); background: var(--background); }
+.event-marker.active .pin-core { border-color: var(--primary-foreground); background: var(--primary-foreground); }
 .event-marker.active .pin-pulse { animation: pin-pulse 1.8s ease-out infinite; }
 .maplibregl-popup-content {
   background: var(--popover);
