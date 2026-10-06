@@ -80,7 +80,7 @@ const pinIconPaths: Record<string, string> = {
 };
 
 function pinIconSvg(category: string) {
-  const path = pinIconPaths[category] ?? pinIconPaths.Briefcase;
+  const path = pinIconPaths[category] ?? pinIconPaths["Briefcase"];
   return `<svg class="pin-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" fill="currentColor" aria-hidden="true"><path d="${path}"/></svg>`;
 }
 
@@ -97,6 +97,8 @@ function Index() {
   const [showBrowse, setShowBrowse] = useState(false);
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [isGlobe, setIsGlobe] = useState(true);
+  const [tour, setTour] = useState<EventItem[]>([]);
+  const tourActionRef = useRef<(event: EventItem, shift: boolean) => void>(() => {});
 
   const filtered = events.filter((event) => {
     const inCategory = category === "All" || event.category === category;
@@ -125,10 +127,10 @@ function Index() {
       map.on("style.load", () => {
         map.setProjection({ type: "globe" });
         map.setPadding({ top: 210, right: 0, bottom: 0, left: 0 });
-        tintBasemap(map);
+        tintBasemap(map as unknown as Parameters<typeof tintBasemap>[0]);
         map.addSource("event-route", {
           type: "geojson",
-          data: { type: "Feature", properties: {}, geometry: { type: "LineString", coordinates: [[3.4219, 6.4281], [18.4241, -33.9249], [13.405, 52.52], [-43.1729, -22.9068]] } },
+          data: { type: "FeatureCollection", features: [] },
         });
         map.addLayer({ id: "event-route-shadow", type: "line", source: "event-route", paint: { "line-color": "#2a1546", "line-width": 5, "line-opacity": 0.22 } });
         map.addLayer({ id: "event-route", type: "line", source: "event-route", paint: { "line-color": "#7c4ddb", "line-width": 2.4, "line-opacity": 0.95, "line-dasharray": [2, 1.6] } });
@@ -138,7 +140,21 @@ function Index() {
         node.className = `event-marker${event.id === 1 ? " active" : ""}`;
         node.setAttribute("aria-label", `Open ${event.title}`);
         node.innerHTML = `<span class="pin-pulse"></span><span class="pin-shape">${pinIconSvg(event.category)}</span><span class="pin-shadow"></span><span class="pin-label">${event.title}</span>`;
-        node.addEventListener("click", () => {
+        let pressTimer = 0;
+        let longPressed = false;
+        const startPress = (e: PointerEvent) => {
+          longPressed = false;
+          const shift = e.shiftKey;
+          pressTimer = window.setTimeout(() => { longPressed = true; tourActionRef.current(event, shift); }, 450);
+        };
+        const cancelPress = () => window.clearTimeout(pressTimer);
+        node.addEventListener("pointerdown", startPress);
+        node.addEventListener("pointerup", cancelPress);
+        node.addEventListener("pointerleave", cancelPress);
+        node.addEventListener("contextmenu", (e) => e.preventDefault());
+        node.addEventListener("click", (e) => {
+          if (longPressed) { longPressed = false; return; }
+          if (e.shiftKey) { tourActionRef.current(event, true); return; }
           setSelected(event);
           setShowPanel(true);
           markerRefs.current.forEach((marker) => marker.classList.remove("active"));
@@ -196,14 +212,51 @@ function Index() {
     });
   }
 
-  function showDirections(event: EventItem) {
+  function drawRoute(coordinates: [number, number][], fit = true) {
     const map = mapRef.current;
     if (!map) return;
-    const origin: [number, number] = [3.3792, 6.5244];
     const source = map.getSource("event-route") as import("maplibre-gl").GeoJSONSource | undefined;
-    source?.setData({ type: "Feature", properties: {}, geometry: { type: "LineString", coordinates: [origin, event.coordinates] } });
-    map.fitBounds([origin, event.coordinates], { padding: 120, duration: 1400, maxZoom: 7 });
+    source?.setData(coordinates.length > 1 ? { type: "Feature", properties: {}, geometry: { type: "LineString", coordinates } } : { type: "FeatureCollection", features: [] });
+    if (fit && coordinates.length > 1) map.fitBounds([coordinates.reduce((a, c) => [Math.min(a[0], c[0]), Math.min(a[1], c[1])] as [number, number]), coordinates.reduce((a, c) => [Math.max(a[0], c[0]), Math.max(a[1], c[1])] as [number, number])], { padding: 140, duration: 1400, maxZoom: 7 });
   }
+
+  function showDirections(event: EventItem) {
+    setTour([]);
+    const go = (origin: [number, number]) => drawRoute([origin, event.coordinates]);
+    if (!navigator.geolocation) return go([3.3792, 6.5244]);
+    navigator.geolocation.getCurrentPosition(
+      ({ coords }) => go([coords.longitude, coords.latitude]),
+      () => { toast("Routing from Lagos", { description: "Allow location access to route from where you are." }); go([3.3792, 6.5244]); },
+      { enableHighAccuracy: true, timeout: 6000 },
+    );
+  }
+
+  tourActionRef.current = (event, shift) => {
+    setTour((current) => {
+      if (current.some((stop) => stop.id === event.id)) return current;
+      const next = shift && current.length ? [...current, event] : [event];
+      if (next.length === 1) toast("Pinned to your yard-tour", { description: "Shift + hold another pin to add the next stop." });
+      else toast.success(`Stop ${next.length} added`, { description: event.title });
+      return next;
+    });
+  };
+
+  useEffect(() => {
+    markerRefs.current.forEach((node, id) => {
+      const index = tour.findIndex((stop) => stop.id === id);
+      node.classList.toggle("in-tour", index >= 0);
+      node.dataset["stop"] = index >= 0 ? String(index + 1) : "";
+    });
+    if (tour.length) drawRoute(tour.map((stop) => stop.coordinates), tour.length > 1);
+    else if (mapRef.current?.getSource("event-route")) drawRoute([], false);
+  }, [tour]);
+
+  useEffect(() => {
+    markerRefs.current.forEach((node, id) => {
+      const item = events.find((e) => e.id === id);
+      node.style.display = item && filtered.some((f) => f.id === id) ? "" : "none";
+    });
+  });
 
   function playNotificationPing() {
     if (!window.AudioContext) return;
@@ -294,6 +347,18 @@ function Index() {
 
       <div className="absolute right-6 top-[13rem] z-20 hidden flex-col gap-2 md:flex"><TooltipProvider><Tooltip><TooltipTrigger asChild><Button variant="secondary" size="icon" onClick={toggleProjection} aria-label={isGlobe ? "Use flat map" : "Use globe"}>{isGlobe ? <MapTrifold className="size-4" weight="duotone" /> : <GlobeHemisphereWest className="size-4" weight="duotone" />}</Button></TooltipTrigger><TooltipContent side="left">{isGlobe ? "Flat map" : "Globe view"}</TooltipContent></Tooltip></TooltipProvider><Button variant="secondary" size="icon" onClick={() => mapRef.current?.zoomIn()} aria-label="Zoom in"><Plus className="size-4" weight="bold" /></Button><Button variant="secondary" size="icon" onClick={() => mapRef.current?.zoomOut()} aria-label="Zoom out"><Minus className="size-4" weight="bold" /></Button></div>
       <Button className="absolute right-4 top-[9.8rem] z-30 bg-background/90 backdrop-blur-xl md:hidden" variant="secondary" size="sm" onClick={() => setShowBrowse(true)}><List className="size-4" weight="duotone" />Explore <CaretRight className="size-4" weight="bold" /></Button>
+      {tour.length > 0 && (
+        <section className="absolute left-1/2 top-[10.5rem] z-30 w-[min(92vw,34rem)] -translate-x-1/2 rounded-[28px] border border-border bg-card/95 px-4 py-3 backdrop-blur-xl">
+          <div className="flex items-center justify-between gap-3">
+            <p className="font-display text-base font-black tracking-tight">Yard-tour · {tour.length} {tour.length === 1 ? "stop" : "stops"}</p>
+            <Button variant="ghost" size="sm" onClick={() => setTour([])}><X className="size-4" /> Clear</Button>
+          </div>
+          <div className="mt-2 flex gap-2 overflow-x-auto [scrollbar-width:none]">
+            {tour.map((stop, index) => <span key={stop.id} className="flex shrink-0 items-center gap-2 rounded-full bg-accent px-3 py-1 text-xs font-semibold text-accent-foreground"><span className="grid size-5 place-items-center rounded-full bg-plum text-[10px] text-primary">{index + 1}</span>{stop.title}</span>)}
+          </div>
+          {tour.length === 1 && <p className="mt-2 text-xs text-muted-foreground">Hold Shift and press-and-hold another pin to add the next stop.</p>}
+        </section>
+      )}
       <LocationAssistant />
     </main>
   );
