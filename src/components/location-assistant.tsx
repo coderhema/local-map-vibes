@@ -24,19 +24,26 @@ function loadMessages(): UIMessage[] {
 
 export function LocationAssistant() {
   const [open, setOpen] = useState(false);
+  const [storageReady, setStorageReady] = useState(false);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const transport = useMemo(() => new DefaultChatTransport({ api: "/api/chat" }), []);
   const { messages, sendMessage, status, stop, setMessages, error } = useChat({
     id: "backyard-location-guide",
-    messages: loadMessages(),
+    messages: [],
     transport,
     onError: (chatError) => toast.error("Yard Guide couldn’t respond", { description: chatError.message }),
   });
   const busy = status === "submitted" || status === "streaming";
 
   useEffect(() => {
+    setMessages(loadMessages());
+    setStorageReady(true);
+  }, [setMessages]);
+
+  useEffect(() => {
+    if (!storageReady) return;
     window.localStorage.setItem(STORAGE_KEY, JSON.stringify(messages));
-  }, [messages]);
+  }, [messages, storageReady]);
 
   useEffect(() => {
     if (open && !busy) textareaRef.current?.focus();
@@ -75,7 +82,7 @@ export function LocationAssistant() {
           <div className="shrink-0 border-t border-border bg-background/80 p-3">
             <PromptInput onSubmit={async ({ text }) => { const value = text.trim(); if (!value || busy) return; await sendMessage({ text: value }); }}>
               <PromptInputTextarea ref={textareaRef} placeholder="Find me a creative neighborhood in Lagos…" className="min-h-20" />
-              <PromptInputFooter className="justify-end"><PromptInputSubmit status={status} onStop={stop} disabled={!busy && false} /></PromptInputFooter>
+              <PromptInputFooter className="justify-end"><PromptInputSubmit status={status} onStop={stop} /></PromptInputFooter>
             </PromptInput>
           </div>
         </section>
