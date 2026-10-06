@@ -111,7 +111,7 @@ function Index() {
 
   return (
     <main className="relative h-dvh min-h-[640px] overflow-hidden bg-background text-foreground">
-      <div ref={mapContainer} className="map-shell absolute inset-x-0 top-[9rem] bottom-[-24%]" aria-label="Interactive globe showing events" />
+      <div ref={mapContainer} className="map-shell absolute inset-x-0 top-[9rem] h-[calc(124dvh-9rem)]" aria-label="Interactive globe showing events" />
       <div className="pointer-events-none absolute inset-0 bg-[linear-gradient(to_bottom,var(--background)_0%,transparent_28%,transparent_76%,var(--background)_110%)]" />
 
       <header className="relative z-20 flex h-20 items-center justify-between border-b border-border/60 bg-background/90 px-5 backdrop-blur-xl md:px-8">
