@@ -61,9 +61,9 @@ function Index() {
     async function mountMap() {
       if (!mapContainer.current || mapRef.current) return;
       const maplibregl = await import("maplibre-gl");
-      const mapWorker = await import("maplibre-gl/dist/maplibre-gl-csp-worker?worker");
+      const mapWorker = await import("maplibre-gl/dist/maplibre-gl-worker.mjs?url");
       if (disposed || !mapContainer.current) return;
-      maplibregl.setWorkerClass(mapWorker.default);
+      maplibregl.setWorkerUrl(mapWorker.default);
       const map = new maplibregl.Map({
         container: mapContainer.current,
         style: "https://basemaps.cartocdn.com/gl/dark-matter-gl-style/style.json",
