@@ -10,3 +10,4 @@
 <!-- LOVABLE:END -->
 
 - Keep the event discovery experience map-first, with MapLibre loaded client-side to preserve SSR safety.
+- Keep Yard Guide as one browser-persisted conversation because location help should remain lightweight without requiring account history.
