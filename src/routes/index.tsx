@@ -28,8 +28,10 @@ type EventItem = {
   coordinates: [number, number];
 };
 
+const initialEvent: EventItem = { id: 1, title: "Lagos Art & Culture Week", place: "Victoria Island, Lagos", date: "Oct 10 · 18:00", category: "Culture", attendees: "2.4k", coordinates: [3.4219, 6.4281] };
+
 const events: EventItem[] = [
-  { id: 1, title: "Lagos Art & Culture Week", place: "Victoria Island, Lagos", date: "Oct 10 · 18:00", category: "Culture", attendees: "2.4k", coordinates: [3.4219, 6.4281] },
+  initialEvent,
   { id: 2, title: "Cape Town Jazz Nights", place: "Waterfront, Cape Town", date: "Oct 12 · 20:00", category: "Music", attendees: "860", coordinates: [18.4241, -33.9249] },
   { id: 3, title: "Berlin Future Forum", place: "Kreuzberg, Berlin", date: "Oct 16 · 09:00", category: "Technology", attendees: "1.1k", coordinates: [13.405, 52.52] },
   { id: 4, title: "Rio Street Food Festival", place: "Copacabana, Rio", date: "Oct 19 · 12:00", category: "Food", attendees: "3.8k", coordinates: [-43.1729, -22.9068] },
@@ -43,7 +45,7 @@ function Index() {
   const mapContainer = useRef<HTMLDivElement>(null);
   const mapRef = useRef<import("maplibre-gl").Map | null>(null);
   const [category, setCategory] = useState("All events");
-  const [selected, setSelected] = useState<EventItem>(events[0]);
+  const [selected, setSelected] = useState<EventItem>(initialEvent);
   const [query, setQuery] = useState("");
   const [alerts, setAlerts] = useState(false);
   const [showPanel, setShowPanel] = useState(true);
@@ -72,12 +74,12 @@ function Index() {
       mapRef.current = map;
       map.on("style.load", () => {
         map.setProjection({ type: "globe" });
-        map.setFog({ color: "rgb(10, 27, 32)", "high-color": "rgb(20, 52, 58)", "horizon-blend": 0.08 });
+        const routeColor = getComputedStyle(document.documentElement).getPropertyValue("--primary").trim();
         map.addSource("event-route", {
           type: "geojson",
           data: { type: "Feature", properties: {}, geometry: { type: "LineString", coordinates: [[3.4219, 6.4281], [18.4241, -33.9249], [13.405, 52.52], [-43.1729, -22.9068]] } },
         });
-        map.addLayer({ id: "event-route", type: "line", source: "event-route", paint: { "line-color": "#f3ad48", "line-width": 2, "line-opacity": 0.72, "line-dasharray": [2, 2] } });
+        map.addLayer({ id: "event-route", type: "line", source: "event-route", paint: { "line-color": routeColor, "line-width": 2, "line-opacity": 0.72, "line-dasharray": [2, 2] } });
       });
       events.forEach((event) => {
         const node = document.createElement("button");
