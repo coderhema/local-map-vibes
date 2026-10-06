@@ -5,4 +5,4 @@
 - [x] Refine map pins and selection motion
 - [x] Add globe/flat map switch
 - [x] Add one browser-saved AI location conversation
-- [ ] Verify desktop and mobile interactions
+- [x] Verify desktop and mobile interactions
