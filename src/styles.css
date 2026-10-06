@@ -186,9 +186,8 @@
   border: 1px solid var(--foreground);
   box-shadow: 0 3px 10px color-mix(in oklab, var(--foreground) 20%, transparent);
   cursor: pointer;
-  animation: float-pin 2.8s ease-in-out infinite;
 }
-.event-marker > span { font-weight: 700; font-size: 0.62rem; }
+.event-marker > span { font-weight: 700; font-size: 0.62rem; animation: float-pin 2.8s ease-in-out infinite; }
 .event-marker.active { background: var(--primary); color: var(--background); border-color: var(--primary); }
 .maplibregl-popup-content {
   background: var(--popover);
@@ -200,7 +199,7 @@
 }
 .maplibregl-popup-tip { border-top-color: var(--popover) !important; }
 .maplibregl-popup-close-button { color: var(--muted-foreground); padding: 0.2rem 0.4rem; }
-@media (prefers-reduced-motion: reduce) { .event-marker { animation: none; } }
+@media (prefers-reduced-motion: reduce) { .event-marker > span { animation: none; } }
 
 .editorial-map {
   border-radius: 50% 50% 0 0 / 18% 18% 0 0;
