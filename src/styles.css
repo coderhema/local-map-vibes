@@ -164,6 +164,19 @@
   50% { transform: translateY(-5px); }
 }
 
+@keyframes notification-ring {
+  0%, 100% { transform: rotate(0); }
+  20% { transform: rotate(15deg); }
+  40% { transform: rotate(-13deg); }
+  60% { transform: rotate(8deg); }
+  80% { transform: rotate(-4deg); }
+}
+
+.notification-bell {
+  animation: notification-ring 0.75s ease-out;
+  transform-origin: 50% 15%;
+}
+
 .map-shell {
   position: absolute !important;
   background: var(--secondary);
@@ -199,7 +212,10 @@
 }
 .maplibregl-popup-tip { border-top-color: var(--popover) !important; }
 .maplibregl-popup-close-button { color: var(--muted-foreground); padding: 0.2rem 0.4rem; }
-@media (prefers-reduced-motion: reduce) { .event-marker > span { animation: none; } }
+@media (prefers-reduced-motion: reduce) {
+  .event-marker > span,
+  .notification-bell { animation: none; }
+}
 
 .editorial-map {
   border-radius: 50% 50% 0 0 / 18% 18% 0 0;

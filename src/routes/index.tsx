@@ -3,7 +3,6 @@ import {
   BellRinging,
   CalendarBlank,
   CaretRight,
-  CompassRose,
   Crosshair,
   ArrowRight,
   Briefcase,
@@ -18,6 +17,7 @@ import {
   X,
 } from "@phosphor-icons/react";
 import { useEffect, useRef, useState } from "react";
+import { toast } from "sonner";
 
 import { Button } from "@/components/ui/button";
 
@@ -157,18 +157,56 @@ function Index() {
     map.fitBounds([origin, event.coordinates], { padding: 120, duration: 1400, maxZoom: 7 });
   }
 
+  function playNotificationPing() {
+    if (!window.AudioContext) return;
+    const audioContext = new AudioContext();
+    const gain = audioContext.createGain();
+    gain.gain.setValueAtTime(0.0001, audioContext.currentTime);
+    gain.gain.exponentialRampToValueAtTime(0.16, audioContext.currentTime + 0.015);
+    gain.gain.exponentialRampToValueAtTime(0.0001, audioContext.currentTime + 0.55);
+    gain.connect(audioContext.destination);
+
+    [659.25, 987.77].forEach((frequency, index) => {
+      const oscillator = audioContext.createOscillator();
+      oscillator.type = "sine";
+      oscillator.frequency.value = frequency;
+      oscillator.connect(gain);
+      oscillator.start(audioContext.currentTime + index * 0.11);
+      oscillator.stop(audioContext.currentTime + 0.45 + index * 0.11);
+    });
+    window.setTimeout(() => void audioContext.close(), 800);
+  }
+
+  function toggleAlerts() {
+    const nextValue = !alerts;
+    setAlerts(nextValue);
+    if (nextValue) {
+      playNotificationPing();
+      toast.success("Backyard alerts are on", { description: "We’ll ping you about nearby events and jobs." });
+      return;
+    }
+    toast("Backyard alerts are off");
+  }
+
+  function followSelected() {
+    setAlerts(true);
+    playNotificationPing();
+    toast.success(selected.kind === "Jobs" ? "Job saved" : "Event followed", {
+      description: selected.kind === "Jobs" ? `We’ll ping you about ${selected.title}.` : `You’ll get updates for ${selected.title}.`,
+    });
+  }
+
   return (
     <main className="relative h-dvh min-h-[640px] overflow-hidden bg-background text-foreground">
       <div ref={mapContainer} className="map-shell absolute inset-0" aria-label="Interactive map showing events and jobs" />
 
       <header className="absolute left-4 right-4 top-4 z-40 flex h-14 items-center justify-between rounded-full border border-foreground/80 bg-background/90 px-3 shadow-sm backdrop-blur-xl md:left-6 md:right-6 md:px-4">
-        <div className="flex items-center gap-3">
-          <div className="grid size-8 place-items-center rounded-full border border-foreground"><CompassRose className="size-4" weight="duotone" /></div>
+        <div className="flex items-center">
           <div><p className="font-display text-lg font-medium leading-none">Backyard</p><p className="mt-0.5 text-[9px] font-semibold uppercase text-muted-foreground">Events & jobs, nearby</p></div>
         </div>
         <div className="hidden items-center gap-2 md:flex">
           <Button variant="ghost" size="sm"><CalendarBlank className="size-4" weight="duotone" /> This month</Button>
-          <Button onClick={() => setAlerts((value) => !value)} variant={alerts ? "default" : "outline"} size="sm"><BellRinging className="size-4" weight="duotone" /> {alerts ? "Alerts on" : "Notify me"}</Button>
+          <Button onClick={toggleAlerts} variant={alerts ? "default" : "outline"} size="sm" aria-pressed={alerts}><BellRinging className={`size-4 ${alerts ? "notification-bell" : ""}`} weight={alerts ? "fill" : "duotone"} /> {alerts ? "Alerts on" : "Notify me"}</Button>
         </div>
       </header>
 
@@ -200,7 +238,7 @@ function Index() {
          <section className="absolute bottom-4 left-4 right-4 z-30 rounded-xl border border-border bg-card p-4 shadow-sm backdrop-blur-xl md:bottom-6 md:left-auto md:right-8 md:w-[25rem]">
            <div className="flex items-start justify-between gap-4"><div><p className="text-[10px] font-bold uppercase text-primary">{selected.kind === "Jobs" ? "Opportunity" : "Trending"} in {selected.place.split(",").at(-1)}</p><h1 className="mt-1 font-display text-2xl font-normal leading-tight">{selected.title}</h1></div><Button aria-label="Close details" variant="ghost" size="icon" onClick={() => setShowPanel(false)}><X className="size-4" /></Button></div>
            <div className="mt-3 flex items-center gap-4 text-xs text-muted-foreground"><span className="flex items-center gap-1"><CalendarBlank className="size-4 text-primary" weight="duotone" />{selected.date}</span><span className="flex items-center gap-1"><MapPin className="size-4 text-primary" weight="fill" />{selected.place}</span></div>
-             <div className="mt-4 flex gap-2"><Button className="flex-1" onClick={() => showDirections(selected)}><NavigationArrow className="size-4" weight="fill" /> Show route <ArrowRight className="size-4" /></Button><Button variant="secondary" onClick={() => setAlerts(true)}>{selected.kind === "Jobs" ? <Briefcase className="size-4" weight="duotone" /> : <BellRinging className="size-4" weight="duotone" />} {selected.kind === "Jobs" ? "Save" : "Follow"}</Button></div>
+              <div className="mt-4 flex gap-2"><Button className="flex-1" onClick={() => showDirections(selected)}><NavigationArrow className="size-4" weight="fill" /> Show route <ArrowRight className="size-4" /></Button><Button variant="secondary" onClick={followSelected}>{selected.kind === "Jobs" ? <Briefcase className="size-4" weight="duotone" /> : <BellRinging className={`size-4 ${alerts ? "notification-bell" : ""}`} weight={alerts ? "fill" : "duotone"} />} {selected.kind === "Jobs" ? "Save" : alerts ? "Following" : "Follow"}</Button></div>
         </section>
       )}
 
