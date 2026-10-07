@@ -111,6 +111,12 @@ function pinIconSvg(category: string) {
 }
 
 /* Great-circle interpolation so routes curve naturally over the globe */
+function LiveCountdown({ target }: { target: string | null }) {
+  const [now, setNow] = useState<number | null>(null);
+  useEffect(() => { setNow(Date.now()); const t = window.setInterval(() => setNow(Date.now()), 1000); return () => window.clearInterval(t); }, []);
+  return <>{countdown(target, now) ?? "—"}</>;
+}
+
 function countdown(target: string | null, now: number | null) {
   if (!target || now === null) return null;
   const ms = Date.parse(target) - now;
@@ -186,8 +192,6 @@ function Index() {
   const homeMarkerRef = useRef<import("maplibre-gl").Marker | null>(null);
   const [day, setDay] = useState<Date | undefined>();
   const [calOpen, setCalOpen] = useState(false);
-  const [now, setNow] = useState<number | null>(null);
-  useEffect(() => { setNow(Date.now()); const t = window.setInterval(() => setNow(Date.now()), 1000); return () => window.clearInterval(t); }, []);
   useEffect(() => {
     try { const saved = localStorage.getItem("backyard-home"); if (saved) { const h = JSON.parse(saved); setHome(h); setOrigin(h.coords); } } catch { /* ignore */ }
   }, []);
@@ -236,6 +240,7 @@ function Index() {
       });
       setMapReady(true);
       const observer = new ResizeObserver(() => map.resize());
+      map.once("remove", () => observer.disconnect());
       observer.observe(mapContainer.current);
       map.once("load", () => map.resize());
     }
@@ -245,50 +250,66 @@ function Index() {
       mapRef.current?.remove();
       mapRef.current = null;
       markerRefs.current.clear();
+      pinsRef.current.clear();
     };
   }, []);
 
   const selectedRef = useRef(initialEvent?.id);
+  const pinsRef = useRef(new Map<string, { marker: import("maplibre-gl").Marker; event: EventItem; key: string }>());
   useEffect(() => {
     const map = mapRef.current;
     if (!mapReady || !map) return;
     let cancelled = false;
-    const created: import("maplibre-gl").Marker[] = [];
     void import("maplibre-gl").then((maplibregl) => {
       if (cancelled) return;
+      const pins = pinsRef.current;
+      const seen = new Set<string>();
       events.forEach((event) => {
+        seen.add(event.id);
+        const key = `${event.title}|${event.category}|${event.kind}`;
+        const existing = pins.get(event.id);
+        if (existing && existing.key === key) {
+          existing.event = event;
+          existing.marker.setLngLat(event.coordinates);
+          return;
+        }
+        existing?.marker.remove();
         const node = document.createElement("button");
         node.className = `event-marker${event.id === selectedRef.current ? " active" : ""}`;
         node.setAttribute("aria-label", `Open ${event.title}`);
         node.style.setProperty("--pin-accent", categoryColor(event.category));
         node.innerHTML = `<span class="pin-pulse"></span><span class="pin-shape">${pinIconSvg(event.kind === "Jobs" ? "Briefcase" : event.category)}</span><span class="pin-shadow"></span><span class="pin-label">${event.title}</span>`;
+        const current = () => pins.get(event.id)?.event ?? event;
         let pressTimer = 0;
         let longPressed = false;
         const startPress = (e: PointerEvent) => {
           longPressed = false;
           const shift = e.shiftKey;
-          pressTimer = window.setTimeout(() => { longPressed = true; tourActionRef.current(event, shift); }, 450);
+          pressTimer = window.setTimeout(() => { longPressed = true; tourActionRef.current(current(), shift); }, 450);
         };
         const cancelPress = () => window.clearTimeout(pressTimer);
         node.addEventListener("pointerdown", startPress);
         node.addEventListener("pointerup", cancelPress);
         node.addEventListener("pointerleave", cancelPress);
+        node.addEventListener("pointercancel", cancelPress);
         node.addEventListener("contextmenu", (e) => e.preventDefault());
         node.addEventListener("click", (e) => {
           if (longPressed) { longPressed = false; return; }
-          if (e.shiftKey) { tourActionRef.current(event, true); return; }
-          setSelected(event);
+          const ev = current();
+          if (e.shiftKey) { tourActionRef.current(ev, true); return; }
+          setSelected(ev);
           setShowPanel(true);
           markerRefs.current.forEach((marker) => marker.classList.remove("active"));
           node.classList.add("active");
-          map.easeTo({ center: event.coordinates, zoom: Math.max(map.getZoom(), 4.5), duration: 950, essential: true });
+          map.easeTo({ center: ev.coordinates, zoom: Math.max(map.getZoom(), 4.5), duration: 950, essential: true });
         });
         markerRefs.current.set(event.id, node);
-        created.push(new maplibregl.Marker({ element: node, anchor: "bottom", subpixelPositioning: true }).setLngLat(event.coordinates).addTo(map));
+        pins.set(event.id, { marker: new maplibregl.Marker({ element: node, anchor: "bottom", subpixelPositioning: true }).setLngLat(event.coordinates).addTo(map), event, key });
       });
+      pins.forEach((pin, id) => { if (!seen.has(id)) { pin.marker.remove(); pins.delete(id); markerRefs.current.delete(id); } });
       setFilterTick((t) => t + 1);
     });
-    return () => { cancelled = true; created.forEach((m) => m.remove()); markerRefs.current.clear(); };
+    return () => { cancelled = true; };
   }, [mapReady, events]);
   const [, setFilterTick] = useState(0);
 
@@ -614,7 +635,7 @@ function Index() {
            )}
            {selected.startsAt && (
              <div className="mt-3 flex items-center justify-between gap-2 rounded-2xl bg-accent px-3 py-2">
-               <div className="flex items-center gap-2"><Timer className="size-5 text-primary" weight="duotone" /><div><p className="text-[10px] font-semibold uppercase text-muted-foreground">{selected.kind === "Jobs" ? "Applications close in" : "Starts in"}</p><p className="font-display text-sm font-black tabular-nums tracking-tight text-accent-foreground">{countdown(selected.startsAt, now) ?? "—"}</p></div></div>
+               <div className="flex items-center gap-2"><Timer className="size-5 text-primary" weight="duotone" /><div><p className="text-[10px] font-semibold uppercase text-muted-foreground">{selected.kind === "Jobs" ? "Applications close in" : "Starts in"}</p><p className="font-display text-sm font-black tabular-nums tracking-tight text-accent-foreground"><LiveCountdown target={selected.startsAt} /></p></div></div>
                <Button variant="ghost" size="sm" onClick={() => downloadIcs(selected)} aria-label="Add to calendar"><CalendarPlus className="size-4" weight="duotone" />Add</Button>
              </div>
            )}
