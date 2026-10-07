@@ -82,7 +82,7 @@ const pinIconPaths: Record<string, string> = {
 
 void pinIconPaths;
 function pinIconSvg(category: string) {
-  const [fill, outline] = pinDuotonePaths[category] ?? pinDuotonePaths["Briefcase"];
+  const [fill, outline] = (pinDuotonePaths[category] ?? pinDuotonePaths["Briefcase"])!;
   return `<svg class="pin-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" fill="currentColor" aria-hidden="true"><path d="${fill}" opacity="0.32"/><path d="${outline}"/></svg>`;
 }
 
@@ -245,19 +245,19 @@ function Index() {
     }
     const path: [number, number][] = [];
     for (let i = 0; i < coordinates.length - 1; i++) {
-      const seg = arcPoints(coordinates[i], coordinates[i + 1]);
+      const seg = arcPoints(coordinates[i]!, coordinates[i + 1]!);
       path.push(...(i ? seg.slice(1) : seg));
     }
     const duration = 1600 + 500 * (coordinates.length - 2);
     // Camera starts at origin, then glides along to the destination with the line
-    map.easeTo({ center: coordinates[0], zoom: Math.min(map.getZoom(), 3.4), duration: 700, essential: true });
+    map.easeTo({ center: coordinates[0]!, zoom: Math.min(map.getZoom(), 3.4), duration: 700, essential: true });
     const start = performance.now() + 500;
     const step = (now: number) => {
       const t = Math.min(1, Math.max(0, (now - start) / duration));
       const e = t < 0.5 ? 4 * t * t * t : 1 - (-2 * t + 2) ** 3 / 2;
       const n = Math.max(2, Math.ceil(e * path.length));
       source?.setData({ type: "Feature", properties: {}, geometry: { type: "LineString", coordinates: path.slice(0, n) } });
-      if (t > 0 && t < 1 && fit) map.jumpTo({ center: path[n - 1] });
+      if (t > 0 && t < 1 && fit) map.jumpTo({ center: path[n - 1]! });
       if (t < 1) routeAnimRef.current = requestAnimationFrame(step);
       else if (fit) map.fitBounds([path.reduce((a, c) => [Math.min(a[0], c[0]), Math.min(a[1], c[1])] as [number, number]), path.reduce((a, c) => [Math.max(a[0], c[0]), Math.max(a[1], c[1])] as [number, number])], { padding: 140, duration: 1100, maxZoom: 6 });
     };
