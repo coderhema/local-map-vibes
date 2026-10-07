@@ -11,3 +11,8 @@
 - [x] Audit visible app icons and use Phosphor icons
 - [x] Enlarge and lower the globe composition
 - [x] Refine map pins with labels and selection feedback
+- [x] Two-phase route camera (glide, then swoop into destination)
+- [x] Job work arrangement (Remote/Hybrid/In-person) + live countdown
+- [x] Calendar filter + add-to-calendar
+- [x] Hourly real-listing refresh
+- [x] User-chosen location with home pin
