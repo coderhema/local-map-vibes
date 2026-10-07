@@ -497,18 +497,18 @@ function tintBasemap(map: { getStyle: () => { layers?: { id: string; type: strin
   for (const layer of layers) {
     const id = layer.id.toLowerCase();
     if (id.startsWith("event-route")) continue;
-    if (layer.type === "background") set(layer.id, "background-color", "#fbf8ff");
+    if (layer.type === "background") set(layer.id, "background-color", "#fbfaff");
     else if (layer.type === "fill") {
-      if (id.includes("water")) set(layer.id, "fill-color", "#dccbfb");
-      else if (id.includes("park") || id.includes("landcover") || id.includes("wood") || id.includes("grass")) set(layer.id, "fill-color", "#f3ecfd");
-      else if (id.includes("building")) set(layer.id, "fill-color", "#eee6fb");
-      else set(layer.id, "fill-color", "#fbf8ff");
+      if (id.includes("water")) set(layer.id, "fill-color", "#cfe0fa");
+      else if (id.includes("park") || id.includes("landcover") || id.includes("wood") || id.includes("grass")) set(layer.id, "fill-color", "#d9f2e5");
+      else if (id.includes("building")) set(layer.id, "fill-color", "#ece9fb");
+      else set(layer.id, "fill-color", "#fbfaff");
     } else if (layer.type === "line") {
-      if (id.includes("water") || id.includes("river")) set(layer.id, "line-color", "#cdb6f7");
-      else if (id.includes("boundary") || id.includes("admin")) set(layer.id, "line-color", "#b79ae8");
-      else set(layer.id, "line-color", "#ece2fb");
+      if (id.includes("water") || id.includes("river")) set(layer.id, "line-color", "#a8c6ef");
+      else if (id.includes("boundary") || id.includes("admin")) set(layer.id, "line-color", "#b3bdf0");
+      else set(layer.id, "line-color", "#e9e8f8");
     } else if (layer.type === "symbol") {
-      set(layer.id, "text-color", id.includes("water") ? "#7c4ddb" : "#4a2d72");
+      set(layer.id, "text-color", id.includes("water") ? "#4a6ed0" : "#3d2a6e");
       set(layer.id, "text-halo-color", "#ffffff");
     }
   }
