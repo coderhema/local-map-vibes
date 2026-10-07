@@ -2,6 +2,7 @@ import { createServerFn } from "@tanstack/react-start";
 import { createClient } from "@supabase/supabase-js";
 import type { Database } from "@/integrations/supabase/types";
 
+export type WorkMode = "Remote" | "Hybrid" | "In-person";
 export type Listing = {
   id: string;
   kind: "Events" | "Jobs";
@@ -12,6 +13,8 @@ export type Listing = {
   attendees: string;
   coordinates: [number, number];
   sourceUrl: string | null;
+  workMode: WorkMode | null;
+  startsAt: string | null;
 };
 
 function publicClient() {
@@ -29,10 +32,12 @@ function publicClient() {
   });
 }
 
+const MODES: WorkMode[] = ["Remote", "Hybrid", "In-person"];
+
 export const getListings = createServerFn({ method: "GET" }).handler(async (): Promise<Listing[]> => {
   const { data, error } = await publicClient()
     .from("listings")
-    .select("id, kind, title, place, date_label, category, meta, lng, lat, source_url")
+    .select("id, kind, title, place, date_label, category, meta, lng, lat, source_url, work_mode, starts_at")
     .order("created_at", { ascending: false })
     .limit(200);
   if (error) throw new Error(error.message);
@@ -46,44 +51,19 @@ export const getListings = createServerFn({ method: "GET" }).handler(async (): P
     attendees: r.meta,
     coordinates: [r.lng, r.lat],
     sourceUrl: r.source_url,
+    workMode: r.kind === "Jobs" ? (MODES.find((m) => m === r.work_mode) ?? "In-person") : null,
+    startsAt: r.starts_at,
   }));
 });
 
-const COOLDOWN_MS = 6 * 60 * 60 * 1000;
-
-// Public trigger: starts background TinyFish runs, rate-limited so it can't drain the wallet.
+// Public trigger: rate-limited to once an hour so it can't drain the TinyFish wallet.
 export const refreshListings = createServerFn({ method: "POST" }).handler(async () => {
-  const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-  const { data: latest } = await supabaseAdmin
-    .from("scrape_runs").select("created_at").order("created_at", { ascending: false }).limit(1).maybeSingle();
-  if (latest && Date.now() - new Date(latest.created_at).getTime() < COOLDOWN_MS) return { started: 0, skipped: true };
-  const apiKey = process.env["TINYFISH_API_KEY"];
-  if (!apiKey) throw new Error("TinyFish is not configured");
-  const { startRuns } = await import("./scrape.server");
-  const runs = await startRuns(apiKey);
-  const { error } = await supabaseAdmin.from("scrape_runs").insert(runs);
-  if (error) throw new Error(error.message);
-  return { started: runs.length, skipped: false };
+  const { startRefresh } = await import("./listings.server");
+  return startRefresh();
 });
 
 // Checks pending runs and saves any finished results. Safe to call repeatedly.
 export const collectListings = createServerFn({ method: "POST" }).handler(async () => {
-  const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-  const apiKey = process.env["TINYFISH_API_KEY"];
-  if (!apiKey) return { pending: 0, added: 0 };
-  const { getRun, parseItems } = await import("./scrape.server");
-  const { data: pending } = await supabaseAdmin.from("scrape_runs").select("run_id, kind, source").eq("status", "PENDING");
-  let added = 0, still = 0;
-  for (const run of pending ?? []) {
-    const state = await getRun(apiKey, run.run_id).catch(() => null);
-    if (!state || !["COMPLETED", "FAILED", "CANCELLED"].includes(state.status)) { still++; continue; }
-    const items = state.status === "COMPLETED" ? parseItems(run.kind === "Jobs" ? "Jobs" : "Events", run.source, state.result) : [];
-    if (items.length) {
-      const { error } = await supabaseAdmin.from("listings").upsert(items.map((l) => ({ ...l, updated_at: new Date().toISOString() })), { onConflict: "kind,title,place" });
-      if (error) throw new Error(error.message);
-    }
-    added += items.length;
-    await supabaseAdmin.from("scrape_runs").update({ status: state.status, added: items.length, finished_at: new Date().toISOString() }).eq("run_id", run.run_id);
-  }
-  return { pending: still, added };
+  const { collectPending } = await import("./listings.server");
+  return collectPending();
 });

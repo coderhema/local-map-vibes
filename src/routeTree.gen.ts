@@ -11,6 +11,7 @@
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as ApiChatRouteImport } from './routes/api/chat'
+import { Route as ApiPublicHooksRefreshListingsRouteImport } from './routes/api/public/hooks/refresh-listings'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
@@ -22,31 +23,41 @@ const ApiChatRoute = ApiChatRouteImport.update({
   path: '/api/chat',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiPublicHooksRefreshListingsRoute =
+  ApiPublicHooksRefreshListingsRouteImport.update({
+    id: '/api/public/hooks/refresh-listings',
+    path: '/api/public/hooks/refresh-listings',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/api/chat': typeof ApiChatRoute
+  '/api/public/hooks/refresh-listings': typeof ApiPublicHooksRefreshListingsRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/api/chat': typeof ApiChatRoute
+  '/api/public/hooks/refresh-listings': typeof ApiPublicHooksRefreshListingsRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/api/chat': typeof ApiChatRoute
+  '/api/public/hooks/refresh-listings': typeof ApiPublicHooksRefreshListingsRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/api/chat'
+  fullPaths: '/' | '/api/chat' | '/api/public/hooks/refresh-listings'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/api/chat'
-  id: '__root__' | '/' | '/api/chat'
+  to: '/' | '/api/chat' | '/api/public/hooks/refresh-listings'
+  id: '__root__' | '/' | '/api/chat' | '/api/public/hooks/refresh-listings'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   ApiChatRoute: typeof ApiChatRoute
+  ApiPublicHooksRefreshListingsRoute: typeof ApiPublicHooksRefreshListingsRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -65,12 +76,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiChatRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/public/hooks/refresh-listings': {
+      id: '/api/public/hooks/refresh-listings'
+      path: '/api/public/hooks/refresh-listings'
+      fullPath: '/api/public/hooks/refresh-listings'
+      preLoaderRoute: typeof ApiPublicHooksRefreshListingsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   ApiChatRoute: ApiChatRoute,
+  ApiPublicHooksRefreshListingsRoute: ApiPublicHooksRefreshListingsRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
