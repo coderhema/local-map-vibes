@@ -461,7 +461,7 @@ function Index() {
   }
 
   function showDirections(event: EventItem) {
-    setTour([]);
+    setTour((t) => (t.length ? [] : t));
     routeShownRef.current = event.id;
     const go = (from: [number, number]) => { setOrigin(from); drawRoute([from, event.coordinates], true, travelMs(mode), true); };
     if (home) return go(home.coords);
