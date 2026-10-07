@@ -22,11 +22,21 @@ import {
   SidebarSimple,
   Sparkle,
   X,
+  House,
+  Laptop,
+  Buildings,
+  ArrowsLeftRight,
+  Timer,
+  CalendarPlus,
+  Crosshair,
+  HandPointing,
 } from "@phosphor-icons/react";
 import { useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
 
 import { Button } from "@/components/ui/button";
+import { Calendar } from "@/components/ui/calendar";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { LocationAssistant } from "@/components/location-assistant";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { pinDuotonePaths } from "@/lib/pin-icons";
@@ -102,6 +112,33 @@ function pinIconSvg(category: string) {
 }
 
 /* Great-circle interpolation so routes curve naturally over the globe */
+function countdown(target: string | null, now: number | null) {
+  if (!target || now === null) return null;
+  const ms = Date.parse(target) - now;
+  if (ms <= 0) return "Happening now";
+  const d = Math.floor(ms / 864e5), h = Math.floor((ms % 864e5) / 36e5), m = Math.floor((ms % 36e5) / 6e4), sec = Math.floor((ms % 6e4) / 1000);
+  return d ? `${d}d ${h}h ${m}m ${sec}s` : `${h}h ${m}m ${sec}s`;
+}
+const sameDay = (a: Date, b: Date) => a.getFullYear() === b.getFullYear() && a.getMonth() === b.getMonth() && a.getDate() === b.getDate();
+function downloadIcs(item: Listing) {
+  if (!item.startsAt) return;
+  const start = new Date(item.startsAt);
+  const end = new Date(start.getTime() + 2 * 36e5);
+  const f = (d: Date) => d.toISOString().replace(/[-:]/g, "").replace(/\.\d{3}/, "");
+  const esc = (t: string) => t.replace(/[,;\\]/g, (c) => `\\${c}`);
+  const ics = ["BEGIN:VCALENDAR", "VERSION:2.0", "PRODID:-//Backyard//EN", "BEGIN:VEVENT", `UID:${item.id}@backyard`, `DTSTAMP:${f(new Date())}`, `DTSTART:${f(start)}`, `DTEND:${f(end)}`, `SUMMARY:${esc(item.kind === "Jobs" ? `Apply: ${item.title}` : item.title)}`, `LOCATION:${esc(item.place)}`, item.sourceUrl ? `URL:${item.sourceUrl}` : "", "END:VEVENT", "END:VCALENDAR"].filter(Boolean).join("\r\n");
+  const a = document.createElement("a");
+  a.href = URL.createObjectURL(new Blob([ics], { type: "text/calendar" }));
+  a.download = `${item.title.slice(0, 40).replace(/[^\w]+/g, "-")}.ics`;
+  a.click();
+  URL.revokeObjectURL(a.href);
+}
+const WORK_MODES = [
+  { id: "Remote", Icon: Laptop },
+  { id: "Hybrid", Icon: ArrowsLeftRight },
+  { id: "In-person", Icon: Buildings },
+] as const;
+
 function arcPoints(a: [number, number], b: [number, number], steps = 96): [number, number][] {
   const r = Math.PI / 180;
   const [l1, p1, l2, p2] = [a[0] * r, a[1] * r, b[0] * r, b[1] * r];
@@ -141,11 +178,26 @@ function Index() {
   const [isGlobe, setIsGlobe] = useState(true);
   const [tour, setTour] = useState<EventItem[]>([]);
   const tourActionRef = useRef<(event: EventItem, shift: boolean) => void>(() => {});
+  const [home, setHome] = useState<{ coords: [number, number]; label: string } | null>(null);
+  const [locOpen, setLocOpen] = useState(false);
+  const [placeQuery, setPlaceQuery] = useState("");
+  const [placeResults, setPlaceResults] = useState<{ label: string; coords: [number, number] }[]>([]);
+  const pickingHomeRef = useRef(false);
+  const [pickingHome, setPickingHome] = useState(false);
+  const homeMarkerRef = useRef<import("maplibre-gl").Marker | null>(null);
+  const [day, setDay] = useState<Date | undefined>();
+  const [calOpen, setCalOpen] = useState(false);
+  const [now, setNow] = useState<number | null>(null);
+  useEffect(() => { setNow(Date.now()); const t = window.setInterval(() => setNow(Date.now()), 1000); return () => window.clearInterval(t); }, []);
+  useEffect(() => {
+    try { const saved = localStorage.getItem("backyard-home"); if (saved) { const h = JSON.parse(saved); setHome(h); setOrigin(h.coords); } } catch { /* ignore */ }
+  }, []);
 
   const filtered = events.filter((event) => {
     const inCategory = category === "All" || event.category === category;
     const matches = `${event.title} ${event.place}`.toLowerCase().includes(query.toLowerCase());
-    return event.kind === kind && inCategory && matches;
+    const onDay = !day || (event.startsAt !== null && sameDay(new Date(event.startsAt), day));
+    return event.kind === kind && inCategory && matches && onDay;
   });
 
   useEffect(() => {
@@ -176,6 +228,12 @@ function Index() {
         });
         map.addLayer({ id: "event-route-shadow", type: "line", source: "event-route", layout: { "line-cap": "round", "line-join": "round" }, paint: { "line-color": "#312e81", "line-width": 16, "line-opacity": 0.16, "line-blur": 4 } });
         map.addLayer({ id: "event-route", type: "line", source: "event-route", layout: { "line-cap": "round", "line-join": "round" }, paint: { "line-color": "#6366f1", "line-width": 8, "line-opacity": 0.95, "line-dasharray": [1.4, 1.2] } });
+      });
+      map.on("click", (e) => {
+        if (!pickingHomeRef.current) return;
+        pickingHomeRef.current = false;
+        setPickingHome(false);
+        saveHomeRef.current([e.lngLat.lng, e.lngLat.lat], "Pinned on map");
       });
       setMapReady(true);
       const observer = new ResizeObserver(() => map.resize());
@@ -259,6 +317,65 @@ function Index() {
     } finally { setRefreshing(false); }
   }
 
+  const saveHomeRef = useRef<(coords: [number, number], label: string) => void>(() => {});
+  saveHomeRef.current = (coords, label) => {
+    const h = { coords, label };
+    setHome(h);
+    setOrigin(coords);
+    localStorage.setItem("backyard-home", JSON.stringify(h));
+    setLocOpen(false);
+    mapRef.current?.easeTo({ center: coords, zoom: Math.max(mapRef.current.getZoom(), 5), duration: 1100, essential: true });
+    toast.success("Your location is set", { description: label });
+  };
+
+  useEffect(() => {
+    const map = mapRef.current;
+    if (!mapReady || !map) return;
+    homeMarkerRef.current?.remove();
+    homeMarkerRef.current = null;
+    if (!home) return;
+    let cancelled = false;
+    void import("maplibre-gl").then((maplibregl) => {
+      if (cancelled) return;
+      const node = document.createElement("div");
+      node.className = "event-marker home-marker";
+      node.setAttribute("aria-label", "Your location");
+      node.innerHTML = `<span class="pin-pulse"></span><span class="pin-shape">${pinIconSvg("House")}</span><span class="pin-shadow"></span><span class="pin-label">You · ${home.label.replace(/</g, "")}</span>`;
+      homeMarkerRef.current = new maplibregl.Marker({ element: node, anchor: "bottom", subpixelPositioning: true }).setLngLat(home.coords).addTo(map);
+    });
+    return () => { cancelled = true; };
+  }, [mapReady, home]);
+
+  useEffect(() => {
+    const q = placeQuery.trim();
+    if (q.length < 2) { setPlaceResults([]); return; }
+    const ctrl = new AbortController();
+    const t = window.setTimeout(() => {
+      fetch(`https://photon.komoot.io/api/?q=${encodeURIComponent(q)}&limit=5&layer=city&layer=state&layer=country&layer=district`, { signal: ctrl.signal })
+        .then((r) => r.json())
+        .then((d: { features: { geometry: { coordinates: [number, number] }; properties: { name?: string; state?: string; country?: string } }[] }) =>
+          setPlaceResults(d.features.map((f) => ({ coords: f.geometry.coordinates, label: [f.properties.name, f.properties.state, f.properties.country].filter((v, i, a) => v && a.indexOf(v) === i).join(", ") }))))
+        .catch(() => {});
+    }, 300);
+    return () => { ctrl.abort(); window.clearTimeout(t); };
+  }, [placeQuery]);
+
+  function useGps() {
+    if (!navigator.geolocation) { toast.error("Location is unavailable in this browser"); return; }
+    navigator.geolocation.getCurrentPosition(
+      ({ coords }) => saveHomeRef.current([coords.longitude, coords.latitude], "Current location"),
+      () => toast.error("Couldn't get your location", { description: "Search for your city or pick a spot on the map instead." }),
+      { enableHighAccuracy: true, timeout: 8000 },
+    );
+  }
+
+  function startPickOnMap() {
+    pickingHomeRef.current = true;
+    setPickingHome(true);
+    setLocOpen(false);
+    toast("Tap the map to set your location");
+  }
+
   function focusEvent(event: EventItem) {
     setSelected(event);
     setShowPanel(true);
@@ -267,6 +384,7 @@ function Index() {
   }
 
   function locateUser() {
+    if (home) { mapRef.current?.easeTo({ center: home.coords, zoom: 9, duration: 1100, essential: true }); return; }
     if (!navigator.geolocation) {
       toast.error("Location is unavailable in this browser");
       return;
@@ -295,7 +413,7 @@ function Index() {
   }
 
   const routeAnimRef = useRef(0);
-  function drawRoute(coordinates: [number, number][], fit = true, speedMs = 2200) {
+  function drawRoute(coordinates: [number, number][], fit = true, speedMs = 2200, arrive = false) {
     const map = mapRef.current;
     if (!map) return;
     const source = map.getSource("event-route") as import("maplibre-gl").GeoJSONSource | undefined;
@@ -323,6 +441,11 @@ function Index() {
       const coords = [...path.slice(0, i + 1), [a[0] + (b[0] - a[0]) * f, a[1] + (b[1] - a[1]) * f] as [number, number]];
       source?.setData({ type: "Feature", properties: {}, geometry: { type: "LineString", coordinates: coords } });
       if (t < 1) routeAnimRef.current = requestAnimationFrame(step);
+      else if (arrive) {
+        // Phase 2: swoop down into the destination, framed above the details card.
+        const wide = window.innerWidth >= 768;
+        map.flyTo({ center: coordinates.at(-1)!, zoom: 7.5, pitch: 0, curve: 1.6, speed: 0.9, padding: { top: 140, bottom: wide ? 80 : 340, left: wide ? 340 : 0, right: wide ? 440 : 0 }, essential: true, easing: (x) => 1 - (1 - x) ** 3 });
+      }
     };
     routeAnimRef.current = requestAnimationFrame(step);
   }
@@ -334,17 +457,18 @@ function Index() {
     setMode(m);
     const map = mapRef.current;
     if (map?.getLayer("event-route")) map.setPaintProperty("event-route", "line-dasharray", m === "flight" ? [1.4, 1.2] : m === "walk" ? [0.2, 1.6] : [1, 0]);
-    if (routeShownRef.current === selected.id) drawRoute([origin, selected.coordinates], true, travelMs(m));
+    if (routeShownRef.current === selected.id) drawRoute([origin, selected.coordinates], true, travelMs(m), true);
   }
 
   function showDirections(event: EventItem) {
     setTour([]);
     routeShownRef.current = event.id;
-    const go = (from: [number, number]) => { setOrigin(from); drawRoute([from, event.coordinates], true, travelMs(mode)); };
+    const go = (from: [number, number]) => { setOrigin(from); drawRoute([from, event.coordinates], true, travelMs(mode), true); };
+    if (home) return go(home.coords);
     if (!navigator.geolocation) return go(LAGOS);
     navigator.geolocation.getCurrentPosition(
       ({ coords }) => go([coords.longitude, coords.latitude]),
-      () => { toast("Routing from Lagos", { description: "Allow location access to route from where you are." }); go(LAGOS); },
+      () => { toast("Routing from Lagos", { description: "Set your location to route from where you are." }); go(LAGOS); },
       { enableHighAccuracy: true, timeout: 6000 },
     );
   }
