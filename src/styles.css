@@ -6,9 +6,10 @@
 @custom-variant dark (&:is(.dark *));
 
 /*
- * Design system: Wise-inspired shapes, lilac palette — deep plum ink with
- * lilac voltage. Light theme. Pills everywhere, blocky 900 display type,
- * hairline borders. All colors in oklch.
+ * Design system: Wise-inspired shapes, jewel-tone palette — plum ink on
+ * paper white with sapphire-indigo primary and vivid per-category accents
+ * (emerald, fuchsia, amber, tangerine). Light theme. Pills everywhere,
+ * blocky 900 display type, hairline borders. All colors in oklch/hex.
  */
 
 @theme inline {
@@ -76,23 +77,23 @@
   --card-foreground: var(--foreground);
   --popover: oklch(1 0 0);
   --popover-foreground: var(--foreground);
-  --primary: oklch(0.820 0.130 310); /* Lilac Voltage */
-  --primary-foreground: oklch(0.300 0.095 305); /* Plum Ink */
-  --secondary: oklch(0.950 0.014 305); /* Lavender Fog */
+  --primary: oklch(0.585 0.233 277.117); /* Sapphire Indigo #6366f1 */
+  --primary-foreground: oklch(0.985 0 0);
+  --secondary: oklch(0.952 0.015 277); /* Indigo Fog */
   --secondary-foreground: oklch(0.300 0.095 305);
-  --muted: oklch(0.950 0.014 305);
+  --muted: oklch(0.952 0.015 277);
   --muted-foreground: oklch(0.529 0.010 300); /* Slate */
-  --accent: oklch(0.955 0.035 310); /* Lilac Mist */
+  --accent: oklch(0.955 0.030 277); /* Indigo Mist */
   --accent-foreground: oklch(0.300 0.095 305);
   --destructive: oklch(0.548 0.198 24.8); /* Alarm Red */
   --destructive-foreground: oklch(1 0 0);
   --border: oklch(0.62 0.02 300 / 45%); /* Pebble hairline */
   --input: oklch(0.62 0.02 300 / 60%);
-  --ring: oklch(0.450 0.140 305); /* Violet */
+  --ring: oklch(0.450 0.180 277); /* Deep Indigo */
   --surface: oklch(1 0 0 / 88%);
   --surface-strong: oklch(1 0 0);
-  --live: oklch(0.820 0.130 310);
-  --live-foreground: oklch(0.300 0.095 305);
+  --live: oklch(0.585 0.233 277.117);
+  --live-foreground: oklch(0.985 0 0);
   --chart-1: var(--primary);
   --chart-2: oklch(0.450 0.140 305); /* Violet */
   --chart-3: oklch(0.399 0.088 241.4); /* Signal Blue */
@@ -179,20 +180,20 @@
   place-items: center;
   border-radius: 50% 50% 50% 12%;
   border: 0.5px solid color-mix(in oklab, var(--background) 70%, transparent);
-  background: var(--plum);
+  background: var(--pin-accent, var(--plum));
   outline: none;
   box-shadow: none;
   transform: rotate(-45deg);
   animation: float-pin 2.8s ease-in-out infinite;
   transition: background-color 180ms ease, border-color 180ms ease, outline-color 180ms ease;
 }
-.event-marker .pin-icon { width: 0.95rem; height: 0.95rem; color: oklch(0.97 0.02 310); transform: rotate(45deg); transition: color 180ms ease; }
+.event-marker .pin-icon { width: 0.95rem; height: 0.95rem; color: oklch(0.99 0 0); transform: rotate(45deg); transition: color 180ms ease; }
 .event-marker .pin-shadow { position: absolute; left: 50%; bottom: -0.14rem; width: 1.05rem; height: 0.28rem; border-radius: 999px; background: color-mix(in oklab, var(--plum) 26%, transparent); filter: blur(2px); transform: translateX(-50%); }
 .event-marker .pin-pulse { position: absolute; left: 50%; bottom: -1rem; width: 1.7rem; height: 1.7rem; border: 1px solid var(--primary); border-radius: 999px; opacity: 0; transform: translate(-50%, -50%); }
 .event-marker .pin-label { position: absolute; left: 50%; bottom: 2.7rem; width: max-content; max-width: 11rem; overflow: hidden; border: 1px solid var(--border); border-radius: 999px; background: var(--popover); color: var(--popover-foreground); padding: 0.3rem 0.6rem; font-family: var(--font-sans); font-size: 0.62rem; font-weight: 700; line-height: 1; opacity: 0; pointer-events: none; text-overflow: ellipsis; white-space: nowrap; box-shadow: 0 5px 16px color-mix(in oklab, var(--plum) 14%, transparent); transform: translate(-50%, 4px); transition: opacity 150ms ease, transform 150ms ease; }
 .event-marker:hover .pin-label,
 .event-marker:focus-visible .pin-label { opacity: 1; transform: translate(-50%, 0); }
-.event-marker.active .pin-shape { background: var(--primary); border-color: var(--primary); outline-color: color-mix(in oklab, var(--primary) 45%, transparent); }
+.event-marker.active .pin-shape { background: var(--pin-accent, var(--primary)); border-color: var(--pin-accent, var(--primary)); outline-color: color-mix(in oklab, var(--pin-accent, var(--primary)) 45%, transparent); }
 .event-marker.active .pin-icon { color: var(--primary-foreground); }
 .event-marker.active .pin-pulse { animation: pin-pulse 1.8s ease-out infinite; }
 .maplibregl-popup-content {
