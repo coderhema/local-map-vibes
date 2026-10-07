@@ -448,7 +448,7 @@ function Index() {
         <div className={`paper-scroll flex-1 overflow-y-auto p-2 ${sidebarCollapsed ? "hidden" : "block"}`}>
           {filtered.map((event) => (
             <Button variant="ghost" key={event.id} onClick={() => { focusEvent(event); setShowBrowse(false); }} className={`mb-2 block h-auto w-full whitespace-normal rounded-2xl border p-4 text-left transition-colors ${selected.id === event.id ? "border-primary bg-accent" : "border-transparent hover:bg-secondary"}`} aria-pressed={selected.id === event.id}>
-               <div className="flex items-start justify-between gap-3"><span className="text-[10px] font-semibold uppercase text-accent-foreground">{event.category}</span><span className="text-[10px] text-muted-foreground">{event.attendees}</span></div>
+               <div className="flex items-start justify-between gap-3"><span className="text-[10px] font-semibold uppercase" style={{ color: categoryColor(event.category) }}>{event.category}</span><span className="text-[10px] text-muted-foreground">{event.attendees}</span></div>
                <p className="mt-1 font-display text-base font-semibold leading-tight">{event.title}</p><p className="mt-2 flex items-center gap-1 text-xs text-muted-foreground"><MapPin className="size-3" weight="duotone" />{event.place}</p><p className="mt-2 text-xs font-semibold">{event.date}</p>
             </Button>
           ))}
@@ -457,7 +457,7 @@ function Index() {
 
       {showPanel && (
          <section className="absolute bottom-4 left-4 right-4 z-30 rounded-[28px] border border-border bg-card p-5 backdrop-blur-xl md:bottom-6 md:left-auto md:right-8 md:w-[25rem]">
-           <div className="flex items-start justify-between gap-4"><div><p className="text-[10px] font-semibold uppercase text-accent-foreground">{selected.kind === "Jobs" ? "Opportunity" : "Trending"} in {selected.place.split(",").at(-1)}</p><h1 className="mt-1 font-display text-2xl font-black tracking-tight leading-tight">{selected.title}</h1></div><Button aria-label="Close details" variant="ghost" size="icon" onClick={() => setShowPanel(false)}><X className="size-4" /></Button></div>
+           <div className="flex items-start justify-between gap-4"><div><p className="text-[10px] font-semibold uppercase" style={{ color: categoryColor(selected.category) }}>{selected.kind === "Jobs" ? "Opportunity" : "Trending"} in {selected.place.split(",").at(-1)}</p><h1 className="mt-1 font-display text-2xl font-black tracking-tight leading-tight">{selected.title}</h1></div><Button aria-label="Close details" variant="ghost" size="icon" onClick={() => setShowPanel(false)}><X className="size-4" /></Button></div>
            <div className="mt-3 flex flex-wrap items-center gap-3 text-xs text-muted-foreground"><span className="flex items-center gap-1"><CalendarBlank className="size-4 text-primary" weight="duotone" />{selected.date}</span><span className="flex items-center gap-1"><MapPin className="size-4 text-primary" weight="fill" />{selected.place}</span></div>
            <div className="mt-4 grid grid-cols-4 gap-1 rounded-full bg-muted p-1" role="radiogroup" aria-label="Mode of transport">
              {MODES.map((m) => { const Icon = { flight: AirplaneTilt, transit: Train, drive: Car, walk: PersonSimpleWalk }[m.id]; const km = distanceKm(origin, selected.coordinates); const tooFar = (m.id === "walk" && km > 60) || ((m.id === "drive" || m.id === "transit") && km > 4000); return (
@@ -480,7 +480,7 @@ function Index() {
             <Button variant="ghost" size="sm" onClick={() => setTour([])}><X className="size-4" /> Clear</Button>
           </div>
           <div className="mt-2 flex gap-2 overflow-x-auto [scrollbar-width:none]">
-            {tour.map((stop, index) => <span key={stop.id} className="flex shrink-0 items-center gap-2 rounded-full bg-accent px-3 py-1 text-xs font-semibold text-accent-foreground"><span className="grid size-5 place-items-center rounded-full bg-plum text-[10px] text-primary">{index + 1}</span>{stop.title}</span>)}
+            {tour.map((stop, index) => <span key={stop.id} className="flex shrink-0 items-center gap-2 rounded-full bg-accent px-3 py-1 text-xs font-semibold text-accent-foreground"><span className="grid size-5 place-items-center rounded-full text-[10px] text-white" style={{ background: categoryColor(stop.category) }}>{index + 1}</span>{stop.title}</span>)}
           </div>
           {tour.length === 1 && <p className="mt-2 text-xs text-muted-foreground">Hold Shift and press-and-hold another pin to add the next stop.</p>}
         </section>
