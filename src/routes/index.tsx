@@ -70,6 +70,18 @@ function formatDuration(hours: number) {
 const eventCategories = ["All", "Music", "Culture", "Technology", "Food", "Sports"];
 const jobCategories = ["All", "Design", "Technology", "Community"];
 
+/* Jewel-tone accent per category — pins, chips and labels each get their own color */
+const CATEGORY_COLORS: Record<string, string> = {
+  Music: "#d946ef", /* amethyst fuchsia */
+  Culture: "#f59e0b", /* citrine amber */
+  Technology: "#6366f1", /* sapphire indigo */
+  Food: "#f97316", /* tangerine */
+  Sports: "#10b981", /* emerald */
+  Design: "#ec4899", /* rose */
+  Community: "#06b6d4", /* topaz cyan */
+};
+const categoryColor = (c: string) => CATEGORY_COLORS[c] ?? "#2a1546";
+
 /* Phosphor bold-weight paths (viewBox 0 0 256 256) for the pin icons */
 const pinIconPaths: Record<string, string> = {
   Music: "M215.38,14.54a12,12,0,0,0-10.29-2.18l-128,32A12,12,0,0,0,68,56V159.35A40,40,0,1,0,92,196V113.37l104-26v40A40,40,0,1,0,220,164V24A12,12,0,0,0,215.38,14.54ZM52,212a16,16,0,1,1,16-16A16,16,0,0,1,52,212ZM92,88.63V65.37l104-26V62.63ZM180,180a16,16,0,1,1,16-16A16,16,0,0,1,180,180Z",
@@ -162,8 +174,8 @@ function Index() {
           type: "geojson",
           data: { type: "FeatureCollection", features: [] },
         });
-        map.addLayer({ id: "event-route-shadow", type: "line", source: "event-route", layout: { "line-cap": "round", "line-join": "round" }, paint: { "line-color": "#2a1546", "line-width": 16, "line-opacity": 0.16, "line-blur": 4 } });
-        map.addLayer({ id: "event-route", type: "line", source: "event-route", layout: { "line-cap": "round", "line-join": "round" }, paint: { "line-color": "#7c4ddb", "line-width": 8, "line-opacity": 0.95, "line-dasharray": [1.4, 1.2] } });
+        map.addLayer({ id: "event-route-shadow", type: "line", source: "event-route", layout: { "line-cap": "round", "line-join": "round" }, paint: { "line-color": "#312e81", "line-width": 16, "line-opacity": 0.16, "line-blur": 4 } });
+        map.addLayer({ id: "event-route", type: "line", source: "event-route", layout: { "line-cap": "round", "line-join": "round" }, paint: { "line-color": "#6366f1", "line-width": 8, "line-opacity": 0.95, "line-dasharray": [1.4, 1.2] } });
       });
       setMapReady(true);
       const observer = new ResizeObserver(() => map.resize());
@@ -191,6 +203,7 @@ function Index() {
         const node = document.createElement("button");
         node.className = `event-marker${event.id === selectedRef.current ? " active" : ""}`;
         node.setAttribute("aria-label", `Open ${event.title}`);
+        node.style.setProperty("--pin-accent", categoryColor(event.category));
         node.innerHTML = `<span class="pin-pulse"></span><span class="pin-shape">${pinIconSvg(event.category)}</span><span class="pin-shadow"></span><span class="pin-label">${event.title}</span>`;
         let pressTimer = 0;
         let longPressed = false;
@@ -424,7 +437,7 @@ function Index() {
           <TooltipProvider><Tooltip><TooltipTrigger asChild><Button size="icon-sm" onClick={locateUser} aria-label="Near me"><svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" fill="currentColor" viewBox="0 0 256 256" className="size-4" aria-hidden="true"><path d="M104,40a24,24,0,1,1,24,24A24,24,0,0,1,104,40Zm108.49,99.51L167.17,88.13a24,24,0,0,0-18-8.13H106.83a24,24,0,0,0-18,8.13L43.51,139.51a12,12,0,0,0,17,17L96,128,73.13,214.93a12,12,0,0,0,21.75,10.14L128,168l33.12,57.07a12,12,0,0,0,21.75-10.14L160,128l35.51,28.49a12,12,0,0,0,17-17Z" opacity="0.2"></path><path d="M160,40a32,32,0,1,0-32,32A32,32,0,0,0,160,40ZM128,56a16,16,0,1,1,16-16A16,16,0,0,1,128,56Zm90.34,78.05L173.17,82.83a32,32,0,0,0-24-10.83H106.83a32,32,0,0,0-24,10.83L37.66,134.05a20,20,0,0,0,28.13,28.43l16.3-13.08L65.55,212.28A20,20,0,0,0,102,228.8l26-44.87,26,44.87a20,20,0,0,0,36.41-16.52L173.91,149.4l16.3,13.08a20,20,0,0,0,28.13-28.43Zm-11.51,16.77a4,4,0,0,1-5.66,0c-.21-.2-.42-.4-.65-.58L165,121.76A8,8,0,0,0,152.26,130L175.14,217a7.72,7.72,0,0,0,.48,1.35,4,4,0,1,1-7.25,3.38,6.25,6.25,0,0,0-.33-.63L134.92,164a8,8,0,0,0-13.84,0L88,221.05a6.25,6.25,0,0,0-.33.63,4,4,0,0,1-2.26,2.07,4,4,0,0,1-5-5.45,7.72,7.72,0,0,0,.48-1.35L103.74,130A8,8,0,0,0,91,121.76L55.48,150.24c-.23.18-.44.38-.65.58a4,4,0,1,1-5.66-5.65c.12-.12.23-.24.34-.37L94.83,93.41a16,16,0,0,1,12-5.41h42.34a16,16,0,0,1,12,5.41l45.32,51.39c.11.13.22.25.34.37A4,4,0,0,1,206.83,150.82Z"></path></svg></Button></TooltipTrigger><TooltipContent>Near me</TooltipContent></Tooltip></TooltipProvider>
         </div>
         <div className="mx-auto mt-2 flex max-w-3xl gap-2 overflow-x-auto pb-2 [scrollbar-width:none]">
-          {(kind === "Events" ? eventCategories : jobCategories).map((item) => <Button key={item} size="sm" variant={category === item ? "default" : "secondary"} onClick={() => setCategory(item)} className="h-8 shrink-0 backdrop-blur-xl" aria-pressed={category === item}>{item}</Button>)}
+          {(kind === "Events" ? eventCategories : jobCategories).map((item) => <Button key={item} size="sm" variant={category === item ? "default" : "secondary"} style={category === item ? { backgroundColor: item === "All" ? "#2a1546" : categoryColor(item), color: "#fff" } : undefined} onClick={() => setCategory(item)} className="h-8 shrink-0 backdrop-blur-xl" aria-pressed={category === item}>{item}</Button>)}
         </div>
       </section>
 
