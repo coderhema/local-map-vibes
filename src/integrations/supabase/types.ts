@@ -62,6 +62,36 @@ export type Database = {
         }
         Relationships: []
       }
+      scrape_runs: {
+        Row: {
+          added: number
+          created_at: string
+          finished_at: string | null
+          kind: string
+          run_id: string
+          source: string
+          status: string
+        }
+        Insert: {
+          added?: number
+          created_at?: string
+          finished_at?: string | null
+          kind: string
+          run_id: string
+          source: string
+          status?: string
+        }
+        Update: {
+          added?: number
+          created_at?: string
+          finished_at?: string | null
+          kind?: string
+          run_id?: string
+          source?: string
+          status?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
