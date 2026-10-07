@@ -10,6 +10,8 @@ export type ScrapedListing = {
   lat: number;
   source_url: string | null;
   source: string;
+  work_mode: string | null;
+  starts_at: string | null;
 };
 
 const EVENT_CATS = "Music, Culture, Technology, Food, Sports";
@@ -25,8 +27,8 @@ const SOURCES: { kind: "Events" | "Jobs"; url: string; label: string }[] = [
 function goalFor(kind: "Events" | "Jobs") {
   const cats = kind === "Events" ? EVENT_CATS : JOB_CATS;
   const what = kind === "Events"
-    ? "up to 8 upcoming in-person events. For each: title, place (venue/neighbourhood, City), date_label (short like 'Oct 12 · 20:00'), meta (e.g. '120 going' or the organiser)"
-    : "up to 8 job listings. For each: title, place (Neighbourhood or company HQ, City — never just 'Remote'), date_label (e.g. 'Full-time · Remote'), meta (company name)";
+    ? "up to 8 upcoming in-person events. For each: title, place (venue/neighbourhood, City), date_label (short like 'Oct 12 · 20:00'), meta (e.g. '120 going' or the organiser), starts_at (ISO 8601 start date-time)"
+    : "up to 8 job listings. For each: title, place (Neighbourhood or company HQ, City — never just 'Remote'), date_label (e.g. 'Full-time · Remote'), meta (company name), work_mode (exactly one of: Remote, Hybrid, In-person), starts_at (ISO date of the application deadline or start date; if none shown, about 2 weeks from today)";
   return `Extract ${what}, url (absolute link), category (exactly one of: ${cats}), and lat and lng as decimal numbers for the real city location. Return JSON {"items":[...]} only.`;
 }
 
@@ -71,6 +73,8 @@ export function parseItems(kind: "Events" | "Jobs", label: string, resultIn: unk
       lat, lng,
       source_url: typeof raw["url"] === "string" ? raw["url"] : null,
       source: label,
+      work_mode: kind === "Jobs" ? (["Remote", "Hybrid", "In-person"].find((m) => m.toLowerCase() === String(raw["work_mode"] ?? "").toLowerCase()) ?? "Remote") : null,
+      starts_at: Number.isFinite(Date.parse(String(raw["starts_at"] ?? ""))) ? new Date(String(raw["starts_at"])).toISOString() : new Date(Date.now() + 14 * 864e5).toISOString(),
     }];
   });
 }
