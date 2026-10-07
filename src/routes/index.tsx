@@ -547,6 +547,28 @@ function Index() {
         <div className="flex items-center">
           <div><p className="font-display text-2xl font-black tracking-tight leading-none">Backyard</p></div>
         </div>
+        <div className="flex items-center gap-1 md:gap-2">
+          <Popover open={locOpen} onOpenChange={setLocOpen}>
+            <PopoverTrigger asChild><Button variant="ghost" size="sm" aria-label="Set your location"><House className="size-4" weight="duotone" /><span className="hidden max-w-[9rem] truncate lg:inline">{home ? home.label : "Set location"}</span></Button></PopoverTrigger>
+            <PopoverContent align="end" className="w-80 rounded-3xl p-3">
+              <p className="px-1 font-display text-base font-black tracking-tight">Where are you?</p>
+              <p className="px-1 text-xs text-muted-foreground">Routes, distances and alerts start from here.</p>
+              <input autoFocus value={placeQuery} onChange={(e) => setPlaceQuery(e.target.value)} placeholder="Search your city, state or country" className="mt-3 h-10 w-full rounded-full border border-border bg-background px-4 text-sm outline-none focus:border-primary" />
+              {placeResults.length > 0 && <div className="mt-2 max-h-48 overflow-y-auto">{placeResults.map((r) => <button key={`${r.label}${r.coords.join()}`} type="button" onClick={() => { saveHomeRef.current(r.coords, r.label); setPlaceQuery(""); }} className="flex w-full items-center gap-2 rounded-2xl px-3 py-2 text-left text-sm hover:bg-secondary"><MapPin className="size-4 shrink-0 text-primary" weight="duotone" />{r.label}</button>)}</div>}
+              <div className="mt-3 grid grid-cols-2 gap-2">
+                <Button variant="secondary" size="sm" onClick={useGps}><Crosshair className="size-4" weight="duotone" />Use GPS</Button>
+                <Button variant="secondary" size="sm" onClick={startPickOnMap}><HandPointing className="size-4" weight="duotone" />Pick on map</Button>
+              </div>
+            </PopoverContent>
+          </Popover>
+          <Popover open={calOpen} onOpenChange={setCalOpen}>
+            <PopoverTrigger asChild><Button variant={day ? "secondary" : "ghost"} size="sm" aria-label="Calendar"><CalendarBlank className="size-4" weight="duotone" /><span className="hidden lg:inline">{day ? day.toLocaleDateString(undefined, { month: "short", day: "numeric" }) : "Calendar"}</span></Button></PopoverTrigger>
+            <PopoverContent align="end" className="w-auto rounded-3xl p-2">
+              <Calendar mode="single" selected={day} onSelect={(d) => { setDay(d); setCalOpen(false); }} modifiers={{ busy: events.filter((e) => e.kind === kind && e.startsAt).map((e) => new Date(e.startsAt!)) }} modifiersClassNames={{ busy: "calendar-busy" }} />
+              <p className="px-2 pb-1 text-[11px] text-muted-foreground">Dotted days have {kind.toLowerCase()}. Pick one to filter the map.</p>
+            </PopoverContent>
+          </Popover>
+        </div>
         <div className="hidden items-center gap-2 md:flex">
           <Button variant="ghost" size="sm" onClick={refreshFromWeb} disabled={refreshing}><ArrowsClockwise className={`size-4 ${refreshing ? "animate-spin" : ""}`} weight="bold" /> {refreshing ? "Refreshing…" : "Refresh listings"}</Button>
           <Button onClick={toggleAlerts} variant={alerts ? "default" : "outline"} size="sm" className="border-0" aria-pressed={alerts}><BellRinging className={`size-4 ${alerts ? "notification-bell" : ""}`} weight={alerts ? "fill" : "duotone"} /> {alerts ? "Alerts on" : "Notify me"}</Button>
@@ -561,6 +583,7 @@ function Index() {
           <TooltipProvider><Tooltip><TooltipTrigger asChild><Button size="icon-sm" onClick={locateUser} aria-label="Near me"><svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" fill="currentColor" viewBox="0 0 256 256" className="size-4" aria-hidden="true"><path d="M104,40a24,24,0,1,1,24,24A24,24,0,0,1,104,40Zm108.49,99.51L167.17,88.13a24,24,0,0,0-18-8.13H106.83a24,24,0,0,0-18,8.13L43.51,139.51a12,12,0,0,0,17,17L96,128,73.13,214.93a12,12,0,0,0,21.75,10.14L128,168l33.12,57.07a12,12,0,0,0,21.75-10.14L160,128l35.51,28.49a12,12,0,0,0,17-17Z" opacity="0.2"></path><path d="M160,40a32,32,0,1,0-32,32A32,32,0,0,0,160,40ZM128,56a16,16,0,1,1,16-16A16,16,0,0,1,128,56Zm90.34,78.05L173.17,82.83a32,32,0,0,0-24-10.83H106.83a32,32,0,0,0-24,10.83L37.66,134.05a20,20,0,0,0,28.13,28.43l16.3-13.08L65.55,212.28A20,20,0,0,0,102,228.8l26-44.87,26,44.87a20,20,0,0,0,36.41-16.52L173.91,149.4l16.3,13.08a20,20,0,0,0,28.13-28.43Zm-11.51,16.77a4,4,0,0,1-5.66,0c-.21-.2-.42-.4-.65-.58L165,121.76A8,8,0,0,0,152.26,130L175.14,217a7.72,7.72,0,0,0,.48,1.35,4,4,0,1,1-7.25,3.38,6.25,6.25,0,0,0-.33-.63L134.92,164a8,8,0,0,0-13.84,0L88,221.05a6.25,6.25,0,0,0-.33.63,4,4,0,0,1-2.26,2.07,4,4,0,0,1-5-5.45,7.72,7.72,0,0,0,.48-1.35L103.74,130A8,8,0,0,0,91,121.76L55.48,150.24c-.23.18-.44.38-.65.58a4,4,0,1,1-5.66-5.65c.12-.12.23-.24.34-.37L94.83,93.41a16,16,0,0,1,12-5.41h42.34a16,16,0,0,1,12,5.41l45.32,51.39c.11.13.22.25.34.37A4,4,0,0,1,206.83,150.82Z"></path></svg></Button></TooltipTrigger><TooltipContent>Near me</TooltipContent></Tooltip></TooltipProvider>
         </div>
         <div className="mx-auto mt-2 flex max-w-3xl gap-2 overflow-x-auto pb-2 [scrollbar-width:none]">
+          {day && <Button size="sm" variant="default" onClick={() => setDay(undefined)} className="h-8 shrink-0"><CalendarBlank className="size-4" weight="fill" />{day.toLocaleDateString(undefined, { month: "short", day: "numeric" })}<X className="size-3" /></Button>}
           {(kind === "Events" ? eventCategories : jobCategories).map((item) => <Button key={item} size="sm" variant={category === item ? "default" : "secondary"} style={category === item ? { backgroundColor: item === "All" ? "#2a1546" : categoryColor(item), color: "#fff" } : undefined} onClick={() => setCategory(item)} className="h-8 shrink-0 backdrop-blur-xl" aria-pressed={category === item}>{item}</Button>)}
         </div>
       </section>
@@ -583,6 +606,19 @@ function Index() {
          <section className="absolute bottom-4 left-4 right-4 z-30 rounded-[28px] border border-border bg-card p-5 backdrop-blur-xl md:bottom-6 md:left-auto md:right-8 md:w-[25rem]">
            <div className="flex items-start justify-between gap-4"><div><p className="text-[10px] font-semibold uppercase" style={{ color: categoryColor(selected.category) }}>{selected.kind === "Jobs" ? "Opportunity" : "Trending"} in {selected.place.split(",").at(-1)}</p><h1 className="mt-1 font-display text-2xl font-black tracking-tight leading-tight">{selected.title}</h1></div><Button aria-label="Close details" variant="ghost" size="icon" onClick={() => setShowPanel(false)}><X className="size-4" /></Button></div>
            <div className="mt-3 flex flex-wrap items-center gap-3 text-xs text-muted-foreground"><span className="flex items-center gap-1"><CalendarBlank className="size-4 text-primary" weight="duotone" />{selected.date}</span><span className="flex items-center gap-1"><MapPin className="size-4 text-primary" weight="fill" />{selected.place}</span></div>
+           {selected.kind === "Jobs" && (
+             <div className="mt-4 grid grid-cols-3 gap-1 rounded-full bg-muted p-1" aria-label="Work arrangement">
+               {WORK_MODES.map(({ id, Icon }) => { const on = selected.workMode === id; return (
+                 <span key={id} aria-current={on || undefined} className={`flex items-center justify-center gap-1.5 rounded-full px-2 py-2 text-[11px] font-semibold ${on ? "bg-primary text-primary-foreground" : "text-muted-foreground opacity-60"}`}><Icon className="size-4" weight={on ? "fill" : "duotone"} />{id}</span>); })}
+             </div>
+           )}
+           {selected.startsAt && (
+             <div className="mt-3 flex items-center justify-between gap-2 rounded-2xl bg-accent px-3 py-2">
+               <div className="flex items-center gap-2"><Timer className="size-5 text-primary" weight="duotone" /><div><p className="text-[10px] font-semibold uppercase text-muted-foreground">{selected.kind === "Jobs" ? "Applications close in" : "Starts in"}</p><p className="font-display text-sm font-black tabular-nums tracking-tight text-accent-foreground">{countdown(selected.startsAt, now) ?? "—"}</p></div></div>
+               <Button variant="ghost" size="sm" onClick={() => downloadIcs(selected)} aria-label="Add to calendar"><CalendarPlus className="size-4" weight="duotone" />Add</Button>
+             </div>
+           )}
+           {selected.workMode !== "Remote" && <>
            <div className="mt-4 grid grid-cols-4 gap-1 rounded-full bg-muted p-1" role="radiogroup" aria-label="Mode of transport">
              {MODES.map((m) => { const Icon = { flight: AirplaneTilt, transit: Train, drive: Car, walk: PersonSimpleWalk }[m.id]; const km = distanceKm(origin, selected.coordinates); const tooFar = (m.id === "walk" && km > 60) || ((m.id === "drive" || m.id === "transit") && km > 4000); return (
                <button key={m.id} type="button" role="radio" aria-checked={mode === m.id} disabled={tooFar} onClick={() => pickMode(m.id)} className={`flex flex-col items-center gap-0.5 rounded-full px-2 py-1.5 text-[11px] font-semibold transition-colors disabled:opacity-40 ${mode === m.id ? "bg-card text-foreground" : "text-muted-foreground hover:text-foreground"}`}>
@@ -590,7 +626,8 @@ function Index() {
                  <span>{tooFar ? "—" : formatDuration(km / m.kmh + m.overheadH)}</span>
                </button>); })}
            </div>
-           <p className="mt-2 text-center text-[11px] text-muted-foreground">{Math.round(distanceKm(origin, selected.coordinates)).toLocaleString()} km from {origin === LAGOS ? "Lagos" : "you"} · {MODES.find((m) => m.id === mode)!.label}</p>
+           <p className="mt-2 text-center text-[11px] text-muted-foreground">{Math.round(distanceKm(origin, selected.coordinates)).toLocaleString()} km from {home ? home.label.split(",")[0] : origin === LAGOS ? "Lagos" : "you"} · {MODES.find((m) => m.id === mode)!.label}</p>
+           </>}
               <div className="mt-3 flex gap-2"><Button className="flex-1" onClick={() => showDirections(selected)}><NavigationArrow className="size-4" weight="fill" /> Show route <ArrowRight className="size-4" /></Button><Button variant="secondary" onClick={followSelected}>{selected.kind === "Jobs" ? <Briefcase className="size-4" weight="duotone" /> : <BellRinging className={`size-4 ${alerts ? "notification-bell" : ""}`} weight={alerts ? "fill" : "duotone"} />} {selected.kind === "Jobs" ? "Save" : alerts ? "Following" : "Follow"}</Button></div>
         </section>
       )}
@@ -609,6 +646,7 @@ function Index() {
           {tour.length === 1 && <p className="mt-2 text-xs text-muted-foreground">Hold Shift and press-and-hold another pin to add the next stop.</p>}
         </section>
       )}
+      {pickingHome && <div className="absolute bottom-6 left-1/2 z-40 flex -translate-x-1/2 items-center gap-2 rounded-full bg-plum px-4 py-2 text-sm font-semibold text-primary-foreground"><HandPointing className="size-4" weight="fill" />Tap the map to set your location<button type="button" aria-label="Cancel" onClick={() => { pickingHomeRef.current = false; setPickingHome(false); }}><X className="size-4" /></button></div>}
       <LocationAssistant />
     </main>
   );
