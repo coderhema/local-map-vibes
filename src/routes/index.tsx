@@ -412,7 +412,7 @@ function Index() {
         </div>
         <div className="hidden items-center gap-2 md:flex">
           <Button variant="ghost" size="sm" onClick={refreshFromWeb} disabled={refreshing}><ArrowsClockwise className={`size-4 ${refreshing ? "animate-spin" : ""}`} weight="bold" /> {refreshing ? "Refreshing…" : "Refresh listings"}</Button>
-          <Button onClick={toggleAlerts} variant={alerts ? "default" : "outline"} size="sm" aria-pressed={alerts}><BellRinging className={`size-4 ${alerts ? "notification-bell" : ""}`} weight={alerts ? "fill" : "duotone"} /> {alerts ? "Alerts on" : "Notify me"}</Button>
+          <Button onClick={toggleAlerts} variant={alerts ? "default" : "outline"} size="sm" className="border-0" aria-pressed={alerts}><BellRinging className={`size-4 ${alerts ? "notification-bell" : ""}`} weight={alerts ? "fill" : "duotone"} /> {alerts ? "Alerts on" : "Notify me"}</Button>
         </div>
       </header>
 
