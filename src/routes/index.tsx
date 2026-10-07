@@ -204,7 +204,7 @@ function Index() {
         node.className = `event-marker${event.id === selectedRef.current ? " active" : ""}`;
         node.setAttribute("aria-label", `Open ${event.title}`);
         node.style.setProperty("--pin-accent", categoryColor(event.category));
-        node.innerHTML = `<span class="pin-pulse"></span><span class="pin-shape">${pinIconSvg(event.category)}</span><span class="pin-shadow"></span><span class="pin-label">${event.title}</span>`;
+        node.innerHTML = `<span class="pin-pulse"></span><span class="pin-shape">${pinIconSvg(event.kind === "Jobs" ? "Briefcase" : event.category)}</span><span class="pin-shadow"></span><span class="pin-label">${event.title}</span>`;
         let pressTimer = 0;
         let longPressed = false;
         const startPress = (e: PointerEvent) => {
