@@ -547,7 +547,7 @@ function Index() {
         <div className="flex items-center">
           <div><p className="font-display text-2xl font-black tracking-tight leading-none">Backyard</p></div>
         </div>
-        <div className="flex items-center gap-1 md:gap-2">
+        <div className="ml-auto mr-1 flex items-center gap-1 md:mr-2 md:gap-2">
           <Popover open={locOpen} onOpenChange={setLocOpen}>
             <PopoverTrigger asChild><Button variant="ghost" size="sm" aria-label="Set your location"><House className="size-4" weight="duotone" /><span className="hidden max-w-[9rem] truncate lg:inline">{home ? home.label : "Set location"}</span></Button></PopoverTrigger>
             <PopoverContent align="end" className="w-80 rounded-3xl p-3">
