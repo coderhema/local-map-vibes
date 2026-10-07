@@ -1,6 +1,11 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, useRouter } from "@tanstack/react-router";
 import {
+  AirplaneTilt,
+  ArrowsClockwise,
   BellRinging,
+  Car,
+  PersonSimpleWalk,
+  Train,
   CalendarBlank,
   CaretRight,
   ArrowRight,
@@ -25,6 +30,7 @@ import { Button } from "@/components/ui/button";
 import { LocationAssistant } from "@/components/location-assistant";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { pinDuotonePaths } from "@/lib/pin-icons";
+import { collectListings, getListings, refreshListings, type Listing } from "@/lib/listings.functions";
 
 export const Route = createFileRoute("/")({
   head: () => ({
@@ -37,33 +43,29 @@ export const Route = createFileRoute("/")({
       { name: "twitter:card", content: "summary_large_image" },
     ],
   }),
+  loader: () => getListings(),
   component: Index,
 });
 
-type EventItem = {
-  id: number;
-  title: string;
-  place: string;
-  date: string;
-  category: string;
-  attendees: string;
-  coordinates: [number, number];
-  kind: "Events" | "Jobs";
-};
-
-const initialEvent: EventItem = { id: 1, title: "Lagos Art & Culture Week", place: "Victoria Island, Lagos", date: "Oct 10 · 18:00", category: "Culture", attendees: "2.4k going", coordinates: [3.4219, 6.4281], kind: "Events" };
-
-const events: EventItem[] = [
-  initialEvent,
-  { id: 2, title: "Cape Town Jazz Nights", place: "Waterfront, Cape Town", date: "Oct 12 · 20:00", category: "Music", attendees: "860 going", coordinates: [18.4241, -33.9249], kind: "Events" },
-  { id: 3, title: "Berlin Future Forum", place: "Kreuzberg, Berlin", date: "Oct 16 · 09:00", category: "Technology", attendees: "1.1k going", coordinates: [13.405, 52.52], kind: "Events" },
-  { id: 4, title: "Rio Street Food Festival", place: "Copacabana, Rio", date: "Oct 19 · 12:00", category: "Food", attendees: "3.8k going", coordinates: [-43.1729, -22.9068], kind: "Events" },
-  { id: 5, title: "Tokyo Design Assembly", place: "Shibuya, Tokyo", date: "Oct 24 · 10:30", category: "Design", attendees: "940 going", coordinates: [139.6917, 35.6895], kind: "Events" },
-  { id: 6, title: "New York Run Club", place: "Central Park, New York", date: "Oct 26 · 07:00", category: "Sports", attendees: "530 going", coordinates: [-73.9654, 40.7829], kind: "Events" },
-  { id: 7, title: "Product Designer", place: "Yaba, Lagos", date: "Full-time · Hybrid", category: "Design", attendees: "New role", coordinates: [3.3792, 6.5244], kind: "Jobs" },
-  { id: 8, title: "Frontend Engineer", place: "Kreuzberg, Berlin", date: "Full-time · Remote", category: "Technology", attendees: "2 days ago", coordinates: [13.3889, 52.517], kind: "Jobs" },
-  { id: 9, title: "Community Lead", place: "Brooklyn, New York", date: "Contract · Hybrid", category: "Community", attendees: "New role", coordinates: [-73.9442, 40.6782], kind: "Jobs" },
+type EventItem = Listing;
+type Mode = "flight" | "transit" | "drive" | "walk";
+const LAGOS: [number, number] = [3.3792, 6.5244];
+const MODES: { id: Mode; label: string; kmh: number; overheadH: number }[] = [
+  { id: "flight", label: "Fly", kmh: 820, overheadH: 2.5 },
+  { id: "transit", label: "Transit", kmh: 75, overheadH: 0.3 },
+  { id: "drive", label: "Drive", kmh: 65, overheadH: 0 },
+  { id: "walk", label: "Walk", kmh: 4.8, overheadH: 0 },
 ];
+function distanceKm(a: [number, number], b: [number, number]) {
+  const r = Math.PI / 180;
+  const h = Math.sin(((b[1] - a[1]) * r) / 2) ** 2 + Math.cos(a[1] * r) * Math.cos(b[1] * r) * Math.sin(((b[0] - a[0]) * r) / 2) ** 2;
+  return 12742 * Math.asin(Math.sqrt(h));
+}
+function formatDuration(hours: number) {
+  if (hours < 1) return `${Math.max(1, Math.round(hours * 60))} min`;
+  if (hours < 48) return `${Math.floor(hours)}h ${Math.round((hours % 1) * 60)}m`;
+  return `${Math.round(hours / 24)} days`;
+}
 
 const eventCategories = ["All", "Music", "Culture", "Technology", "Food", "Sports"];
 const jobCategories = ["All", "Design", "Technology", "Community"];
@@ -81,6 +83,7 @@ const pinIconPaths: Record<string, string> = {
 };
 
 void pinIconPaths;
+void CalendarBlank;
 function pinIconSvg(category: string) {
   const [fill, outline] = (pinDuotonePaths[category] ?? pinDuotonePaths["Briefcase"])!;
   return `<svg class="pin-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" fill="currentColor" aria-hidden="true"><path d="${fill}" opacity="0.32"/><path d="${outline}"/></svg>`;
@@ -108,7 +111,13 @@ function arcPoints(a: [number, number], b: [number, number], steps = 96): [numbe
 function Index() {
   const mapContainer = useRef<HTMLDivElement>(null);
   const mapRef = useRef<import("maplibre-gl").Map | null>(null);
-  const markerRefs = useRef(new Map<number, HTMLButtonElement>());
+  const events = Route.useLoaderData();
+  const initialEvent = events[0]!;
+  const markerRefs = useRef(new Map<string, HTMLButtonElement>());
+  const [mapReady, setMapReady] = useState(false);
+  const [mode, setMode] = useState<Mode>("flight");
+  const [origin, setOrigin] = useState<[number, number]>(LAGOS);
+  const [refreshing, setRefreshing] = useState(false);
   const [category, setCategory] = useState("All");
   const [kind, setKind] = useState<"Events" | "Jobs">("Events");
   const [selected, setSelected] = useState<EventItem>(initialEvent);
@@ -153,12 +162,34 @@ function Index() {
           type: "geojson",
           data: { type: "FeatureCollection", features: [] },
         });
-        map.addLayer({ id: "event-route-shadow", type: "line", source: "event-route", layout: { "line-cap": "round", "line-join": "round" }, paint: { "line-color": "#2a1546", "line-width": 8, "line-opacity": 0.18, "line-blur": 2 } });
-        map.addLayer({ id: "event-route", type: "line", source: "event-route", layout: { "line-cap": "round", "line-join": "round" }, paint: { "line-color": "#7c4ddb", "line-width": 4, "line-opacity": 0.95 } });
+        map.addLayer({ id: "event-route-shadow", type: "line", source: "event-route", layout: { "line-cap": "round", "line-join": "round" }, paint: { "line-color": "#2a1546", "line-width": 16, "line-opacity": 0.16, "line-blur": 4 } });
+        map.addLayer({ id: "event-route", type: "line", source: "event-route", layout: { "line-cap": "round", "line-join": "round" }, paint: { "line-color": "#7c4ddb", "line-width": 8, "line-opacity": 0.95, "line-dasharray": [1.4, 1.2] } });
       });
+      setMapReady(true);
+      const observer = new ResizeObserver(() => map.resize());
+      observer.observe(mapContainer.current);
+      map.once("load", () => map.resize());
+    }
+    void mountMap();
+    return () => {
+      disposed = true;
+      mapRef.current?.remove();
+      mapRef.current = null;
+      markerRefs.current.clear();
+    };
+  }, []);
+
+  const selectedRef = useRef(initialEvent?.id);
+  useEffect(() => {
+    const map = mapRef.current;
+    if (!mapReady || !map) return;
+    let cancelled = false;
+    const created: import("maplibre-gl").Marker[] = [];
+    void import("maplibre-gl").then((maplibregl) => {
+      if (cancelled) return;
       events.forEach((event) => {
         const node = document.createElement("button");
-        node.className = `event-marker${event.id === 1 ? " active" : ""}`;
+        node.className = `event-marker${event.id === selectedRef.current ? " active" : ""}`;
         node.setAttribute("aria-label", `Open ${event.title}`);
         node.innerHTML = `<span class="pin-pulse"></span><span class="pin-shape">${pinIconSvg(event.category)}</span><span class="pin-shadow"></span><span class="pin-label">${event.title}</span>`;
         let pressTimer = 0;
@@ -183,20 +214,37 @@ function Index() {
           map.easeTo({ center: event.coordinates, zoom: Math.max(map.getZoom(), 4.5), duration: 950, essential: true });
         });
         markerRefs.current.set(event.id, node);
-        new maplibregl.Marker({ element: node, anchor: "bottom", subpixelPositioning: true }).setLngLat(event.coordinates).addTo(map);
+        created.push(new maplibregl.Marker({ element: node, anchor: "bottom", subpixelPositioning: true }).setLngLat(event.coordinates).addTo(map));
       });
-      const observer = new ResizeObserver(() => map.resize());
-      observer.observe(mapContainer.current);
-      map.once("load", () => map.resize());
-    }
-    void mountMap();
-    return () => {
-      disposed = true;
-      mapRef.current?.remove();
-      mapRef.current = null;
-      markerRefs.current.clear();
-    };
+      setFilterTick((t) => t + 1);
+    });
+    return () => { cancelled = true; created.forEach((m) => m.remove()); markerRefs.current.clear(); };
+  }, [mapReady, events]);
+  const [, setFilterTick] = useState(0);
+
+  // Save any background scrapes that finished since the last visit.
+  useEffect(() => {
+    void collectListings().then((c) => { if (c.added) void router.invalidate(); }).catch(() => {});
   }, []);
+
+  async function refreshFromWeb() {
+    setRefreshing(true);
+    const id = toast.loading("Finding real events and jobs…", { description: "This takes a few minutes — keep browsing." });
+    try {
+      const res = await refreshListings();
+      if (res.skipped) toast("Checking latest results", { id, description: "A refresh ran in the last few hours." });
+      let total = 0;
+      for (let i = 0; i < 40; i++) {
+        const c = await collectListings();
+        if (c.added) { total += c.added; await router.invalidate(); }
+        if (!c.pending) break;
+        await new Promise((r) => setTimeout(r, 15000));
+      }
+      toast.success(total ? `${total} real listings added` : "Listings are up to date", { id });
+    } catch (e) {
+      toast.error("Couldn't refresh listings", { id, description: e instanceof Error ? e.message : undefined });
+    } finally { setRefreshing(false); }
+  }
 
   function focusEvent(event: EventItem) {
     setSelected(event);
@@ -234,7 +282,7 @@ function Index() {
   }
 
   const routeAnimRef = useRef(0);
-  function drawRoute(coordinates: [number, number][], fit = true) {
+  function drawRoute(coordinates: [number, number][], fit = true, speedMs = 2200) {
     const map = mapRef.current;
     if (!map) return;
     const source = map.getSource("event-route") as import("maplibre-gl").GeoJSONSource | undefined;
@@ -248,29 +296,42 @@ function Index() {
       const seg = arcPoints(coordinates[i]!, coordinates[i + 1]!);
       path.push(...(i ? seg.slice(1) : seg));
     }
-    const duration = 1600 + 500 * (coordinates.length - 2);
-    // Camera starts at origin, then glides along to the destination with the line
-    map.easeTo({ center: coordinates[0]!, zoom: Math.min(map.getZoom(), 3.4), duration: 700, essential: true });
-    const start = performance.now() + 500;
+    const duration = speedMs + 500 * (coordinates.length - 2);
+    const lngs = path.map((p) => p[0]), lats = path.map((p) => p[1]);
+    if (fit) map.fitBounds([[Math.min(...lngs), Math.min(...lats)], [Math.max(...lngs), Math.max(...lats)]], { padding: { top: 260, bottom: 300, left: 120, right: 120 }, duration, maxZoom: 6, essential: true, easing: (t) => 1 - (1 - t) ** 3 });
+    const start = performance.now();
     const step = (now: number) => {
-      const t = Math.min(1, Math.max(0, (now - start) / duration));
-      const e = t < 0.5 ? 4 * t * t * t : 1 - (-2 * t + 2) ** 3 / 2;
-      const n = Math.max(2, Math.ceil(e * path.length));
-      source?.setData({ type: "Feature", properties: {}, geometry: { type: "LineString", coordinates: path.slice(0, n) } });
-      if (t > 0 && t < 1 && fit) map.jumpTo({ center: path[n - 1]! });
+      const t = Math.min(1, (now - start) / duration);
+      const e = t < 0.5 ? 2 * t * t : 1 - (-2 * t + 2) ** 2 / 2;
+      const exact = e * (path.length - 1);
+      const i = Math.floor(exact);
+      const f = exact - i;
+      const a = path[i]!, b = path[Math.min(i + 1, path.length - 1)]!;
+      const coords = [...path.slice(0, i + 1), [a[0] + (b[0] - a[0]) * f, a[1] + (b[1] - a[1]) * f] as [number, number]];
+      source?.setData({ type: "Feature", properties: {}, geometry: { type: "LineString", coordinates: coords } });
       if (t < 1) routeAnimRef.current = requestAnimationFrame(step);
-      else if (fit) map.fitBounds([path.reduce((a, c) => [Math.min(a[0], c[0]), Math.min(a[1], c[1])] as [number, number]), path.reduce((a, c) => [Math.max(a[0], c[0]), Math.max(a[1], c[1])] as [number, number])], { padding: 140, duration: 1100, maxZoom: 6 });
     };
     routeAnimRef.current = requestAnimationFrame(step);
   }
 
+  const router = useRouter();
+  const routeShownRef = useRef<string | null>(null);
+  function travelMs(m: Mode) { return { flight: 2600, transit: 2200, drive: 2000, walk: 1800 }[m]; }
+  function pickMode(m: Mode) {
+    setMode(m);
+    const map = mapRef.current;
+    if (map?.getLayer("event-route")) map.setPaintProperty("event-route", "line-dasharray", m === "flight" ? [1.4, 1.2] : m === "walk" ? [0.2, 1.6] : [1, 0]);
+    if (routeShownRef.current === selected.id) drawRoute([origin, selected.coordinates], true, travelMs(m));
+  }
+
   function showDirections(event: EventItem) {
     setTour([]);
-    const go = (origin: [number, number]) => drawRoute([origin, event.coordinates]);
-    if (!navigator.geolocation) return go([3.3792, 6.5244]);
+    routeShownRef.current = event.id;
+    const go = (from: [number, number]) => { setOrigin(from); drawRoute([from, event.coordinates], true, travelMs(mode)); };
+    if (!navigator.geolocation) return go(LAGOS);
     navigator.geolocation.getCurrentPosition(
       ({ coords }) => go([coords.longitude, coords.latitude]),
-      () => { toast("Routing from Lagos", { description: "Allow location access to route from where you are." }); go([3.3792, 6.5244]); },
+      () => { toast("Routing from Lagos", { description: "Allow location access to route from where you are." }); go(LAGOS); },
       { enableHighAccuracy: true, timeout: 6000 },
     );
   }
@@ -350,7 +411,7 @@ function Index() {
           <div><p className="font-display text-2xl font-black tracking-tight leading-none">Backyard</p></div>
         </div>
         <div className="hidden items-center gap-2 md:flex">
-          <Button variant="ghost" size="sm"><CalendarBlank className="size-4" weight="duotone" /> This month</Button>
+          <Button variant="ghost" size="sm" onClick={refreshFromWeb} disabled={refreshing}><ArrowsClockwise className={`size-4 ${refreshing ? "animate-spin" : ""}`} weight="bold" /> {refreshing ? "Refreshing…" : "Refresh listings"}</Button>
           <Button onClick={toggleAlerts} variant={alerts ? "default" : "outline"} size="sm" aria-pressed={alerts}><BellRinging className={`size-4 ${alerts ? "notification-bell" : ""}`} weight={alerts ? "fill" : "duotone"} /> {alerts ? "Alerts on" : "Notify me"}</Button>
         </div>
       </header>
@@ -385,7 +446,15 @@ function Index() {
          <section className="absolute bottom-4 left-4 right-4 z-30 rounded-[28px] border border-border bg-card p-5 backdrop-blur-xl md:bottom-6 md:left-auto md:right-8 md:w-[25rem]">
            <div className="flex items-start justify-between gap-4"><div><p className="text-[10px] font-semibold uppercase text-accent-foreground">{selected.kind === "Jobs" ? "Opportunity" : "Trending"} in {selected.place.split(",").at(-1)}</p><h1 className="mt-1 font-display text-2xl font-black tracking-tight leading-tight">{selected.title}</h1></div><Button aria-label="Close details" variant="ghost" size="icon" onClick={() => setShowPanel(false)}><X className="size-4" /></Button></div>
            <div className="mt-3 flex flex-wrap items-center gap-3 text-xs text-muted-foreground"><span className="flex items-center gap-1"><CalendarBlank className="size-4 text-primary" weight="duotone" />{selected.date}</span><span className="flex items-center gap-1"><MapPin className="size-4 text-primary" weight="fill" />{selected.place}</span></div>
-              <div className="mt-4 flex gap-2"><Button className="flex-1" onClick={() => showDirections(selected)}><NavigationArrow className="size-4" weight="fill" /> Show route <ArrowRight className="size-4" /></Button><Button variant="secondary" onClick={followSelected}>{selected.kind === "Jobs" ? <Briefcase className="size-4" weight="duotone" /> : <BellRinging className={`size-4 ${alerts ? "notification-bell" : ""}`} weight={alerts ? "fill" : "duotone"} />} {selected.kind === "Jobs" ? "Save" : alerts ? "Following" : "Follow"}</Button></div>
+           <div className="mt-4 grid grid-cols-4 gap-1 rounded-full bg-muted p-1" role="radiogroup" aria-label="Mode of transport">
+             {MODES.map((m) => { const Icon = { flight: AirplaneTilt, transit: Train, drive: Car, walk: PersonSimpleWalk }[m.id]; const km = distanceKm(origin, selected.coordinates); const tooFar = (m.id === "walk" && km > 60) || ((m.id === "drive" || m.id === "transit") && km > 4000); return (
+               <button key={m.id} type="button" role="radio" aria-checked={mode === m.id} disabled={tooFar} onClick={() => pickMode(m.id)} className={`flex flex-col items-center gap-0.5 rounded-full px-2 py-1.5 text-[11px] font-semibold transition-colors disabled:opacity-40 ${mode === m.id ? "bg-card text-foreground" : "text-muted-foreground hover:text-foreground"}`}>
+                 <Icon className="size-4" weight={mode === m.id ? "fill" : "duotone"} />
+                 <span>{tooFar ? "—" : formatDuration(km / m.kmh + m.overheadH)}</span>
+               </button>); })}
+           </div>
+           <p className="mt-2 text-center text-[11px] text-muted-foreground">{Math.round(distanceKm(origin, selected.coordinates)).toLocaleString()} km from {origin === LAGOS ? "Lagos" : "you"} · {MODES.find((m) => m.id === mode)!.label}</p>
+              <div className="mt-3 flex gap-2"><Button className="flex-1" onClick={() => showDirections(selected)}><NavigationArrow className="size-4" weight="fill" /> Show route <ArrowRight className="size-4" /></Button><Button variant="secondary" onClick={followSelected}>{selected.kind === "Jobs" ? <Briefcase className="size-4" weight="duotone" /> : <BellRinging className={`size-4 ${alerts ? "notification-bell" : ""}`} weight={alerts ? "fill" : "duotone"} />} {selected.kind === "Jobs" ? "Save" : alerts ? "Following" : "Follow"}</Button></div>
         </section>
       )}
 
