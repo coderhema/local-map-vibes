@@ -161,7 +161,7 @@ function Index() {
   const mapContainer = useRef<HTMLDivElement>(null);
   const mapRef = useRef<import("maplibre-gl").Map | null>(null);
   const events = Route.useLoaderData();
-  const initialEvent = events[0]!;
+  const initialEvent = events.find((e) => e.kind === "Events") ?? events[0]!;
   const markerRefs = useRef(new Map<string, HTMLButtonElement>());
   const [mapReady, setMapReady] = useState(false);
   const [mode, setMode] = useState<Mode>("flight");
