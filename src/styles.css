@@ -178,10 +178,9 @@
   height: 1.8rem;
   place-items: center;
   border-radius: 50% 50% 50% 12%;
-  border: 1px solid color-mix(in oklab, var(--plum) 55%, transparent);
+  border: 0.5px solid color-mix(in oklab, var(--background) 70%, transparent);
   background: var(--plum);
-  outline: 1px solid color-mix(in oklab, var(--plum) 18%, transparent);
-  outline-offset: 2px;
+  outline: none;
   box-shadow: none;
   transform: rotate(-45deg);
   animation: float-pin 2.8s ease-in-out infinite;

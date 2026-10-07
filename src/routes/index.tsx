@@ -24,6 +24,7 @@ import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { LocationAssistant } from "@/components/location-assistant";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+import { pinDuotonePaths } from "@/lib/pin-icons";
 
 export const Route = createFileRoute("/")({
   head: () => ({
@@ -79,9 +80,29 @@ const pinIconPaths: Record<string, string> = {
   Briefcase: "M100,100a12,12,0,0,1,12-12h32a12,12,0,0,1,0,24H112A12,12,0,0,1,100,100ZM236,68V196a20,20,0,0,1-20,20H40a20,20,0,0,1-20-20V68A20,20,0,0,1,40,48H76V40a28,28,0,0,1,28-28h48a28,28,0,0,1,28,28v8h36A20,20,0,0,1,236,68ZM100,48h56V40a4,4,0,0,0-4-4H104a4,4,0,0,0-4,4ZM44,72v35.23A180.06,180.06,0,0,0,128,128a180,180,0,0,0,84-20.78V72ZM212,192V133.94A204.27,204.27,0,0,1,128,152a204.21,204.21,0,0,1-84-18.06V192Z",
 };
 
+void pinIconPaths;
 function pinIconSvg(category: string) {
-  const path = pinIconPaths[category] ?? pinIconPaths["Briefcase"];
-  return `<svg class="pin-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" fill="currentColor" aria-hidden="true"><path d="${path}"/></svg>`;
+  const [fill, outline] = (pinDuotonePaths[category] ?? pinDuotonePaths["Briefcase"])!;
+  return `<svg class="pin-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" fill="currentColor" aria-hidden="true"><path d="${fill}" opacity="0.32"/><path d="${outline}"/></svg>`;
+}
+
+/* Great-circle interpolation so routes curve naturally over the globe */
+function arcPoints(a: [number, number], b: [number, number], steps = 96): [number, number][] {
+  const r = Math.PI / 180;
+  const [l1, p1, l2, p2] = [a[0] * r, a[1] * r, b[0] * r, b[1] * r];
+  const d = 2 * Math.asin(Math.sqrt(Math.sin((p2 - p1) / 2) ** 2 + Math.cos(p1) * Math.cos(p2) * Math.sin((l2 - l1) / 2) ** 2));
+  if (d < 1e-6) return [a, b];
+  const pts: [number, number][] = [];
+  for (let i = 0; i <= steps; i++) {
+    const f = i / steps;
+    const A = Math.sin((1 - f) * d) / Math.sin(d);
+    const B = Math.sin(f * d) / Math.sin(d);
+    const x = A * Math.cos(p1) * Math.cos(l1) + B * Math.cos(p2) * Math.cos(l2);
+    const y = A * Math.cos(p1) * Math.sin(l1) + B * Math.cos(p2) * Math.sin(l2);
+    const z = A * Math.sin(p1) + B * Math.sin(p2);
+    pts.push([Math.atan2(y, x) / r, Math.atan2(z, Math.sqrt(x * x + y * y)) / r]);
+  }
+  return pts;
 }
 
 function Index() {
@@ -132,8 +153,8 @@ function Index() {
           type: "geojson",
           data: { type: "FeatureCollection", features: [] },
         });
-        map.addLayer({ id: "event-route-shadow", type: "line", source: "event-route", paint: { "line-color": "#2a1546", "line-width": 5, "line-opacity": 0.22 } });
-        map.addLayer({ id: "event-route", type: "line", source: "event-route", paint: { "line-color": "#7c4ddb", "line-width": 2.4, "line-opacity": 0.95, "line-dasharray": [2, 1.6] } });
+        map.addLayer({ id: "event-route-shadow", type: "line", source: "event-route", layout: { "line-cap": "round", "line-join": "round" }, paint: { "line-color": "#2a1546", "line-width": 8, "line-opacity": 0.18, "line-blur": 2 } });
+        map.addLayer({ id: "event-route", type: "line", source: "event-route", layout: { "line-cap": "round", "line-join": "round" }, paint: { "line-color": "#7c4ddb", "line-width": 4, "line-opacity": 0.95 } });
       });
       events.forEach((event) => {
         const node = document.createElement("button");
@@ -212,12 +233,35 @@ function Index() {
     });
   }
 
+  const routeAnimRef = useRef(0);
   function drawRoute(coordinates: [number, number][], fit = true) {
     const map = mapRef.current;
     if (!map) return;
     const source = map.getSource("event-route") as import("maplibre-gl").GeoJSONSource | undefined;
-    source?.setData(coordinates.length > 1 ? { type: "Feature", properties: {}, geometry: { type: "LineString", coordinates } } : { type: "FeatureCollection", features: [] });
-    if (fit && coordinates.length > 1) map.fitBounds([coordinates.reduce((a, c) => [Math.min(a[0], c[0]), Math.min(a[1], c[1])] as [number, number]), coordinates.reduce((a, c) => [Math.max(a[0], c[0]), Math.max(a[1], c[1])] as [number, number])], { padding: 140, duration: 1400, maxZoom: 7 });
+    cancelAnimationFrame(routeAnimRef.current);
+    if (coordinates.length < 2) {
+      source?.setData({ type: "FeatureCollection", features: [] });
+      return;
+    }
+    const path: [number, number][] = [];
+    for (let i = 0; i < coordinates.length - 1; i++) {
+      const seg = arcPoints(coordinates[i]!, coordinates[i + 1]!);
+      path.push(...(i ? seg.slice(1) : seg));
+    }
+    const duration = 1600 + 500 * (coordinates.length - 2);
+    // Camera starts at origin, then glides along to the destination with the line
+    map.easeTo({ center: coordinates[0]!, zoom: Math.min(map.getZoom(), 3.4), duration: 700, essential: true });
+    const start = performance.now() + 500;
+    const step = (now: number) => {
+      const t = Math.min(1, Math.max(0, (now - start) / duration));
+      const e = t < 0.5 ? 4 * t * t * t : 1 - (-2 * t + 2) ** 3 / 2;
+      const n = Math.max(2, Math.ceil(e * path.length));
+      source?.setData({ type: "Feature", properties: {}, geometry: { type: "LineString", coordinates: path.slice(0, n) } });
+      if (t > 0 && t < 1 && fit) map.jumpTo({ center: path[n - 1]! });
+      if (t < 1) routeAnimRef.current = requestAnimationFrame(step);
+      else if (fit) map.fitBounds([path.reduce((a, c) => [Math.min(a[0], c[0]), Math.min(a[1], c[1])] as [number, number]), path.reduce((a, c) => [Math.max(a[0], c[0]), Math.max(a[1], c[1])] as [number, number])], { padding: 140, duration: 1100, maxZoom: 6 });
+    };
+    routeAnimRef.current = requestAnimationFrame(step);
   }
 
   function showDirections(event: EventItem) {
