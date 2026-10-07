@@ -51,7 +51,7 @@ export function LocationAssistant() {
 
   return (
     <>
-      <Button className="absolute right-4 top-[13rem] z-30 size-11 rounded-full border border-border bg-secondary/95 backdrop-blur-xl md:right-6 md:top-[9.8rem]" variant="secondary" size="icon" onClick={() => setOpen(true)} aria-label="Open Yard Guide">
+      <Button className="absolute right-4 top-[12.6rem] z-30 size-10 rounded-full border border-border bg-secondary/95 backdrop-blur-xl md:right-6 md:top-[9.8rem]" variant="secondary" size="icon" onClick={() => setOpen(true)} aria-label="Open Yard Guide">
         <ChatCircleDots className="size-5" weight="duotone" />
       </Button>
 

@@ -7,7 +7,6 @@ import {
   PersonSimpleWalk,
   Train,
   CalendarBlank,
-  CaretRight,
   ArrowRight,
   Briefcase,
   Confetti,
@@ -633,7 +632,7 @@ function Index() {
         </section>
       )}
 
-      <div className="absolute right-4 top-[16.5rem] z-20 flex flex-col gap-2 md:right-6 md:top-[13rem] [&>button:not(:first-child)]:hidden md:[&>button]:inline-flex"><TooltipProvider><Tooltip><TooltipTrigger asChild><Button variant="secondary" size="icon" onClick={toggleProjection} aria-label={isGlobe ? "Use flat map" : "Use globe"}>{isGlobe ? <MapTrifold className="size-4" weight="duotone" /> : <GlobeHemisphereWest className="size-4" weight="duotone" />}</Button></TooltipTrigger><TooltipContent side="left">{isGlobe ? "Flat map" : "Globe view"}</TooltipContent></Tooltip></TooltipProvider><Button variant="secondary" size="icon" onClick={() => mapRef.current?.zoomIn()} aria-label="Zoom in"><Plus className="size-4" weight="bold" /></Button><Button variant="secondary" size="icon" onClick={() => mapRef.current?.zoomOut()} aria-label="Zoom out"><Minus className="size-4" weight="bold" /></Button></div>
+      <div className="absolute right-4 top-[16.5rem] z-20 flex flex-col gap-2 md:right-6 md:top-[13rem] max-md:[&>button:not(:first-child)]:hidden"><TooltipProvider><Tooltip><TooltipTrigger asChild><Button variant="secondary" size="icon" onClick={toggleProjection} aria-label={isGlobe ? "Use flat map" : "Use globe"}>{isGlobe ? <MapTrifold className="size-4" weight="duotone" /> : <GlobeHemisphereWest className="size-4" weight="duotone" />}</Button></TooltipTrigger><TooltipContent side="left">{isGlobe ? "Flat map" : "Globe view"}</TooltipContent></Tooltip></TooltipProvider><Button variant="secondary" size="icon" onClick={() => mapRef.current?.zoomIn()} aria-label="Zoom in"><Plus className="size-4" weight="bold" /></Button><Button variant="secondary" size="icon" onClick={() => mapRef.current?.zoomOut()} aria-label="Zoom out"><Minus className="size-4" weight="bold" /></Button></div>
       {tour.length > 0 && (
         <section className="absolute left-1/2 top-[9.6rem] z-30 w-[calc(100%-2rem)] max-w-[34rem] md:top-[10.5rem] -translate-x-1/2 rounded-[28px] border border-border bg-card/95 px-4 py-3 backdrop-blur-xl">
           <div className="flex items-center justify-between gap-3">
