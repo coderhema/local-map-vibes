@@ -51,6 +51,12 @@ export const Route = createFileRoute("/")({
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },
     ],
+    links: [
+      { rel: "preconnect", href: "https://tiles.openfreemap.org", crossOrigin: "anonymous" },
+      { rel: "preload", href: "https://tiles.openfreemap.org/styles/positron", as: "fetch", crossOrigin: "anonymous" },
+      { rel: "modulepreload", href: "/maplibre/maplibre-gl-worker.mjs" },
+      { rel: "modulepreload", href: "/maplibre/maplibre-gl-shared.mjs" },
+    ],
   }),
   loader: () => getListings(),
   component: Index,
@@ -207,18 +213,25 @@ function Index() {
     let disposed = false;
     async function mountMap() {
       if (!mapContainer.current || mapRef.current) return;
-      const maplibregl = await import("maplibre-gl");
+      // Load the map library and the basemap style at the same time instead of one after the other.
+      const stylePromise = fetch("https://tiles.openfreemap.org/styles/positron")
+        .then((r) => (r.ok ? r.json() : null))
+        .catch(() => null);
+      const [maplibregl, styleJson] = await Promise.all([import("maplibre-gl"), stylePromise]);
       if (disposed || !mapContainer.current) return;
       maplibregl.setWorkerUrl("/maplibre/maplibre-gl-worker.mjs");
       const map = new maplibregl.Map({
         container: mapContainer.current,
-        style: "https://tiles.openfreemap.org/styles/positron",
+        style: styleJson ?? "https://tiles.openfreemap.org/styles/positron",
         center: [10, 8],
         zoom: 2.65,
         minZoom: 0.8,
         maxZoom: 14,
         attributionControl: false,
         renderWorldCopies: false,
+        // High-density phone screens render 8x the pixels at full ratio; cap it for faster paints.
+        pixelRatio: Math.min(window.devicePixelRatio || 1, 2),
+        fadeDuration: 0,
       });
       mapRef.current = map;
       map.on("style.load", () => {
