@@ -163,7 +163,7 @@ function Index() {
           data: { type: "FeatureCollection", features: [] },
         });
         map.addLayer({ id: "event-route-shadow", type: "line", source: "event-route", layout: { "line-cap": "round", "line-join": "round" }, paint: { "line-color": "#2a1546", "line-width": 16, "line-opacity": 0.16, "line-blur": 4 } });
-        map.addLayer({ id: "event-route", type: "line", source: "event-route", layout: { "line-cap": "round", "line-join": "round" }, paint: { "line-color": "#7c4ddb", "line-width": 8, "line-opacity": 0.95 } });
+        map.addLayer({ id: "event-route", type: "line", source: "event-route", layout: { "line-cap": "round", "line-join": "round" }, paint: { "line-color": "#7c4ddb", "line-width": 8, "line-opacity": 0.95, "line-dasharray": [1.4, 1.2] } });
       });
       setMapReady(true);
       const observer = new ResizeObserver(() => map.resize());
