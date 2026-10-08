@@ -100,7 +100,7 @@ const CATEGORY_COLORS: Record<string, string> = {
 const categoryColor = (c: string) => CATEGORY_COLORS[c] ?? "#2a1546";
 
 function pinIconSvg(category: string) {
-  const markup = pinFilledMarkup[category] ?? pinFilledMarkup.Briefcase ?? "";
+  const markup = pinFilledMarkup[category] ?? pinFilledMarkup["Briefcase"] ?? "";
   return `<svg class="pin-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" fill="currentColor" aria-hidden="true">${markup}</svg>`;
 }
 
@@ -199,7 +199,7 @@ function Index() {
     setDarkMode(dark);
     try { localStorage.setItem("backyrd-theme", dark ? "dark" : "light"); } catch { /* Keep the switch usable without storage. */ }
     const map = mapRef.current;
-    if (map?.isStyleLoaded()) tintBasemap(map);
+    if (map?.isStyleLoaded()) tintBasemap(map as unknown as Parameters<typeof tintBasemap>[0]);
   }
   useEffect(() => {
     try { const saved = localStorage.getItem("backyard-home"); if (saved) { const h = JSON.parse(saved); setHome(h); setOrigin(h.coords); } } catch { /* ignore */ }
