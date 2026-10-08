@@ -109,6 +109,7 @@
   --sidebar-ring: var(--ring);
   --glass-border: oklch(0.75 0.03 277 / 35%);
   --glass-ghost: oklch(1 0 0 / 22%);
+  --home-pin: oklch(0.300 0.095 305);
   --map-land: #fbfaff;
   --map-water: #cfe0fa;
   --map-park: #d9f2e5;
@@ -277,7 +278,7 @@
 
 /* User's home pin */
 .home-marker { cursor: default; }
-.home-marker .pin-shape { background: var(--secondary-foreground); }
+.home-marker .pin-shape { background: var(--home-pin); }
 .home-marker .pin-pulse { animation: pin-pulse 2.4s ease-out infinite; border-color: var(--plum); }
 /* Calendar days that have listings */
 .calendar-busy { position: relative; }
