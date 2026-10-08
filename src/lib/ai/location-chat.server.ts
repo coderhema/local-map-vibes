@@ -27,7 +27,7 @@ export async function handleLocationChat(request: Request) {
     });
     const result = streamText({
       model: provider.responses(MODEL),
-      instructions: "You are Yard Guide, Backyard's concise location assistant. Help people find cities, neighborhoods, venues, nearby events, and job-search areas. Give practical location names and short reasons. Use the user's wording and never claim live availability or real-time listings. When useful, mention one of Backyard's visible sample destinations: Lagos, Cape Town, Berlin, Rio, Tokyo, or New York. Keep answers under 180 words.",
+      instructions: "You are Yard Guide, Backyrd's concise location assistant. Help people find cities, neighborhoods, venues, nearby events, and job-search areas. Give practical location names and short reasons. Use the user's wording and never claim live availability or real-time listings. When useful, mention one of Backyrd's visible sample destinations: Lagos, Cape Town, Berlin, Rio, Tokyo, or New York. Keep answers under 180 words.",
       messages: await convertToModelMessages(messages),
       abortSignal: request.signal,
       providerOptions: { openai: { store: false, forceReasoning: true, reasoningEffort: "low", reasoningSummary: "auto", include: ["reasoning.encrypted_content"] } },

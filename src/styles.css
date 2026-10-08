@@ -63,7 +63,7 @@
   --font-display: "Inter", ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
 }
 
-:root, .dark {
+:root {
   color-scheme: light;
   --radius: 1.25rem;
   /* Paper */
@@ -107,7 +107,58 @@
   --sidebar-accent-foreground: var(--accent-foreground);
   --sidebar-border: var(--border);
   --sidebar-ring: var(--ring);
+  --glass-border: oklch(0.75 0.03 277 / 35%);
+  --glass-ghost: oklch(1 0 0 / 22%);
+  --home-pin: oklch(0.300 0.095 305);
+  --map-land: #fbfaff;
+  --map-water: #cfe0fa;
+  --map-park: #d9f2e5;
+  --map-building: #ece9fb;
+  --map-river: #a8c6ef;
+  --map-boundary: #b3bdf0;
+  --map-road: #e9e8f8;
+  --map-water-label: #4a6ed0;
+  --map-label: #3d2a6e;
+  --map-halo: #ffffff;
 }
+
+.dark {
+  color-scheme: dark;
+  --background: oklch(0.17 0.018 290);
+  --foreground: oklch(0.94 0.009 285);
+  --plum: oklch(0.82 0.06 305);
+  --card: oklch(0.225 0.025 290 / 91%);
+  --popover: oklch(0.235 0.025 290);
+  --primary: oklch(0.64 0.20 277);
+  --secondary: oklch(0.29 0.035 285);
+  --secondary-foreground: var(--foreground);
+  --muted: oklch(0.265 0.022 290);
+  --muted-foreground: oklch(0.75 0.022 285);
+  --accent: oklch(0.32 0.055 280);
+  --accent-foreground: oklch(0.94 0.025 285);
+  --border: oklch(0.65 0.04 285 / 30%);
+  --input: oklch(0.65 0.04 285 / 45%);
+  --ring: oklch(0.75 0.14 277);
+  --surface: oklch(0.225 0.025 290 / 82%);
+  --surface-strong: oklch(0.225 0.025 290);
+  --sidebar: var(--card);
+  --glass-border: oklch(0.8 0.04 285 / 20%);
+  --glass-ghost: oklch(0.4 0.025 290 / 16%);
+  --map-land: #252630;
+  --map-water: #151f2e;
+  --map-park: #253e38;
+  --map-building: #343442;
+  --map-river: #304c62;
+  --map-boundary: #595775;
+  --map-road: #41424e;
+  --map-water-label: #8faecb;
+  --map-label: #c7c6db;
+  --map-halo: #252630;
+}
+
+.frosted-button { backdrop-filter: blur(12px) saturate(125%); }
+.frosted-button:not(:disabled) { border-color: var(--glass-border); }
+.frosted-ghost { background: var(--glass-ghost); }
 
 @layer base {
   * {
@@ -120,7 +171,7 @@
     margin: 0;
     min-width: 320px;
     font-family: var(--font-sans);
-    letter-spacing: -0.006em;
+    letter-spacing: 0;
     overflow: hidden;
   }
 }
@@ -187,7 +238,7 @@
   animation: float-pin 2.8s ease-in-out infinite;
   transition: background-color 180ms ease, border-color 180ms ease, outline-color 180ms ease;
 }
-.event-marker .pin-icon { width: 0.95rem; height: 0.95rem; color: oklch(0.99 0 0); transform: rotate(45deg); transition: color 180ms ease; }
+.event-marker .pin-icon { width: 0.95rem; height: 0.95rem; color: var(--primary-foreground); transform: rotate(45deg); transition: color 180ms ease; }
 .event-marker .pin-shadow { position: absolute; left: 50%; bottom: -0.14rem; width: 1.05rem; height: 0.28rem; border-radius: 999px; background: color-mix(in oklab, var(--plum) 26%, transparent); filter: blur(2px); transform: translateX(-50%); }
 .event-marker .pin-pulse { position: absolute; left: 50%; bottom: -1rem; width: 1.7rem; height: 1.7rem; border: 1px solid var(--primary); border-radius: 999px; opacity: 0; transform: translate(-50%, -50%); }
 .event-marker .pin-label { position: absolute; left: 50%; bottom: 2.7rem; width: max-content; max-width: 11rem; overflow: hidden; border: 1px solid var(--border); border-radius: 999px; background: var(--popover); color: var(--popover-foreground); padding: 0.3rem 0.6rem; font-family: var(--font-sans); font-size: 0.62rem; font-weight: 700; line-height: 1; opacity: 0; pointer-events: none; text-overflow: ellipsis; white-space: nowrap; box-shadow: 0 5px 16px color-mix(in oklab, var(--plum) 14%, transparent); transform: translate(-50%, 4px); transition: opacity 150ms ease, transform 150ms ease; }
@@ -227,7 +278,7 @@
 
 /* User's home pin */
 .home-marker { cursor: default; }
-.home-marker .pin-shape { background: var(--plum); }
+.home-marker .pin-shape { background: var(--home-pin); }
 .home-marker .pin-pulse { animation: pin-pulse 2.4s ease-out infinite; border-color: var(--plum); }
 /* Calendar days that have listings */
 .calendar-busy { position: relative; }
