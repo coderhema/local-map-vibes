@@ -29,6 +29,8 @@ import {
   CalendarPlus,
   Crosshair,
   HandPointing,
+  Moon,
+  Sun,
 } from "@phosphor-icons/react";
 import { useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
@@ -38,15 +40,15 @@ import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { LocationAssistant } from "@/components/location-assistant";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
-import { pinDuotonePaths } from "@/lib/pin-icons";
+import { pinFilledMarkup } from "@/lib/pin-icons";
 import { collectListings, getListings, refreshListings, type Listing } from "@/lib/listings.functions";
 
 export const Route = createFileRoute("/")({
   head: () => ({
     meta: [
-      { title: "Backyard — Events and jobs around you" },
+      { title: "Backyrd — Events and jobs around you" },
       { name: "description", content: "Discover events and job opportunities in your city, region, and around the world." },
-      { property: "og:title", content: "Backyard — Events and jobs around you" },
+      { property: "og:title", content: "Backyrd — Events and jobs around you" },
       { property: "og:description", content: "Find what is happening and where your next opportunity is." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },
@@ -97,23 +99,9 @@ const CATEGORY_COLORS: Record<string, string> = {
 };
 const categoryColor = (c: string) => CATEGORY_COLORS[c] ?? "#2a1546";
 
-/* Phosphor bold-weight paths (viewBox 0 0 256 256) for the pin icons */
-const pinIconPaths: Record<string, string> = {
-  Music: "M215.38,14.54a12,12,0,0,0-10.29-2.18l-128,32A12,12,0,0,0,68,56V159.35A40,40,0,1,0,92,196V113.37l104-26v40A40,40,0,1,0,220,164V24A12,12,0,0,0,215.38,14.54ZM52,212a16,16,0,1,1,16-16A16,16,0,0,1,52,212ZM92,88.63V65.37l104-26V62.63ZM180,180a16,16,0,1,1,16-16A16,16,0,0,1,180,180Z",
-  Culture: "M203.57,51A107.9,107.9,0,0,0,20,128c0,44.72,27.6,82.25,72,97.94A36,36,0,0,0,140,192a12,12,0,0,1,12-12h46.21a35.79,35.79,0,0,0,35.1-28A108.6,108.6,0,0,0,236,127.09,107.23,107.23,0,0,0,203.57,51Zm6.34,95.67a11.91,11.91,0,0,1-11.7,9.3H152a36,36,0,0,0-36,36,12,12,0,0,1-16,11.3c-16.65-5.88-30.65-15.76-40.48-28.56A76,76,0,0,1,44,128a84,84,0,0,1,83.13-84H128a84.35,84.35,0,0,1,84,83.29A84.72,84.72,0,0,1,209.91,146.71ZM144,76a16,16,0,1,1-16-16A16,16,0,0,1,144,76Zm-44,24A16,16,0,1,1,84,84,16,16,0,0,1,100,100Zm0,56a16,16,0,1,1-16-16A16,16,0,0,1,100,156Zm88-56a16,16,0,1,1-16-16A16,16,0,0,1,188,100Z",
-  Technology: "M156,88H100a12,12,0,0,0-12,12v56a12,12,0,0,0,12,12h56a12,12,0,0,0,12-12V100A12,12,0,0,0,156,88Zm-12,56H112V112h32Zm88-4H220V116h12a12,12,0,0,0,0-24H220V56a20,20,0,0,0-20-20H164V24a12,12,0,0,0-24,0V36H116V24a12,12,0,0,0-24,0V36H56A20,20,0,0,0,36,56V92H24a12,12,0,0,0,0,24H36v24H24a12,12,0,0,0,0,24H36v36a20,20,0,0,0,20,20H92v12a12,12,0,0,0,24,0V220h24v12a12,12,0,0,0,24,0V220h36a20,20,0,0,0,20-20V164h12a12,12,0,0,0,0-24Zm-36,56H60V60H196Z",
-  Food: "M68,88V40a12,12,0,0,1,24,0V88a12,12,0,0,1-24,0ZM220,40V224a12,12,0,0,1-24,0V180H152a12,12,0,0,1-12-12,273.23,273.23,0,0,1,7.33-57.82C157.42,68.42,176.76,40.33,203.27,29A12,12,0,0,1,220,40ZM196,62.92C182.6,77,175,98,170.77,115.38A254.41,254.41,0,0,0,164.55,156H196ZM128,39A12,12,0,0,0,104,41l4,47.46a28,28,0,0,1-56,0L56,41A12,12,0,1,0,32,39L28,87c0,.34,0,.67,0,1a52.1,52.1,0,0,0,40,50.59V224a12,12,0,0,0,24,0V138.59A52.1,52.1,0,0,0,132,88c0-.33,0-.66,0-1Z",
-  Sports: "M128,20A108,108,0,1,0,236,128,108.12,108.12,0,0,0,128,20ZM60,177.28A83.59,83.59,0,0,1,44.87,140H75.14A83.1,83.1,0,0,1,60,177.28ZM44.87,116A83.59,83.59,0,0,1,60,78.72,83.1,83.1,0,0,1,75.14,116ZM116,211.13a83.63,83.63,0,0,1-39-16.46A106.94,106.94,0,0,0,99.34,140H116ZM116,116H99.34A106.94,106.94,0,0,0,77,61.33a83.63,83.63,0,0,1,39-16.46Zm80-37.28A83.59,83.59,0,0,1,211.13,116H180.86A83.1,83.1,0,0,1,196,78.72ZM140,211.13V140h16.66A106.94,106.94,0,0,0,179,194.67,83.63,83.63,0,0,1,140,211.13ZM156.66,116H140V44.87a83.63,83.63,0,0,1,39,16.46A106.94,106.94,0,0,0,156.66,116ZM196,177.28A83.1,83.1,0,0,1,180.86,140h30.27A83.59,83.59,0,0,1,196,177.28Z",
-  Design: "M252,92.68a19.86,19.86,0,0,0-5.86-14.14L177.46,9.85a20,20,0,0,0-28.29,0L121.35,37.67,64.11,59.14A20,20,0,0,0,51.4,74.58L28.16,214A12,12,0,0,0,40,228a11.9,11.9,0,0,0,2-.16l139.45-23.25a20.07,20.07,0,0,0,15.44-12.7l21.46-57.25,27.82-27.82A19.85,19.85,0,0,0,252,92.68ZM175.2,181.3,75,198l33-33a34,34,0,1,0-17-17L58,181,74.7,80.8,125,61.94,194.05,131ZM112,134a10,10,0,1,1,10,10A10,10,0,0,1,112,134Zm96-23L145,48l18.34-18.34,63,63Z",
-  Community: "M125.18,156.94a64,64,0,1,0-82.36,0,100.23,100.23,0,0,0-39.49,32,12,12,0,0,0,19.35,14.2,76,76,0,0,1,122.64,0,12,12,0,0,0,19.36-14.2A100.33,100.33,0,0,0,125.18,156.94ZM44,108a40,40,0,1,1,40,40A40,40,0,0,1,44,108Zm206.1,97.67a12,12,0,0,1-16.78-2.57A76.31,76.31,0,0,0,172,172a12,12,0,0,1,0-24,40,40,0,1,0-10.3-78.67,12,12,0,1,1-6.16-23.19,64,64,0,0,1,57.64,110.8,100.23,100.23,0,0,1,39.49,32A12,12,0,0,1,250.1,205.67Z",
-  Briefcase: "M100,100a12,12,0,0,1,12-12h32a12,12,0,0,1,0,24H112A12,12,0,0,1,100,100ZM236,68V196a20,20,0,0,1-20,20H40a20,20,0,0,1-20-20V68A20,20,0,0,1,40,48H76V40a28,28,0,0,1,28-28h48a28,28,0,0,1,28,28v8h36A20,20,0,0,1,236,68ZM100,48h56V40a4,4,0,0,0-4-4H104a4,4,0,0,0-4,4ZM44,72v35.23A180.06,180.06,0,0,0,128,128a180,180,0,0,0,84-20.78V72ZM212,192V133.94A204.27,204.27,0,0,1,128,152a204.21,204.21,0,0,1-84-18.06V192Z",
-};
-
-void pinIconPaths;
-void CalendarBlank;
 function pinIconSvg(category: string) {
-  const [fill, outline] = (pinDuotonePaths[category] ?? pinDuotonePaths["Briefcase"])!;
-  return `<svg class="pin-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" fill="currentColor" aria-hidden="true"><path d="${fill}" opacity="0.32"/><path d="${outline}"/></svg>`;
+  const markup = pinFilledMarkup[category] ?? pinFilledMarkup.Briefcase ?? "";
+  return `<svg class="pin-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" fill="currentColor" aria-hidden="true">${markup}</svg>`;
 }
 
 /* Great-circle interpolation so routes curve naturally over the globe */
@@ -137,7 +125,7 @@ function downloadIcs(item: Listing) {
   const end = new Date(start.getTime() + 2 * 36e5);
   const f = (d: Date) => d.toISOString().replace(/[-:]/g, "").replace(/\.\d{3}/, "");
   const esc = (t: string) => t.replace(/[,;\\]/g, (c) => `\\${c}`);
-  const ics = ["BEGIN:VCALENDAR", "VERSION:2.0", "PRODID:-//Backyard//EN", "BEGIN:VEVENT", `UID:${item.id}@backyard`, `DTSTAMP:${f(new Date())}`, `DTSTART:${f(start)}`, `DTEND:${f(end)}`, `SUMMARY:${esc(item.kind === "Jobs" ? `Apply: ${item.title}` : item.title)}`, `LOCATION:${esc(item.place)}`, item.sourceUrl ? `URL:${item.sourceUrl}` : "", "END:VEVENT", "END:VCALENDAR"].filter(Boolean).join("\r\n");
+  const ics = ["BEGIN:VCALENDAR", "VERSION:2.0", "PRODID:-//Backyrd//EN", "BEGIN:VEVENT", `UID:${item.id}@backyard`, `DTSTAMP:${f(new Date())}`, `DTSTART:${f(start)}`, `DTEND:${f(end)}`, `SUMMARY:${esc(item.kind === "Jobs" ? `Apply: ${item.title}` : item.title)}`, `LOCATION:${esc(item.place)}`, item.sourceUrl ? `URL:${item.sourceUrl}` : "", "END:VEVENT", "END:VCALENDAR"].filter(Boolean).join("\r\n");
   const a = document.createElement("a");
   a.href = URL.createObjectURL(new Blob([ics], { type: "text/calendar" }));
   a.download = `${item.title.slice(0, 40).replace(/[^\w]+/g, "-")}.ics`;
@@ -198,6 +186,21 @@ function Index() {
   const homeMarkerRef = useRef<import("maplibre-gl").Marker | null>(null);
   const [day, setDay] = useState<Date | undefined>();
   const [calOpen, setCalOpen] = useState(false);
+  const [darkMode, setDarkMode] = useState(false);
+  useEffect(() => {
+    let dark = window.matchMedia("(prefers-color-scheme: dark)").matches;
+    try { const saved = localStorage.getItem("backyrd-theme"); if (saved) dark = saved === "dark"; } catch { /* Storage may be unavailable. */ }
+    document.documentElement.classList.toggle("dark", dark);
+    setDarkMode(dark);
+  }, []);
+  function toggleTheme() {
+    const dark = !darkMode;
+    document.documentElement.classList.toggle("dark", dark);
+    setDarkMode(dark);
+    try { localStorage.setItem("backyrd-theme", dark ? "dark" : "light"); } catch { /* Keep the switch usable without storage. */ }
+    const map = mapRef.current;
+    if (map?.isStyleLoaded()) tintBasemap(map);
+  }
   useEffect(() => {
     try { const saved = localStorage.getItem("backyard-home"); if (saved) { const h = JSON.parse(saved); setHome(h); setOrigin(h.coords); } } catch { /* ignore */ }
   }, []);
@@ -558,10 +561,10 @@ function Index() {
     setAlerts(nextValue);
     if (nextValue) {
       playNotificationPing();
-      toast.success("Backyard alerts are on", { description: "We’ll ping you about nearby events and jobs." });
+      toast.success("Backyrd alerts are on", { description: "We’ll ping you about nearby events and jobs." });
       return;
     }
-    toast("Backyard alerts are off");
+    toast("Backyrd alerts are off");
   }
 
   function followSelected() {
@@ -578,7 +581,7 @@ function Index() {
 
       <header className="absolute left-4 right-4 top-4 z-40 flex h-14 items-center justify-between rounded-[1.25rem] border border-border bg-card/90 px-4 backdrop-blur-xl md:left-6 md:right-6 md:px-4">
         <div className="flex min-w-0 items-center">
-          <div><p className="truncate font-display text-xl md:text-2xl font-black tracking-tight leading-none">Backyard</p></div>
+          <div><p className="truncate font-display text-xl md:text-2xl font-black tracking-tight leading-none">Backyrd</p></div>
         </div>
         <div className="ml-auto flex shrink-0 items-center gap-0.5 md:mr-2 md:gap-2">
           <Popover open={locOpen} onOpenChange={setLocOpen}>
@@ -603,6 +606,7 @@ function Index() {
           </Popover>
         </div>
         <div className="flex shrink-0 items-center gap-0.5 md:gap-2">
+          <Button variant="ghost" size="icon-sm" onClick={toggleTheme} aria-label={darkMode ? "Use light mode" : "Use dark mode"} aria-pressed={darkMode}>{darkMode ? <Sun className="size-4" weight="fill" /> : <Moon className="size-4" weight="fill" />}</Button>
           <Button variant="ghost" size="sm" onClick={refreshFromWeb} disabled={refreshing} aria-label="Refresh listings"><ArrowsClockwise className={`size-4 ${refreshing ? "animate-spin" : ""}`} weight="bold" /> <span className="hidden md:inline">{refreshing ? "Refreshing…" : "Refresh listings"}</span></Button>
           <Button onClick={toggleAlerts} variant={alerts ? "default" : "ghost"} size="sm" aria-pressed={alerts} aria-label={alerts ? "Alerts on" : "Notify me"}><BellRinging className={`size-4 ${alerts ? "notification-bell" : ""}`} weight={alerts ? "fill" : "duotone"} /> <span className="hidden md:inline">{alerts ? "Alerts on" : "Notify me"}</span></Button>
         </div>
@@ -624,7 +628,7 @@ function Index() {
 
       <aside className={`absolute bottom-4 left-4 top-[5.2rem] z-30 w-[calc(100%-2rem)] flex-col overflow-hidden rounded-[28px] border border-border bg-card/95 backdrop-blur-xl transition-[width] duration-300 md:left-6 md:flex ${sidebarCollapsed ? "md:w-14" : "md:w-80"} ${showBrowse ? "flex" : "hidden"}`}>
         <div className={`border-b border-border ${sidebarCollapsed ? "hidden md:flex md:flex-col md:items-center md:gap-2 md:p-2" : "px-4 py-4"}`}>
-          {sidebarCollapsed ? <><TooltipProvider><Tooltip><TooltipTrigger asChild><Button variant="ghost" size="icon-sm" onClick={() => setSidebarCollapsed(false)} aria-label="Expand discovery panel"><SidebarSimple className="size-4" weight="duotone" /></Button></TooltipTrigger><TooltipContent side="right">Expand panel</TooltipContent></Tooltip><Tooltip><TooltipTrigger asChild><Button variant={kind === "Events" ? "secondary" : "ghost"} size="icon-sm" onClick={() => { setKind("Events"); setCategory("All"); }} aria-label="Events"><Confetti className="size-4" weight="duotone" /></Button></TooltipTrigger><TooltipContent side="right">Events</TooltipContent></Tooltip><Tooltip><TooltipTrigger asChild><Button variant={kind === "Jobs" ? "secondary" : "ghost"} size="icon-sm" onClick={() => { setKind("Jobs"); setCategory("All"); }} aria-label="Jobs"><Briefcase className="size-4" weight="duotone" /></Button></TooltipTrigger><TooltipContent side="right">Jobs</TooltipContent></Tooltip></TooltipProvider></> : <><div className="mb-4 grid grid-cols-2 gap-1 rounded-full bg-muted p-1"><Button variant={kind === "Events" ? "secondary" : "ghost"} size="sm" className={kind === "Events" ? "border-0 bg-secondary text-foreground" : "border-0 bg-transparent"} onClick={() => { setKind("Events"); setCategory("All"); setSelected(initialEvent); }}><Confetti className="size-4" weight="duotone" />Events</Button><Button variant={kind === "Jobs" ? "secondary" : "ghost"} size="sm" className={kind === "Jobs" ? "border-0 bg-secondary text-foreground" : "border-0 bg-transparent"} onClick={() => { const firstJob = events.find((item) => item.kind === "Jobs"); setKind("Jobs"); setCategory("All"); if (firstJob) setSelected(firstJob); }}><Briefcase className="size-4" weight="duotone" />Jobs</Button></div><div className="flex items-center justify-between"><div><p className="font-display text-2xl font-black tracking-tight">In your backyard</p><p className="mt-1 text-xs text-muted-foreground">{filtered.length} {kind.toLowerCase()} to explore</p></div><Button className="md:hidden" aria-label="Close discovery" variant="ghost" size="icon" onClick={() => setShowBrowse(false)}><X className="size-4" /></Button><Button className="hidden md:inline-flex" aria-label="Collapse discovery panel" variant="ghost" size="icon-sm" onClick={() => setSidebarCollapsed(true)}><SidebarSimple className="size-4" weight="duotone" /></Button></div></>}
+          {sidebarCollapsed ? <><TooltipProvider><Tooltip><TooltipTrigger asChild><Button variant="ghost" size="icon-sm" onClick={() => setSidebarCollapsed(false)} aria-label="Expand discovery panel"><SidebarSimple className="size-4" weight="duotone" /></Button></TooltipTrigger><TooltipContent side="right">Expand panel</TooltipContent></Tooltip><Tooltip><TooltipTrigger asChild><Button variant={kind === "Events" ? "secondary" : "ghost"} size="icon-sm" onClick={() => { setKind("Events"); setCategory("All"); }} aria-label="Events"><Confetti className="size-4" weight="duotone" /></Button></TooltipTrigger><TooltipContent side="right">Events</TooltipContent></Tooltip><Tooltip><TooltipTrigger asChild><Button variant={kind === "Jobs" ? "secondary" : "ghost"} size="icon-sm" onClick={() => { setKind("Jobs"); setCategory("All"); }} aria-label="Jobs"><Briefcase className="size-4" weight="duotone" /></Button></TooltipTrigger><TooltipContent side="right">Jobs</TooltipContent></Tooltip></TooltipProvider></> : <><div className="mb-4 grid grid-cols-2 gap-1 rounded-full bg-muted p-1"><Button variant={kind === "Events" ? "secondary" : "ghost"} size="sm" className={kind === "Events" ? "border-0 bg-secondary text-foreground" : "border-0 bg-transparent"} onClick={() => { setKind("Events"); setCategory("All"); setSelected(initialEvent); }}><Confetti className="size-4" weight="duotone" />Events</Button><Button variant={kind === "Jobs" ? "secondary" : "ghost"} size="sm" className={kind === "Jobs" ? "border-0 bg-secondary text-foreground" : "border-0 bg-transparent"} onClick={() => { const firstJob = events.find((item) => item.kind === "Jobs"); setKind("Jobs"); setCategory("All"); if (firstJob) setSelected(firstJob); }}><Briefcase className="size-4" weight="duotone" />Jobs</Button></div><div className="flex items-center justify-between"><div><p className="font-display text-2xl font-black tracking-tight">In your Backyrd</p><p className="mt-1 text-xs text-muted-foreground">{filtered.length} {kind.toLowerCase()} to explore</p></div><Button className="md:hidden" aria-label="Close discovery" variant="ghost" size="icon" onClick={() => setShowBrowse(false)}><X className="size-4" /></Button><Button className="hidden md:inline-flex" aria-label="Collapse discovery panel" variant="ghost" size="icon-sm" onClick={() => setSidebarCollapsed(true)}><SidebarSimple className="size-4" weight="duotone" /></Button></div></>}
         </div>
         <div className={`paper-scroll flex-1 overflow-y-auto p-2 ${sidebarCollapsed ? "hidden" : "block"}`}>
           {filtered.map((event) => (
@@ -685,26 +689,28 @@ function Index() {
   );
 }
 
-// Duotone lilac/white recolor of the Positron basemap.
+// Theme the existing vector layers without reloading tiles.
 function tintBasemap(map: { getStyle: () => { layers?: { id: string; type: string }[] }; setPaintProperty: (id: string, prop: string, value: unknown) => void }) {
+  const palette = getComputedStyle(document.documentElement);
+  const color = (role: string) => palette.getPropertyValue(`--map-${role}`).trim();
   const layers = map.getStyle().layers ?? [];
   const set = (id: string, prop: string, value: unknown) => { try { map.setPaintProperty(id, prop, value); } catch { /* ignore */ } };
   for (const layer of layers) {
     const id = layer.id.toLowerCase();
     if (id.startsWith("event-route")) continue;
-    if (layer.type === "background") set(layer.id, "background-color", "#fbfaff");
+    if (layer.type === "background") set(layer.id, "background-color", color("land"));
     else if (layer.type === "fill") {
-      if (id.includes("water")) set(layer.id, "fill-color", "#cfe0fa");
-      else if (id.includes("park") || id.includes("landcover") || id.includes("wood") || id.includes("grass")) set(layer.id, "fill-color", "#d9f2e5");
-      else if (id.includes("building")) set(layer.id, "fill-color", "#ece9fb");
-      else set(layer.id, "fill-color", "#fbfaff");
+      if (id.includes("water")) set(layer.id, "fill-color", color("water"));
+      else if (id.includes("park") || id.includes("landcover") || id.includes("wood") || id.includes("grass")) set(layer.id, "fill-color", color("park"));
+      else if (id.includes("building")) set(layer.id, "fill-color", color("building"));
+      else set(layer.id, "fill-color", color("land"));
     } else if (layer.type === "line") {
-      if (id.includes("water") || id.includes("river")) set(layer.id, "line-color", "#a8c6ef");
-      else if (id.includes("boundary") || id.includes("admin")) set(layer.id, "line-color", "#b3bdf0");
-      else set(layer.id, "line-color", "#e9e8f8");
+      if (id.includes("water") || id.includes("river")) set(layer.id, "line-color", color("river"));
+      else if (id.includes("boundary") || id.includes("admin")) set(layer.id, "line-color", color("boundary"));
+      else set(layer.id, "line-color", color("road"));
     } else if (layer.type === "symbol") {
-      set(layer.id, "text-color", id.includes("water") ? "#4a6ed0" : "#3d2a6e");
-      set(layer.id, "text-halo-color", "#ffffff");
+      set(layer.id, "text-color", id.includes("water") ? color("water-label") : color("label"));
+      set(layer.id, "text-halo-color", color("halo"));
     }
   }
 }
