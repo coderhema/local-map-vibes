@@ -1,5 +1,5 @@
 import { useChat } from "@ai-sdk/react";
-import { ChatCircleDots, Compass, X } from "@phosphor-icons/react";
+import { ChatCircleDots, Compass, Moon, Sun, X } from "@phosphor-icons/react";
 import { DefaultChatTransport, type UIMessage } from "ai";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { toast } from "sonner";
@@ -22,7 +22,7 @@ function loadMessages(): UIMessage[] {
   }
 }
 
-export function LocationAssistant() {
+export function LocationAssistant({ darkMode, onToggleTheme }: { darkMode: boolean; onToggleTheme: () => void }) {
   const [open, setOpen] = useState(false);
   const [storageReady, setStorageReady] = useState(false);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
@@ -51,9 +51,12 @@ export function LocationAssistant() {
 
   return (
     <>
-      <Button className="absolute right-4 top-[12.6rem] z-30 size-10 rounded-full border border-border bg-secondary/95 backdrop-blur-xl md:right-6 md:top-[9.8rem]" variant="secondary" size="icon" onClick={() => setOpen(true)} aria-label="Open Yard Guide">
+      <div className="absolute right-4 top-[12.6rem] z-30 flex flex-col gap-2 md:right-6 md:top-[9.8rem]">
+      <Button className="size-10 rounded-full border border-border bg-secondary/95 backdrop-blur-xl" variant="secondary" size="icon" onClick={() => setOpen(true)} aria-label="Open Yard Guide">
         <ChatCircleDots className="size-5" weight="duotone" />
       </Button>
+      <Button variant="secondary" size="icon" onClick={onToggleTheme} aria-label={darkMode ? "Use light mode" : "Use dark mode"} aria-pressed={darkMode}>{darkMode ? <Sun className="size-4" weight="fill" /> : <Moon className="size-4" weight="fill" />}</Button>
+      </div>
 
       {open && (
         <section className="absolute bottom-4 right-4 top-[5.2rem] z-50 flex w-[calc(100%-2rem)] max-w-[24rem] flex-col overflow-hidden rounded-[28px] border border-border bg-card backdrop-blur-xl md:bottom-6 md:right-6" aria-label="Yard Guide location assistant">

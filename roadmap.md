@@ -1,5 +1,7 @@
 # Roadmap
 
+- [x] Sideways distant-pin directions, curved shields, dark stars, 3D edge clouds and real-position monuments; theme switch beside chat
+
 - [x] Rename app Backyrd, fill pin icons, lightly frost buttons, and add matching dark mode
 
 - [x] Apply uploaded Apple dark visual system and verify map controls

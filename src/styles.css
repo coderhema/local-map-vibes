@@ -110,6 +110,9 @@
   --glass-border: oklch(0.75 0.03 277 / 35%);
   --glass-ghost: oklch(1 0 0 / 22%);
   --home-pin: oklch(0.300 0.095 305);
+  --cloud-color: #f4f8ff;
+  --monument-color: #a88752;
+  --star-color: #f5f0ff;
   --map-land: #fbfaff;
   --map-water: #cfe0fa;
   --map-park: #d9f2e5;
@@ -145,6 +148,8 @@
   --glass-border: oklch(0.8 0.04 285 / 20%);
   --glass-ghost: oklch(0.4 0.025 290 / 16%);
   --map-land: #252630;
+  --cloud-color: #9daec4;
+  --monument-color: #dbc28c;
   --map-water: #151f2e;
   --map-park: #253e38;
   --map-building: #343442;
@@ -177,8 +182,8 @@
 }
 
 @keyframes float-pin {
-  0%, 100% { transform: translateY(0) rotate(-45deg); }
-  50% { transform: translateY(-2px) rotate(-45deg); }
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-2px); }
 }
 
 @keyframes pin-pulse {
@@ -229,16 +234,17 @@
   width: 1.8rem;
   height: 1.8rem;
   place-items: center;
-  border-radius: 50% 50% 50% 12%;
+  border-radius: 42% 42% 48% 48%;
+  clip-path: path("M 14.4 0 C 21 0 28.8 3 28.8 9 C 28.8 18 23 24 14.4 28.8 C 5.8 24 0 18 0 9 C 0 3 7.8 0 14.4 0 Z");
   border: 0.5px solid color-mix(in oklab, var(--background) 70%, transparent);
   background: var(--pin-accent, var(--plum));
   outline: none;
   box-shadow: none;
-  transform: rotate(-45deg);
+  transform: none;
   animation: float-pin 2.8s ease-in-out infinite;
   transition: background-color 180ms ease, border-color 180ms ease, outline-color 180ms ease;
 }
-.event-marker .pin-icon { width: 0.95rem; height: 0.95rem; color: var(--primary-foreground); transform: rotate(45deg); transition: color 180ms ease; }
+.event-marker .pin-icon { width: 0.95rem; height: 0.95rem; color: var(--primary-foreground); transform: translateY(-2px); transition: color 180ms ease; }
 .event-marker .pin-shadow { position: absolute; left: 50%; bottom: -0.14rem; width: 1.05rem; height: 0.28rem; border-radius: 999px; background: color-mix(in oklab, var(--plum) 26%, transparent); filter: blur(2px); transform: translateX(-50%); }
 .event-marker .pin-pulse { position: absolute; left: 50%; bottom: -1rem; width: 1.7rem; height: 1.7rem; border: 1px solid var(--primary); border-radius: 999px; opacity: 0; transform: translate(-50%, -50%); }
 .event-marker .pin-label { position: absolute; left: 50%; bottom: 2.7rem; width: max-content; max-width: 11rem; overflow: hidden; border: 1px solid var(--border); border-radius: 999px; background: var(--popover); color: var(--popover-foreground); padding: 0.3rem 0.6rem; font-family: var(--font-sans); font-size: 0.62rem; font-weight: 700; line-height: 1; opacity: 0; pointer-events: none; text-overflow: ellipsis; white-space: nowrap; box-shadow: 0 5px 16px color-mix(in oklab, var(--plum) 14%, transparent); transform: translate(-50%, 4px); transition: opacity 150ms ease, transform 150ms ease; }
@@ -283,3 +289,16 @@
 /* Calendar days that have listings */
 .calendar-busy { position: relative; }
 .calendar-busy::after { content: ""; position: absolute; bottom: 3px; left: 50%; width: 4px; height: 4px; border-radius: 999px; background: var(--primary); transform: translateX(-50%); }
+
+.direction-pin { position: absolute; pointer-events: auto; width: 30px; height: 30px; padding: 0; border: 0; background: transparent; cursor: pointer; }
+.direction-pin[hidden] { display: none; }
+.direction-pin[data-side="left"] { left: 0; }
+.direction-pin[data-side="right"] { right: 0; }
+.direction-shield { display: grid; place-items: center; width: 30px; height: 30px; background: var(--primary); color: var(--primary-foreground); border-radius: 42%; clip-path: polygon(0 0, 100% 0, 100% 65%, 90% 78%, 50% 100%, 10% 78%, 0 65%); transform: rotate(-90deg); }
+.direction-pin[data-side="right"] .direction-shield { transform: rotate(90deg); }
+.direction-shield svg { width: 16px; height: 16px; transform: rotate(90deg); }
+.direction-pin[data-side="right"] svg { transform: rotate(-90deg); }
+.direction-pin:hover { filter: brightness(1.15); }
+.dark .map-shell { background: var(--background); }
+.world-atmosphere { pointer-events: none; position: absolute; inset: 0; z-index: 1; }
+.world-atmosphere canvas { pointer-events: none !important; }
