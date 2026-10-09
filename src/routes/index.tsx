@@ -623,13 +623,6 @@ function Index() {
               </div>
             </PopoverContent>
           </Popover>
-          <Popover open={calOpen} onOpenChange={setCalOpen}>
-            <PopoverTrigger asChild><Button variant={day ? "secondary" : "ghost"} size="sm" aria-label="Calendar"><CalendarBlank className="size-4" weight="duotone" /><span className="hidden lg:inline">{day ? day.toLocaleDateString(undefined, { month: "short", day: "numeric" }) : "Calendar"}</span></Button></PopoverTrigger>
-            <PopoverContent align="end" className="w-auto rounded-3xl p-2">
-              <Calendar mode="single" selected={day} onSelect={(d) => { setDay(d); setCalOpen(false); }} modifiers={{ busy: events.filter((e) => e.kind === kind && e.startsAt).map((e) => new Date(e.startsAt!)) }} modifiersClassNames={{ busy: "calendar-busy" }} />
-              <p className="px-2 pb-1 text-[11px] text-muted-foreground">Dotted days have {kind.toLowerCase()}. Pick one to filter the map.</p>
-            </PopoverContent>
-          </Popover>
         </div>
         <div className="flex shrink-0 items-center gap-0.5 md:gap-2">
           <Button variant="ghost" size="sm" onClick={refreshFromWeb} disabled={refreshing} aria-label="Refresh listings"><ArrowsClockwise className={`size-4 ${refreshing ? "animate-spin" : ""}`} weight="bold" /> <span className="hidden md:inline">{refreshing ? "Refreshing…" : "Refresh listings"}</span></Button>
