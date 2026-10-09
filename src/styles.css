@@ -111,6 +111,8 @@
   --glass-ghost: oklch(1 0 0 / 22%);
   --home-pin: oklch(0.300 0.095 305);
   --star-color: #f5f0ff;
+  --route-color: #f43f2e;
+  --route-shadow: #2a1546;
   --map-land: #fbfaff;
   --map-water: #cfe0fa;
   --map-park: #d9f2e5;
@@ -158,6 +160,18 @@
 }
 
 .frosted-button { backdrop-filter: blur(12px) saturate(125%); }
+
+.route-distance-popup { pointer-events: none; }
+.route-distance-popup .maplibregl-popup-content {
+  background: var(--popover);
+  color: var(--popover-foreground);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  box-shadow: none;
+  padding: 9px 13px;
+  font: 600 12px var(--font-sans);
+}
+.route-distance-popup .maplibregl-popup-tip { display: none; }
 .frosted-button:not(:disabled) { border-color: var(--glass-border); }
 .frosted-ghost { background: var(--glass-ghost); }
 
