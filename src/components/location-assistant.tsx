@@ -1,5 +1,5 @@
 import { useChat } from "@ai-sdk/react";
-import { ChatCircleDots, Compass, X } from "@phosphor-icons/react";
+import { ChatCircleDots, Compass, Moon, Sun, X } from "@phosphor-icons/react";
 import { DefaultChatTransport, type UIMessage } from "ai";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { toast } from "sonner";
@@ -22,7 +22,7 @@ function loadMessages(): UIMessage[] {
   }
 }
 
-export function LocationAssistant() {
+export function LocationAssistant({ darkMode, onToggleTheme }: { darkMode: boolean; onToggleTheme: () => void }) {
   const [open, setOpen] = useState(false);
   const [storageReady, setStorageReady] = useState(false);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
