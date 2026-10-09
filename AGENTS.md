@@ -17,4 +17,6 @@
 - The user's chosen home location is browser-persisted (`backyard-home`) and is the origin for routes and distances, so no account is needed.
 - Map pins are diffed by listing id (reused, not rebuilt) and the countdown ticks in its own small component, because rebuilding pins or re-rendering the whole page every second made the map lag on phones.
 - Persist appearance in `backyrd-theme`, default to the device preference, and keep existing home/chat storage keys unchanged so branding changes do not erase user choices.
-- Lazy-load the pointer-transparent R3F atmosphere after the map mounts; project stylized monuments from geographic coordinates and hide horizon-covered objects to preserve map interaction and initial loading speed.
+- Lazy-load the pointer-transparent R3F atmosphere after the map mounts; project stylized monuments and surface clouds from geographic coordinates and hide horizon-covered objects to preserve map interaction and initial loading speed.
+- Group distant hints by side, listing kind and category with a selectable member list; update only when group membership changes to keep camera movement smooth.
+- Keep city, regional, world and street camera presets in the browser-safe map-discovery module; focus changes the camera, not listing availability, so worldwide opportunities remain accessible.

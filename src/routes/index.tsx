@@ -170,7 +170,7 @@ function Index() {
   const [refreshing, setRefreshing] = useState(false);
   const [category, setCategory] = useState("All");
   const [kind, setKind] = useState<"Events" | "Jobs">("Events");
-  const [selected, setSelected] = useState<EventItem>(initialEvent);
+  const [selected, setSelected] = useState<EventItem | undefined>(initialEvent);
   const [query, setQuery] = useState("");
   const [alerts, setAlerts] = useState(false);
   const [showPanel, setShowPanel] = useState(true);
@@ -507,7 +507,7 @@ function Index() {
     setMode(m);
     const map = mapRef.current;
     if (map?.getLayer("event-route")) map.setPaintProperty("event-route", "line-dasharray", m === "flight" ? [1.4, 1.2] : m === "walk" ? [0.2, 1.6] : [1, 0]);
-    if (routeShownRef.current === selected.id) drawRoute([origin, selected.coordinates], true, travelMs(m), true);
+    if (selected && routeShownRef.current === selected.id) drawRoute([origin, selected.coordinates], true, travelMs(m), true);
   }
 
   function showDirections(event: EventItem) {
@@ -582,6 +582,7 @@ function Index() {
   }
 
   function followSelected() {
+    if (!selected) return;
     setAlerts(true);
     playNotificationPing();
     toast.success(selected.kind === "Jobs" ? "Job saved" : "Event followed", {
@@ -649,7 +650,7 @@ function Index() {
         </div>
         <div className={`paper-scroll flex-1 overflow-y-auto p-2 ${sidebarCollapsed ? "hidden" : "block"}`}>
           {filtered.map((event) => (
-            <Button variant="ghost" key={event.id} onClick={() => { focusEvent(event); setShowBrowse(false); }} className={`mb-2 block h-auto w-full whitespace-normal rounded-2xl border p-4 text-left transition-colors ${selected.id === event.id ? "border-primary bg-accent" : "border-transparent hover:bg-secondary"}`} aria-pressed={selected.id === event.id}>
+            <Button variant="ghost" key={event.id} onClick={() => { focusEvent(event); setShowBrowse(false); }} className={`mb-2 block h-auto w-full whitespace-normal rounded-2xl border p-4 text-left transition-colors ${selected?.id === event.id ? "border-primary bg-accent" : "border-transparent hover:bg-secondary"}`} aria-pressed={selected?.id === event.id}>
                <div className="flex items-start justify-between gap-3"><span className="text-[10px] font-semibold uppercase" style={{ color: categoryColor(event.category) }}>{event.category}</span><span className="text-[10px] text-muted-foreground">{event.attendees}</span></div>
                <p className="mt-1 font-display text-base font-semibold leading-tight">{event.title}</p><p className="mt-2 flex items-center gap-1 text-xs text-muted-foreground"><MapPin className="size-3" weight="duotone" />{event.place}</p><p className="mt-2 text-xs font-semibold">{event.date}</p>
             </Button>
