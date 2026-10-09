@@ -67,7 +67,7 @@ function Calendar({
         ),
         dropdown: cn("bg-popover absolute inset-0 opacity-0", defaultClassNames.dropdown),
         caption_label: cn(
-          "select-none font-medium",
+          "select-none font-semibold tracking-tight",
           captionLayout === "label"
             ? "text-sm"
             : "[&>svg]:text-muted-foreground flex h-8 items-center gap-1 rounded-md pl-2 pr-1 text-sm [&>svg]:size-3.5",
