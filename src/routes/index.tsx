@@ -29,19 +29,20 @@ import {
   CalendarPlus,
   Crosshair,
   HandPointing,
-  Moon,
-  Sun,
 } from "@phosphor-icons/react";
-import { useEffect, useRef, useState } from "react";
+import { lazy, Suspense, useCallback, useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
 
 import { Button } from "@/components/ui/button";
 import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { MapDirections } from "@/components/map-directions";
 import { LocationAssistant } from "@/components/location-assistant";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { pinFilledMarkup } from "@/lib/pin-icons";
 import { collectListings, getListings, refreshListings, type Listing } from "@/lib/listings.functions";
+
+const WorldAtmosphere = lazy(() => import("@/components/world-atmosphere"));
 
 export const Route = createFileRoute("/")({
   head: () => ({
@@ -187,6 +188,7 @@ function Index() {
   const [day, setDay] = useState<Date | undefined>();
   const [calOpen, setCalOpen] = useState(false);
   const [darkMode, setDarkMode] = useState(false);
+  const selectDistant = useCallback((item: EventItem) => { setSelected(item); setShowPanel(true); mapRef.current?.flyTo({ center: item.coordinates, zoom: 4.5, duration: 1800, essential: true }); }, []);
   useEffect(() => {
     let dark = window.matchMedia("(prefers-color-scheme: dark)").matches;
     try { const saved = localStorage.getItem("backyrd-theme"); if (saved) dark = saved === "dark"; } catch { /* Storage may be unavailable. */ }
@@ -579,6 +581,9 @@ function Index() {
     <main className="relative h-dvh min-h-[640px] overflow-hidden bg-background text-foreground">
       <div ref={mapContainer} className="map-shell absolute inset-0" aria-label="Interactive map showing events and jobs" />
 
+      {mapReady && mapRef.current && <Suspense fallback={null}><WorldAtmosphere map={mapRef.current} dark={darkMode} /></Suspense>}
+      <MapDirections map={mapReady ? mapRef.current : null} listings={filtered} onSelect={selectDistant} />
+
       <header className="absolute left-4 right-4 top-4 z-40 flex h-14 items-center justify-between rounded-[1.25rem] border border-border bg-card/90 px-4 backdrop-blur-xl md:left-6 md:right-6 md:px-4">
         <div className="flex min-w-0 items-center">
           <div><p className="truncate font-display text-xl md:text-2xl font-black tracking-tight leading-none">Backyrd</p></div>
@@ -606,7 +611,6 @@ function Index() {
           </Popover>
         </div>
         <div className="flex shrink-0 items-center gap-0.5 md:gap-2">
-          <Button variant="ghost" size="icon-sm" onClick={toggleTheme} aria-label={darkMode ? "Use light mode" : "Use dark mode"} aria-pressed={darkMode}>{darkMode ? <Sun className="size-4" weight="fill" /> : <Moon className="size-4" weight="fill" />}</Button>
           <Button variant="ghost" size="sm" onClick={refreshFromWeb} disabled={refreshing} aria-label="Refresh listings"><ArrowsClockwise className={`size-4 ${refreshing ? "animate-spin" : ""}`} weight="bold" /> <span className="hidden md:inline">{refreshing ? "Refreshing…" : "Refresh listings"}</span></Button>
           <Button onClick={toggleAlerts} variant={alerts ? "default" : "ghost"} size="sm" aria-pressed={alerts} aria-label={alerts ? "Alerts on" : "Notify me"}><BellRinging className={`size-4 ${alerts ? "notification-bell" : ""}`} weight={alerts ? "fill" : "duotone"} /> <span className="hidden md:inline">{alerts ? "Alerts on" : "Notify me"}</span></Button>
         </div>
@@ -670,7 +674,7 @@ function Index() {
         </section>
       )}
 
-      <div className="absolute right-4 top-[16.5rem] z-20 flex flex-col gap-2 md:right-6 md:top-[13rem] max-md:[&>button:not(:first-child)]:hidden"><TooltipProvider><Tooltip><TooltipTrigger asChild><Button variant="secondary" size="icon" onClick={toggleProjection} aria-label={isGlobe ? "Use flat map" : "Use globe"}>{isGlobe ? <MapTrifold className="size-4" weight="duotone" /> : <GlobeHemisphereWest className="size-4" weight="duotone" />}</Button></TooltipTrigger><TooltipContent side="left">{isGlobe ? "Flat map" : "Globe view"}</TooltipContent></Tooltip></TooltipProvider><Button variant="secondary" size="icon" onClick={() => mapRef.current?.zoomIn()} aria-label="Zoom in"><Plus className="size-4" weight="bold" /></Button><Button variant="secondary" size="icon" onClick={() => mapRef.current?.zoomOut()} aria-label="Zoom out"><Minus className="size-4" weight="bold" /></Button></div>
+      <div className="absolute right-4 top-[19rem] z-20 flex flex-col gap-2 md:right-6 md:top-[16rem] max-md:[&>button:not(:first-child)]:hidden"><TooltipProvider><Tooltip><TooltipTrigger asChild><Button variant="secondary" size="icon" onClick={toggleProjection} aria-label={isGlobe ? "Use flat map" : "Use globe"}>{isGlobe ? <MapTrifold className="size-4" weight="duotone" /> : <GlobeHemisphereWest className="size-4" weight="duotone" />}</Button></TooltipTrigger><TooltipContent side="left">{isGlobe ? "Flat map" : "Globe view"}</TooltipContent></Tooltip></TooltipProvider><Button variant="secondary" size="icon" onClick={() => mapRef.current?.zoomIn()} aria-label="Zoom in"><Plus className="size-4" weight="bold" /></Button><Button variant="secondary" size="icon" onClick={() => mapRef.current?.zoomOut()} aria-label="Zoom out"><Minus className="size-4" weight="bold" /></Button></div>
       {tour.length > 0 && (
         <section className="absolute left-1/2 top-[9.6rem] z-30 w-[calc(100%-2rem)] max-w-[34rem] md:top-[10.5rem] -translate-x-1/2 rounded-[28px] border border-border bg-card/95 px-4 py-3 backdrop-blur-xl">
           <div className="flex items-center justify-between gap-3">
@@ -684,7 +688,7 @@ function Index() {
         </section>
       )}
       {pickingHome && <div className="absolute bottom-6 left-1/2 z-40 flex -translate-x-1/2 items-center gap-2 rounded-full bg-plum px-4 py-2 text-sm font-semibold text-primary-foreground"><HandPointing className="size-4" weight="fill" />Tap the map to set your location<button type="button" aria-label="Cancel" onClick={() => { pickingHomeRef.current = false; setPickingHome(false); }}><X className="size-4" /></button></div>}
-      <LocationAssistant />
+      <LocationAssistant darkMode={darkMode} onToggleTheme={toggleTheme} />
     </main>
   );
 }
