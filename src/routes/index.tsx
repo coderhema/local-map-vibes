@@ -111,6 +111,7 @@ function pinIconSvg(category: string) {
 function LiveCountdown({ target }: { target: string | null }) {
   const [now, setNow] = useState<number | null>(null);
   useEffect(() => { setNow(Date.now()); const t = window.setInterval(() => setNow(Date.now()), 1000); return () => window.clearInterval(t); }, []);
+  if (target && now === null) return <span className="breathe-shimmer">Checking date…</span>;
   return <>{countdown(target, now) ?? "—"}</>;
 }
 
@@ -165,6 +166,7 @@ function Index() {
   const [home, setHome] = useState<{ coords: [number, number]; label: string } | null>(null);
   const [locOpen, setLocOpen] = useState(false);
   const [placeQuery, setPlaceQuery] = useState("");
+  const [placeSearching, setPlaceSearching] = useState(false);
   const [placeResults, setPlaceResults] = useState<{ label: string; coords: [number, number] }[]>([]);
   const pickingHomeRef = useRef(false);
   const [pickingHome, setPickingHome] = useState(false);
@@ -391,14 +393,16 @@ function Index() {
 
   useEffect(() => {
     const q = placeQuery.trim();
-    if (q.length < 2) { setPlaceResults([]); return; }
+    if (q.length < 2) { setPlaceResults([]); setPlaceSearching(false); return; }
+    setPlaceSearching(true);
     const ctrl = new AbortController();
     const t = window.setTimeout(() => {
       fetch(`https://photon.komoot.io/api/?q=${encodeURIComponent(q)}&limit=5&layer=city&layer=state&layer=country&layer=district`, { signal: ctrl.signal })
         .then((r) => r.json())
         .then((d: { features: { geometry: { coordinates: [number, number] }; properties: { name?: string; state?: string; country?: string } }[] }) =>
           setPlaceResults(d.features.map((f) => ({ coords: f.geometry.coordinates, label: [f.properties.name, f.properties.state, f.properties.country].filter((v, i, a) => v && a.indexOf(v) === i).join(", ") }))))
-        .catch(() => {});
+        .catch(() => {})
+        .finally(() => { if (!ctrl.signal.aborted) setPlaceSearching(false); });
     }, 300);
     return () => { ctrl.abort(); window.clearTimeout(t); };
   }, [placeQuery]);
@@ -618,7 +622,8 @@ function Index() {
               <p className="px-1 font-display text-base font-black tracking-tight">Where are you?</p>
               <p className="px-1 text-xs text-muted-foreground">Routes, distances and alerts start from here.</p>
               <input autoFocus value={placeQuery} onChange={(e) => setPlaceQuery(e.target.value)} placeholder="Search your city, state or country" className="mt-3 h-10 w-full rounded-full border border-border bg-background px-4 text-sm outline-none focus:border-primary" />
-              {placeResults.length > 0 && <div className="mt-2 max-h-48 overflow-y-auto">{placeResults.map((r) => <button key={`${r.label}${r.coords.join()}`} type="button" onClick={() => { saveHomeRef.current(r.coords, r.label); setPlaceQuery(""); }} className="flex w-full items-center gap-2 rounded-2xl px-3 py-2 text-left text-sm hover:bg-secondary"><MapPin className="size-4 shrink-0 text-primary" weight="duotone" />{r.label}</button>)}</div>}
+              {placeSearching && <p className="breathe-shimmer mt-3 px-3 text-sm">Finding places…</p>}
+              {!placeSearching && placeResults.length > 0 && <div className="mt-2 max-h-48 overflow-y-auto">{placeResults.map((r) => <button key={`${r.label}${r.coords.join()}`} type="button" onClick={() => { saveHomeRef.current(r.coords, r.label); setPlaceQuery(""); }} className="flex w-full items-center gap-2 rounded-2xl px-3 py-2 text-left text-sm hover:bg-secondary"><MapPin className="size-4 shrink-0 text-primary" weight="duotone" />{r.label}</button>)}</div>}
               <div className="mt-3 grid grid-cols-2 gap-2">
                 <Button variant="secondary" size="sm" onClick={useGps}><Crosshair className="size-4" weight="duotone" />Use GPS</Button>
                 <Button variant="secondary" size="sm" onClick={startPickOnMap}><HandPointing className="size-4" weight="duotone" />Pick on map</Button>

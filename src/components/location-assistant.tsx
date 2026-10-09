@@ -7,7 +7,6 @@ import { toast } from "sonner";
 import { Conversation, ConversationContent, ConversationEmptyState, ConversationScrollButton } from "@/components/ai-elements/conversation";
 import { Message, MessageContent, MessageResponse } from "@/components/ai-elements/message";
 import { PromptInput, PromptInputFooter, PromptInputSubmit, PromptInputTextarea } from "@/components/ai-elements/prompt-input";
-import { Shimmer } from "@/components/ai-elements/shimmer";
 import { Button } from "@/components/ui/button";
 
 const STORAGE_KEY = "backyard-location-chat";
@@ -76,7 +75,7 @@ export function LocationAssistant({ darkMode, onToggleTheme }: { darkMode: boole
                   </MessageContent>
                 </Message>
               ))}
-              {status === "submitted" && <Shimmer className="text-sm">Looking around...</Shimmer>}
+              {status === "submitted" && <p className="breathe-shimmer text-sm">Looking around the map…</p>}
               {error && <p className="text-sm text-destructive">{error.message}</p>}
             </ConversationContent>
             <ConversationScrollButton />
