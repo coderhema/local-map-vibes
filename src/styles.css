@@ -291,10 +291,10 @@
 .direction-pin[hidden] { display: none; }
 .direction-pin[data-side="left"] { left: 32px; }
 .direction-pin[data-side="right"] { right: 76px; }
-.direction-shield { display: grid; place-items: center; width: 30px; height: 30px; background: var(--primary); color: var(--primary-foreground); border-radius: 0; clip-path: shape(from 12% 0, line to 88% 0, curve to 100% 12% with 100% 0, line to 100% 48%, curve to 50% 100% with 100% 79% / 68% 91%, curve to 0 48% with 32% 91% / 0 79%, line to 0 12%, curve to 12% 0 with 0 0, close); transform: rotate(-90deg); }
-.direction-pin[data-side="right"] .direction-shield { transform: rotate(90deg); }
-.direction-shield svg { width: 16px; height: 16px; transform: rotate(90deg); }
-.direction-pin[data-side="right"] svg { transform: rotate(-90deg); }
+.direction-shield { display: grid; place-items: center; width: 30px; height: 30px; background: var(--primary); color: var(--primary-foreground); border: 0.5px solid color-mix(in oklab, var(--background) 55%, transparent); border-radius: 10px; box-shadow: 0 2px 6px color-mix(in oklab, var(--plum) 10%, transparent); }
+.direction-pin[data-side="right"] .direction-shield { transform: none; }
+.direction-shield svg { width: 16px; height: 16px; }
+.direction-pin[data-side="right"] svg { transform: none; }
 .direction-pin:hover { filter: brightness(1.15); }
 .direction-count { position: absolute; right: -9px; top: -7px; min-width: 22px; height: 19px; padding: 0 4px; display: grid; place-items: center; border-radius: 999px; border: 1px solid var(--glass-border); background: var(--surface-strong); color: var(--foreground); font: 800 10px/1 var(--font-sans); }
 @media (min-width: 768px) {
@@ -303,7 +303,7 @@
   .direction-pin[data-side="right"] { right: 84px; }
 }
 @supports not (clip-path: shape(from 0 0, line to 100% 100%, close)) {
-  .pin-shape, .direction-shield { clip-path: polygon(8% 0, 92% 0, 100% 8%, 100% 48%, 91% 71%, 72% 88%, 50% 100%, 28% 88%, 9% 71%, 0 48%, 0 8%); }
+  .pin-shape { clip-path: polygon(8% 0, 92% 0, 100% 8%, 100% 48%, 91% 71%, 72% 88%, 50% 100%, 28% 88%, 9% 71%, 0 48%, 0 8%); }
 }
 .dark .map-shell { background: var(--background); }
 .world-atmosphere { pointer-events: none; position: absolute; inset: 0; z-index: 1; }
