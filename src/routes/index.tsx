@@ -41,6 +41,7 @@ import { LocationAssistant } from "@/components/location-assistant";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { pinFilledMarkup } from "@/lib/pin-icons";
 import { MAP_VIEWS } from "@/lib/map-discovery";
+import { installRouteTrails, setRouteTrail, routePath, routeDistanceKm, ROUTE_LABELS, type RouteMode } from "@/lib/route-trails";
 import { collectListings, getListings, refreshListings, type Listing } from "@/lib/listings.functions";
 
 const WorldAtmosphere = lazy(() => import("@/components/world-atmosphere"));
@@ -67,7 +68,7 @@ export const Route = createFileRoute("/")({
 });
 
 type EventItem = Listing;
-type Mode = "flight" | "transit" | "drive" | "walk";
+type Mode = RouteMode;
 const LAGOS: [number, number] = [3.3792, 6.5244];
 const MODES: { id: Mode; label: string; kmh: number; overheadH: number }[] = [
   { id: "flight", label: "Fly", kmh: 820, overheadH: 2.5 },
@@ -139,24 +140,6 @@ const WORK_MODES = [
   { id: "Hybrid", Icon: ArrowsLeftRight },
   { id: "In-person", Icon: Buildings },
 ] as const;
-
-function arcPoints(a: [number, number], b: [number, number], steps = 96): [number, number][] {
-  const r = Math.PI / 180;
-  const [l1, p1, l2, p2] = [a[0] * r, a[1] * r, b[0] * r, b[1] * r];
-  const d = 2 * Math.asin(Math.sqrt(Math.sin((p2 - p1) / 2) ** 2 + Math.cos(p1) * Math.cos(p2) * Math.sin((l2 - l1) / 2) ** 2));
-  if (d < 1e-6) return [a, b];
-  const pts: [number, number][] = [];
-  for (let i = 0; i <= steps; i++) {
-    const f = i / steps;
-    const A = Math.sin((1 - f) * d) / Math.sin(d);
-    const B = Math.sin(f * d) / Math.sin(d);
-    const x = A * Math.cos(p1) * Math.cos(l1) + B * Math.cos(p2) * Math.cos(l2);
-    const y = A * Math.cos(p1) * Math.sin(l1) + B * Math.cos(p2) * Math.sin(l2);
-    const z = A * Math.sin(p1) + B * Math.sin(p2);
-    pts.push([Math.atan2(y, x) / r, Math.atan2(z, Math.sqrt(x * x + y * y)) / r]);
-  }
-  return pts;
-}
 
 function Index() {
   const mapContainer = useRef<HTMLDivElement>(null);
@@ -253,12 +236,22 @@ function Index() {
         map.setPitch(45);
         map.setPadding({ top: 210, right: 0, bottom: 0, left: 0 });
         tintBasemap(map as unknown as Parameters<typeof tintBasemap>[0]);
-        map.addSource("event-route", {
-          type: "geojson",
-          data: { type: "FeatureCollection", features: [] },
+        installRouteTrails(map);
+        const popup = new maplibregl.Popup({ closeButton: false, closeOnClick: false, offset: 16, className: "route-distance-popup" });
+        map.on("mousemove", "event-route-hit", (e) => {
+          const info = routeInfoRef.current;
+          if (!info) return;
+          map.getCanvas().style.cursor = "pointer";
+          popup.setLngLat(e.lngLat).setText(`${ROUTE_LABELS[info.mode]} · ≈ ${info.km.toLocaleString(undefined, { maximumFractionDigits: 1 })} km`).addTo(map);
         });
-        map.addLayer({ id: "event-route-shadow", type: "line", source: "event-route", layout: { "line-cap": "round", "line-join": "round" }, paint: { "line-color": "#2a1546", "line-width": 16, "line-opacity": 0.18, "line-blur": 4 } });
-        map.addLayer({ id: "event-route", type: "line", source: "event-route", layout: { "line-cap": "round", "line-join": "round" }, paint: { "line-color": "#f43f2e", "line-width": 8, "line-opacity": 0.95, "line-dasharray": [1.4, 1.2] } });
+        const hideDistance = () => { popup.remove(); map.getCanvas().style.cursor = ""; };
+        map.on("mouseleave", "event-route-hit", hideDistance);
+        map.on("movestart", hideDistance);
+        map.on("click", "event-route-hit", (e) => {
+          const info = routeInfoRef.current;
+          if (info) popup.setLngLat(e.lngLat).setText(`${ROUTE_LABELS[info.mode]} · ≈ ${info.km.toLocaleString(undefined, { maximumFractionDigits: 1 })} km`).addTo(map);
+        });
+        map.once("remove", () => popup.remove());
       });
       map.on("click", (e) => {
         if (!pickingHomeRef.current) return;
@@ -275,6 +268,7 @@ function Index() {
     void mountMap();
     return () => {
       disposed = true;
+      cancelAnimationFrame(routeAnimRef.current);
       mapRef.current?.remove();
       mapRef.current = null;
       markerRefs.current.clear();
@@ -468,18 +462,24 @@ function Index() {
   }
 
   const routeAnimRef = useRef(0);
-  function drawRoute(coordinates: [number, number][], fit = true, speedMs = 2200, arrive = false) {
+  const routeInfoRef = useRef<{ mode: Mode; km: number } | null>(null);
+  function drawRoute(coordinates: [number, number][], fit = true, speedMs = 2200, arrive = false, routeMode = mode) {
     const map = mapRef.current;
     if (!map) return;
     const source = map.getSource("event-route") as import("maplibre-gl").GeoJSONSource | undefined;
     cancelAnimationFrame(routeAnimRef.current);
     if (coordinates.length < 2) {
+      routeInfoRef.current = null;
       source?.setData({ type: "FeatureCollection", features: [] });
       return;
     }
+    setRouteTrail(map, routeMode);
+    routeInfoRef.current = { mode: routeMode, km: routeDistanceKm(coordinates) };
     const path: [number, number][] = [];
     for (let i = 0; i < coordinates.length - 1; i++) {
-      const seg = arcPoints(coordinates[i]!, coordinates[i + 1]!);
+      const a = coordinates[i], b = coordinates[i + 1];
+      if (!a || !b) continue;
+      const seg = routePath(a, b, routeMode);
       path.push(...(i ? seg.slice(1) : seg));
     }
     const duration = speedMs + 500 * (coordinates.length - 2);
@@ -492,14 +492,16 @@ function Index() {
       const exact = e * (path.length - 1);
       const i = Math.floor(exact);
       const f = exact - i;
-      const a = path[i]!, b = path[Math.min(i + 1, path.length - 1)]!;
+      const a = path[i], b = path[Math.min(i + 1, path.length - 1)];
+      if (!a || !b) return;
       const coords = [...path.slice(0, i + 1), [a[0] + (b[0] - a[0]) * f, a[1] + (b[1] - a[1]) * f] as [number, number]];
       source?.setData({ type: "Feature", properties: {}, geometry: { type: "LineString", coordinates: coords } });
       if (t < 1) routeAnimRef.current = requestAnimationFrame(step);
       else if (arrive) {
         // Phase 2: swoop down into the destination, framed above the details card.
         const wide = window.innerWidth >= 768;
-        map.flyTo({ center: coordinates.at(-1)!, zoom: 7.5, pitch: 0, curve: 1.6, speed: 0.9, padding: { top: 140, bottom: wide ? 80 : 340, left: wide ? 340 : 0, right: wide ? 440 : 0 }, essential: true, easing: (x) => 1 - (1 - x) ** 3 });
+        const destination = coordinates.at(-1);
+        if (destination) map.flyTo({ center: destination, zoom: 7.5, pitch: 0, curve: 1.6, speed: 0.9, padding: { top: 140, bottom: wide ? 80 : 340, left: wide ? 340 : 0, right: wide ? 440 : 0 }, essential: true, easing: (x) => 1 - (1 - x) ** 3 });
       }
     };
     routeAnimRef.current = requestAnimationFrame(step);
@@ -511,8 +513,9 @@ function Index() {
   function pickMode(m: Mode) {
     setMode(m);
     const map = mapRef.current;
-    if (map?.getLayer("event-route")) map.setPaintProperty("event-route", "line-dasharray", m === "flight" ? [1.4, 1.2] : m === "walk" ? [0.2, 1.6] : [1, 0]);
-    if (selected && routeShownRef.current === selected.id) drawRoute([origin, selected.coordinates], true, travelMs(m), true);
+    if (map) setRouteTrail(map, m);
+    if (tour.length > 1) drawRoute(tour.map((stop) => stop.coordinates), false, travelMs(m), false, m);
+    else if (selected && routeShownRef.current === selected.id) drawRoute([origin, selected.coordinates], true, travelMs(m), true, m);
   }
 
   function showDirections(event: EventItem) {

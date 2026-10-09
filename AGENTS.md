@@ -20,3 +20,4 @@
 - Lazy-load the pointer-transparent R3F atmosphere after the map mounts; project stylized monuments and surface clouds from geographic coordinates and hide horizon-covered objects to preserve map interaction and initial loading speed.
 - Group distant hints by side, listing kind and category with a selectable member list; update only when group membership changes to keep camera movement smooth.
 - Keep city, regional, world and street camera presets in the browser-safe map-discovery module; focus changes the camera, not listing availability, so worldwide opportunities remain accessible.
+- Keep transport geometry and local repeatable trail textures in the browser-safe route-trails module; use one shared animated source and a wider hover hit-layer for fast, consistent mode switching. Distances are direct geographic estimates, not road-network navigation.
