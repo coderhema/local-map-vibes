@@ -353,3 +353,19 @@
 @media (prefers-reduced-motion: reduce) {
   ::view-transition-new(root) { animation: none; mask-image: none; }
 }
+
+/* Breathing text shimmer for loading states inside cards. */
+.breathe-shimmer {
+  display: inline-block;
+  color: transparent;
+  background: linear-gradient(100deg, var(--muted-foreground) 30%, var(--primary) 50%, var(--muted-foreground) 70%) 0 0 / 250% 100%;
+  -webkit-background-clip: text;
+  background-clip: text;
+  animation: breathe-shimmer 1.8s ease-in-out infinite;
+}
+@keyframes breathe-shimmer {
+  0% { background-position: 100% 0; opacity: 0.55; }
+  50% { opacity: 1; }
+  100% { background-position: 0 0; opacity: 0.55; }
+}
+@media (prefers-reduced-motion: reduce) { .breathe-shimmer { animation: none; color: var(--muted-foreground); } }

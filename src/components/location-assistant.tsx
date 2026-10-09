@@ -76,7 +76,7 @@ export function LocationAssistant({ darkMode, onToggleTheme }: { darkMode: boole
                   </MessageContent>
                 </Message>
               ))}
-              {status === "submitted" && <Shimmer className="text-sm">Looking around...</Shimmer>}
+              {status === "submitted" && <p className="breathe-shimmer text-sm">Looking around the map…</p>}
               {error && <p className="text-sm text-destructive">{error.message}</p>}
             </ConversationContent>
             <ConversationScrollButton />
