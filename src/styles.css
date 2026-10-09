@@ -292,8 +292,8 @@
 
 .direction-pin { position: absolute; pointer-events: auto; width: 30px; height: 30px; padding: 0; border: 0; background: transparent; cursor: pointer; }
 .direction-pin[hidden] { display: none; }
-.direction-pin[data-side="left"] { left: 4px; }
-.direction-pin[data-side="right"] { right: 4px; }
+.direction-pin[data-side="left"] { left: 0; }
+.direction-pin[data-side="right"] { right: 0; }
 .direction-shield { display: grid; place-items: center; width: 30px; height: 30px; background: var(--primary); color: var(--primary-foreground); border-radius: 42%; clip-path: polygon(0 0, 100% 0, 100% 65%, 90% 78%, 50% 100%, 10% 78%, 0 65%); transform: rotate(-90deg); }
 .direction-pin[data-side="right"] .direction-shield { transform: rotate(90deg); }
 .direction-shield svg { width: 16px; height: 16px; transform: rotate(90deg); }

@@ -40,9 +40,10 @@ export function MapDirections({ map, listings, onSelect }: { map: MapLibreMap | 
         button.style.top = `${220 + (i + 0.5) * Math.min(42, Math.max(18, (height - 300) / Math.max(1, side.length)))}px`;
       }));
     };
-    map.on("render", update);
+    map.on("move", update);
+    map.on("resize", update);
     update();
-    return () => { map.off("render", update); root.replaceChildren(); };
+    return () => { map.off("move", update); map.off("resize", update); root.replaceChildren(); };
   }, [map, listings, onSelect]);
-  return <div ref={container} className="pointer-events-none absolute inset-0 z-20" aria-label="Directions to distant listings" />;
+  return <div ref={container} className="pointer-events-none absolute inset-0 z-[35]" aria-label="Directions to distant listings" />;
 }
