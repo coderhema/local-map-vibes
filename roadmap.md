@@ -1,10 +1,10 @@
 # Roadmap
 
-- [ ] Refine shield silhouettes, faint shadows and horizontal pulses
-- [ ] Inset and group distant direction hints with +n badges
-- [ ] Tilt the initial map and support street-level/local-to-world focus
-- [ ] Anchor dimensional clouds over the map surface without blocking movement
-- [ ] Verify map interactions and grouped hints
+- [x] Refine shield silhouettes, faint shadows and horizontal pulses
+- [x] Inset and group distant direction hints with +n badges
+- [x] Tilt the initial map and support street-level/local-to-world focus
+- [x] Anchor dimensional clouds over the map surface without blocking movement
+- [x] Verify map interactions and grouped hints
 
 - [x] Sideways distant-pin directions, curved shields, dark stars, 3D edge clouds and real-position monuments; theme switch beside chat
 
