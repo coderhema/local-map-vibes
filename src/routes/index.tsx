@@ -703,6 +703,20 @@ function Index() {
         </section>
       )}
       {pickingHome && <div className="absolute bottom-6 left-1/2 z-40 flex -translate-x-1/2 items-center gap-2 rounded-full bg-plum px-4 py-2 text-sm font-semibold text-primary-foreground"><HandPointing className="size-4" weight="fill" />Tap the map to set your location<button type="button" aria-label="Cancel" onClick={() => { pickingHomeRef.current = false; setPickingHome(false); }}><X className="size-4" /></button></div>}
+      <div className={`absolute bottom-4 left-1/2 z-30 -translate-x-1/2 md:bottom-6 ${showPanel && selected ? "max-md:hidden" : ""}`}>
+        <Popover open={calOpen} onOpenChange={setCalOpen}>
+          <PopoverTrigger asChild>
+            <button type="button" aria-label="Calendar" className={`flex h-12 items-center gap-2.5 rounded-2xl border border-glass-border bg-foreground px-4 text-background shadow-lg backdrop-blur-xl transition-transform hover:scale-[1.03] active:scale-95`}>
+              <CalendarBlank className="size-5" weight="duotone" />
+              <span className="text-xs font-bold tracking-tight">{day ? day.toLocaleDateString(undefined, { month: "short", day: "numeric" }) : "Calendar"}</span>
+            </button>
+          </PopoverTrigger>
+          <PopoverContent side="top" align="center" className="w-auto rounded-3xl p-2">
+            <Calendar mode="single" selected={day} onSelect={(d) => { setDay(d); setCalOpen(false); }} modifiers={{ busy: events.filter((e) => e.kind === kind && e.startsAt).map((e) => new Date(e.startsAt!)) }} modifiersClassNames={{ busy: "calendar-busy" }} />
+            <p className="px-2 pb-1 text-[11px] text-muted-foreground">Dotted days have {kind.toLowerCase()}. Pick one to filter the map.</p>
+          </PopoverContent>
+        </Popover>
+      </div>
       <LocationAssistant darkMode={darkMode} onToggleTheme={toggleTheme} />
     </main>
   );
