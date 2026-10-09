@@ -71,19 +71,32 @@ export function installRouteTrails(map: LibreMap) {
         ctx.lineWidth = 1.2;
       }
     } else {
-      for (const [x, y, tilt] of [[14, 9, -0.18], [46, 23, 0.18]]) {
-        if (x === undefined || y === undefined || tilt === undefined) continue;
-        ctx.save(); ctx.translate(x, y); ctx.rotate(tilt);
-        ctx.beginPath(); ctx.ellipse(-2, 0, 5.5, 3, 0, 0, Math.PI * 2); ctx.fill();
-        ctx.beginPath(); ctx.ellipse(5, 0, 2.3, 3.1, 0, 0, Math.PI * 2); ctx.fill();
+      // Shoe prints: rounded sole + separate heel, with tread lines cut out.
+      const shoe = (x: number, y: number, tilt: number, flip: number) => {
+        ctx.save(); ctx.translate(x, y); ctx.rotate(tilt); ctx.scale(1, flip);
+        ctx.beginPath();
+        ctx.moveTo(1, -2.2);
+        ctx.bezierCurveTo(4, -3.6, 9.5, -3.4, 10.5, -0.6);
+        ctx.bezierCurveTo(11.2, 1.6, 9, 3.4, 5.5, 3.2);
+        ctx.bezierCurveTo(3, 3, 1.4, 2.2, 1, 1.2);
+        ctx.closePath(); ctx.fill();
+        ctx.beginPath(); ctx.ellipse(-4.2, 0.2, 3, 2.5, 0, 0, Math.PI * 2); ctx.fill();
+        ctx.globalCompositeOperation = "destination-out"; ctx.lineWidth = 0.6;
+        for (const tx of [3, 5, 7, 9]) { ctx.beginPath(); ctx.moveTo(tx, -2.6); ctx.lineTo(tx - 0.6, 2.6); ctx.stroke(); }
+        for (const tx of [-5.5, -3]) { ctx.beginPath(); ctx.moveTo(tx, -1.6); ctx.lineTo(tx, 2); ctx.stroke(); }
         ctx.restore();
-      }
+      };
+      shoe(16, 10, -0.12, 1);
+      shoe(48, 22, 0.12, -1);
     }
     map.addImage(`route-${mode}`, ctx.getImageData(0, 0, 128, 64), { pixelRatio: 2 });
   }
   map.addSource("event-route", { type: "geojson", data: { type: "FeatureCollection", features: [] } });
   map.addLayer({ id: "event-route-shadow", type: "line", source: "event-route", layout: { "line-cap": "round", "line-join": "round" }, paint: { "line-color": palette.getPropertyValue("--route-shadow").trim(), "line-width": 10, "line-opacity": 0.1, "line-blur": 4 } });
   map.addLayer({ id: "event-route", type: "line", source: "event-route", layout: { "line-cap": "round", "line-join": "round" }, paint: { "line-color": color, "line-width": 5, "line-opacity": 0.95 } });
+  map.addSource("event-route-ends", { type: "geojson", data: { type: "FeatureCollection", features: [] } });
+  map.addLayer({ id: "event-route-podium-glow", type: "circle", source: "event-route-ends", paint: { "circle-radius": 22, "circle-color": color, "circle-opacity": 0.25, "circle-blur": 0.6, "circle-pitch-alignment": "map" } });
+  map.addLayer({ id: "event-route-podium", type: "circle", source: "event-route-ends", paint: { "circle-radius": 14, "circle-color": "#ffffff", "circle-opacity": 0.95, "circle-stroke-width": 3, "circle-stroke-color": color, "circle-pitch-alignment": "map", "circle-pitch-scale": "viewport" } });
   map.addLayer({ id: "event-route-hit", type: "line", source: "event-route", paint: { "line-width": 32, "line-opacity": 0 } });
 }
 
@@ -92,4 +105,9 @@ export function setRouteTrail(map: LibreMap, mode: RouteMode) {
   map.setPaintProperty("event-route", "line-pattern", mode === "flight" ? undefined : `route-${mode}`);
   map.setPaintProperty("event-route", "line-width", mode === "flight" ? 5 : 32);
   map.setPaintProperty("event-route-shadow", "line-opacity", mode === "flight" ? 0.1 : 0);
+}
+export function setRouteEnds(map: LibreMap, coordinates: RouteCoordinate[]) {
+  const source = map.getSource("event-route-ends") as import("maplibre-gl").GeoJSONSource | undefined;
+  const a = coordinates[0], b = coordinates[coordinates.length - 1];
+  source?.setData({ type: "FeatureCollection", features: a && b ? [a, b].map((c) => ({ type: "Feature" as const, properties: {}, geometry: { type: "Point" as const, coordinates: c } })) : [] });
 }

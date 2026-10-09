@@ -41,7 +41,7 @@ import { LocationAssistant } from "@/components/location-assistant";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { pinFilledMarkup } from "@/lib/pin-icons";
 import { MAP_VIEWS } from "@/lib/map-discovery";
-import { installRouteTrails, setRouteTrail, routePath, routeDistanceKm, ROUTE_LABELS, type RouteMode } from "@/lib/route-trails";
+import { installRouteTrails, setRouteTrail, setRouteEnds, routePath, routeDistanceKm, ROUTE_LABELS, type RouteMode } from "@/lib/route-trails";
 import { collectListings, getListings, refreshListings, type Listing } from "@/lib/listings.functions";
 
 const WorldAtmosphere = lazy(() => import("@/components/world-atmosphere"));
@@ -471,9 +471,11 @@ function Index() {
     if (coordinates.length < 2) {
       routeInfoRef.current = null;
       source?.setData({ type: "FeatureCollection", features: [] });
+      setRouteEnds(map, []);
       return;
     }
     setRouteTrail(map, routeMode);
+    setRouteEnds(map, coordinates);
     routeInfoRef.current = { mode: routeMode, km: routeDistanceKm(coordinates) };
     const path: [number, number][] = [];
     for (let i = 0; i < coordinates.length - 1; i++) {
