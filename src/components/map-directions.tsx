@@ -55,9 +55,9 @@ export function MapDirections({ map, listings, onSelect, collapsed }: { map: Map
       </Button>;
       return group.items.length === 1 ? <div key={group.key}>{control}</div> : <Popover key={group.key} open={open === group.key} onOpenChange={(value) => setOpen(value ? group.key : null)}>
         <PopoverTrigger asChild>{control}</PopoverTrigger>
-        <PopoverContent side={group.side === "left" ? "right" : "left"} className="w-64 max-w-[calc(100vw-5rem)] p-2">
-          <p className="px-2 py-1 text-xs font-semibold text-muted-foreground">{first.category} · {group.items.length} {first.kind.toLowerCase()}</p>
-          <div className="max-h-64 overflow-y-auto">{group.items.map((item) => <Button key={item.id} variant="ghost" className="h-auto w-full flex-col items-start whitespace-normal px-2 py-2 text-left" onClick={() => { setOpen(null); onSelect(item); }}><span className="text-xs font-semibold">{item.title}</span><span className="text-[11px] text-muted-foreground">{item.place}</span></Button>)}</div>
+        <PopoverContent side={group.side === "left" ? "right" : "left"} className="w-64 max-w-[calc(100vw-5rem)] rounded-[26px] border border-border p-2 shadow-xl">
+          <p className="px-3 py-1.5 text-xs font-semibold text-muted-foreground">{first.category} · {group.items.length} {first.kind.toLowerCase()}</p>
+          <div className="max-h-64 overflow-y-auto">{group.items.map((item) => <Button key={item.id} variant="ghost" className="mb-1 h-auto w-full flex-col items-start whitespace-normal rounded-2xl border border-transparent px-3 py-2 text-left last:mb-0" onClick={() => { setOpen(null); onSelect(item); }}><span className="text-xs font-semibold">{item.title}</span><span className="text-[11px] text-muted-foreground">{item.place}</span></Button>)}</div>
         </PopoverContent>
       </Popover>;
     })}
