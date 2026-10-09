@@ -110,8 +110,6 @@
   --glass-border: oklch(0.75 0.03 277 / 35%);
   --glass-ghost: oklch(1 0 0 / 22%);
   --home-pin: oklch(0.300 0.095 305);
-  --cloud-color: #f4f8ff;
-  --monument-color: #a88752;
   --star-color: #f5f0ff;
   --map-land: #fbfaff;
   --map-water: #cfe0fa;
@@ -148,8 +146,6 @@
   --glass-border: oklch(0.8 0.04 285 / 20%);
   --glass-ghost: oklch(0.4 0.025 290 / 16%);
   --map-land: #252630;
-  --cloud-color: #9daec4;
-  --monument-color: #dbc28c;
   --map-water: #151f2e;
   --map-park: #253e38;
   --map-building: #343442;
@@ -290,7 +286,8 @@
 .calendar-busy { position: relative; }
 .calendar-busy::after { content: ""; position: absolute; bottom: 3px; left: 50%; width: 4px; height: 4px; border-radius: 999px; background: var(--primary); transform: translateX(-50%); }
 
-.direction-pin { position: absolute; pointer-events: auto; width: 34px; height: 34px; padding: 0; border: 0; background: transparent; cursor: pointer; }
+.direction-pin { position: absolute; pointer-events: auto; width: 34px; height: 34px; padding: 0; border: 0; background: transparent; backdrop-filter: none; box-shadow: none; cursor: pointer; }
+.direction-pin:hover, .direction-pin:focus-visible { background: transparent; }
 .direction-pin[hidden] { display: none; }
 .direction-pin[data-side="left"] { left: 32px; }
 .direction-pin[data-side="right"] { right: 76px; }
