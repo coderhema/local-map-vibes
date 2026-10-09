@@ -308,3 +308,18 @@
 .dark .map-shell { background: var(--background); }
 .world-atmosphere { pointer-events: none; position: absolute; inset: 0; z-index: 1; }
 .world-atmosphere * { pointer-events: none !important; }
+
+/* Theme change: fast horizontal slanted sweep across the page */
+::view-transition-old(root),
+::view-transition-new(root) { animation: none; mix-blend-mode: normal; }
+::view-transition-new(root) {
+  animation: theme-sweep 320ms linear both;
+  z-index: 2;
+}
+@keyframes theme-sweep {
+  from { clip-path: polygon(-60% 0%, -30% 0%, -60% 100%, -90% 100%); }
+  to   { clip-path: polygon(100% 0%, 130% 0%, 100% 100%, 70% 100%); }
+}
+@media (prefers-reduced-motion: reduce) {
+  ::view-transition-new(root) { animation: none; }
+}

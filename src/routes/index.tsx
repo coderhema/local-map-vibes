@@ -199,11 +199,16 @@ function Index() {
   }, []);
   function toggleTheme() {
     const dark = !darkMode;
-    document.documentElement.classList.toggle("dark", dark);
-    setDarkMode(dark);
-    try { localStorage.setItem("backyrd-theme", dark ? "dark" : "light"); } catch { /* Keep the switch usable without storage. */ }
-    const map = mapRef.current;
-    if (map?.isStyleLoaded()) tintBasemap(map as unknown as Parameters<typeof tintBasemap>[0]);
+    const apply = () => {
+      document.documentElement.classList.toggle("dark", dark);
+      setDarkMode(dark);
+      try { localStorage.setItem("backyrd-theme", dark ? "dark" : "light"); } catch { /* Keep the switch usable without storage. */ }
+      const map = mapRef.current;
+      if (map?.isStyleLoaded()) tintBasemap(map as unknown as Parameters<typeof tintBasemap>[0]);
+    };
+    const doc = document as Document & { startViewTransition?: (update: () => void) => unknown };
+    if (typeof doc.startViewTransition === "function") doc.startViewTransition(apply);
+    else apply();
   }
   useEffect(() => {
     try { const saved = localStorage.getItem("backyard-home"); if (saved) { const h = JSON.parse(saved); setHome(h); setOrigin(h.coords); } } catch { /* ignore */ }
