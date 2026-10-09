@@ -706,7 +706,7 @@ function Index() {
       <div className={`absolute bottom-4 left-1/2 z-30 -translate-x-1/2 md:bottom-6 ${showPanel && selected ? "max-md:hidden" : ""}`}>
         <Popover open={calOpen} onOpenChange={setCalOpen}>
           <PopoverTrigger asChild>
-            <button type="button" aria-label="Calendar" className={`flex h-12 items-center gap-2.5 rounded-2xl border border-glass-border bg-foreground px-4 text-background shadow-lg backdrop-blur-xl transition-transform hover:scale-[1.03] active:scale-95`}>
+            <button type="button" aria-label="Calendar" className="frosted-button flex h-12 items-center gap-2.5 rounded-2xl border-transparent bg-foreground px-4 text-background shadow-lg transition-transform hover:scale-[1.03] active:scale-95 dark:bg-secondary/60 dark:text-foreground">
               <CalendarBlank className="size-5" weight="duotone" />
               <span className="text-xs font-bold tracking-tight">{day ? day.toLocaleDateString(undefined, { month: "short", day: "numeric" }) : "Calendar"}</span>
             </button>
