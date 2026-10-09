@@ -57,7 +57,7 @@ export function MapDirections({ map, listings, onSelect, collapsed }: { map: Map
         <PopoverTrigger asChild>{control}</PopoverTrigger>
         <PopoverContent side={group.side === "left" ? "right" : "left"} className="w-64 max-w-[calc(100vw-5rem)] rounded-[26px] border border-border p-2 shadow-xl">
           <p className="px-3 py-1.5 text-xs font-semibold text-muted-foreground">{first.category} · {group.items.length} {first.kind.toLowerCase()}</p>
-          <div className="max-h-64 overflow-y-auto">{group.items.map((item) => <Button key={item.id} variant="ghost" className="mb-1 h-auto w-full flex-col items-start whitespace-normal rounded-2xl border border-transparent px-3 py-2 text-left last:mb-0" onClick={() => { setOpen(null); onSelect(item); }}><span className="text-xs font-semibold">{item.title}</span><span className="text-[11px] text-muted-foreground">{item.place}</span></Button>)}</div>
+          <div className="max-h-64 overflow-y-auto">{group.items.map((item) => <Button key={item.id} variant="ghost" className="mb-1 h-auto w-full flex-col items-start whitespace-normal rounded-[18px] border border-transparent px-3 py-2 text-left last:mb-0" onClick={() => { setOpen(null); onSelect(item); }}><span className="text-xs font-semibold">{item.title}</span><span className="text-[11px] text-muted-foreground">{item.place}</span></Button>)}</div>
         </PopoverContent>
       </Popover>;
     })}
