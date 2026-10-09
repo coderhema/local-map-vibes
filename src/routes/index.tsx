@@ -40,6 +40,7 @@ import { MapDirections } from "@/components/map-directions";
 import { LocationAssistant } from "@/components/location-assistant";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { pinFilledMarkup } from "@/lib/pin-icons";
+import { MAP_VIEWS } from "@/lib/map-discovery";
 import { collectListings, getListings, refreshListings, type Listing } from "@/lib/listings.functions";
 
 const WorldAtmosphere = lazy(() => import("@/components/world-atmosphere"));
@@ -161,7 +162,7 @@ function Index() {
   const mapContainer = useRef<HTMLDivElement>(null);
   const mapRef = useRef<import("maplibre-gl").Map | null>(null);
   const events = Route.useLoaderData();
-  const initialEvent = events.find((e) => e.kind === "Events") ?? events[0]!;
+  const initialEvent = events.find((e) => e.kind === "Events") ?? events[0];
   const markerRefs = useRef(new Map<string, HTMLButtonElement>());
   const [mapReady, setMapReady] = useState(false);
   const [mode, setMode] = useState<Mode>("flight");
@@ -188,7 +189,8 @@ function Index() {
   const [day, setDay] = useState<Date | undefined>();
   const [calOpen, setCalOpen] = useState(false);
   const [darkMode, setDarkMode] = useState(false);
-  const selectDistant = useCallback((item: EventItem) => { setSelected(item); setShowPanel(true); mapRef.current?.flyTo({ center: item.coordinates, zoom: 4.5, duration: 1800, essential: true }); }, []);
+  const [focus, setFocus] = useState<"city" | "region" | "world">("world");
+  const selectDistant = useCallback((item: EventItem) => { setSelected(item); setShowPanel(true); mapRef.current?.flyTo({ center: item.coordinates, zoom: 11, pitch: 45, duration: 1800, essential: true }); }, []);
   useEffect(() => {
     let dark = window.matchMedia("(prefers-color-scheme: dark)").matches;
     try { const saved = localStorage.getItem("backyrd-theme"); if (saved) dark = saved === "dark"; } catch { /* Storage may be unavailable. */ }
@@ -230,8 +232,10 @@ function Index() {
         style: styleJson ?? "https://tiles.openfreemap.org/styles/positron",
         center: [10, 8],
         zoom: 2.65,
+        pitch: 45,
+        maxPitch: 65,
         minZoom: 0.8,
-        maxZoom: 14,
+        maxZoom: 19,
         attributionControl: false,
         renderWorldCopies: false,
         // High-density phone screens render 8x the pixels at full ratio; cap it for faster paints.
@@ -241,6 +245,7 @@ function Index() {
       mapRef.current = map;
       map.on("style.load", () => {
         map.setProjection({ type: "globe" });
+        map.setPitch(45);
         map.setPadding({ top: 210, right: 0, bottom: 0, left: 0 });
         tintBasemap(map as unknown as Parameters<typeof tintBasemap>[0]);
         map.addSource("event-route", {
@@ -362,7 +367,8 @@ function Index() {
     setOrigin(coords);
     localStorage.setItem("backyard-home", JSON.stringify(h));
     setLocOpen(false);
-    mapRef.current?.easeTo({ center: coords, zoom: Math.max(mapRef.current.getZoom(), 5), duration: 1100, essential: true });
+    setFocus("city");
+    mapRef.current?.flyTo({ center: coords, ...MAP_VIEWS.city, duration: 1600, essential: true });
     toast.success("Your location is set", { description: label });
   };
 
@@ -418,11 +424,16 @@ function Index() {
     setSelected(event);
     setShowPanel(true);
     markerRefs.current.forEach((marker, id) => marker.classList.toggle("active", id === event.id));
-    mapRef.current?.easeTo({ center: event.coordinates, zoom: 5, duration: 950, essential: true });
+    mapRef.current?.flyTo({ center: event.coordinates, zoom: 11, pitch: 45, duration: 1400, essential: true });
+  }
+
+  function focusArea(next: "city" | "region" | "world") {
+    setFocus(next);
+    mapRef.current?.flyTo({ center: home?.coords ?? origin, ...MAP_VIEWS[next], padding: { top: next === "world" ? 210 : 170, bottom: 0, left: 0, right: 0 }, duration: 1600, essential: true });
   }
 
   function locateUser() {
-    if (home) { mapRef.current?.easeTo({ center: home.coords, zoom: 9, duration: 1100, essential: true }); return; }
+    if (home) { focusArea("city"); return; }
     if (!navigator.geolocation) {
       toast.error("Location is unavailable in this browser");
       return;
@@ -444,8 +455,9 @@ function Index() {
     mapRef.current?.easeTo({
       center: [10, 8],
       zoom: nextIsGlobe ? 2.65 : 1.2,
+      pitch: 45,
       padding: { top: nextIsGlobe ? 210 : 0, right: 0, bottom: 0, left: 0 },
-      duration: 900,
+      duration: 1400,
       essential: true,
     });
   }
@@ -582,7 +594,7 @@ function Index() {
       <div ref={mapContainer} className="map-shell absolute inset-0" aria-label="Interactive map showing events and jobs" />
 
       {mapReady && mapRef.current && <Suspense fallback={null}><WorldAtmosphere map={mapRef.current} dark={darkMode} /></Suspense>}
-      <MapDirections map={mapReady ? mapRef.current : null} listings={filtered} onSelect={selectDistant} />
+      <MapDirections map={mapReady ? mapRef.current : null} listings={filtered} onSelect={selectDistant} collapsed={sidebarCollapsed} />
 
       <header className="absolute left-4 right-4 top-4 z-40 flex h-14 items-center justify-between rounded-[1.25rem] border border-border bg-card/90 px-4 backdrop-blur-xl md:left-6 md:right-6 md:px-4">
         <div className="flex min-w-0 items-center">
@@ -625,6 +637,7 @@ function Index() {
         </div>
         <div className="mx-auto mt-2 flex max-w-3xl gap-2 overflow-x-auto pb-2 [scrollbar-width:none]">
           <Button size="sm" variant="default" className="h-8 shrink-0 md:hidden" onClick={() => setShowBrowse(true)}><List className="size-4" weight="duotone" />Explore</Button>
+          <Popover><PopoverTrigger asChild><Button size="sm" variant="secondary" className="h-8 shrink-0" aria-label="Map focus"><Crosshair className="size-4" weight="fill" />{focus === "city" ? "City" : focus === "region" ? "Region" : "World"}</Button></PopoverTrigger><PopoverContent className="w-44 p-1"><div className="flex flex-col">{(["city", "region", "world"] as const).map((view) => <Button key={view} variant={focus === view ? "secondary" : "ghost"} className="justify-start" aria-pressed={focus === view} onClick={() => focusArea(view)}>{view === "city" ? <Buildings weight="fill" /> : view === "region" ? <MapTrifold weight="fill" /> : <GlobeHemisphereWest weight="fill" />}{view === "city" ? "City" : view === "region" ? "Region" : "World"}</Button>)}</div></PopoverContent></Popover>
           {day && <Button size="sm" variant="default" onClick={() => setDay(undefined)} className="h-8 shrink-0"><CalendarBlank className="size-4" weight="fill" />{day.toLocaleDateString(undefined, { month: "short", day: "numeric" })}<X className="size-3" /></Button>}
           {(kind === "Events" ? eventCategories : jobCategories).map((item) => <Button key={item} size="sm" variant={category === item ? "default" : "secondary"} style={category === item ? { backgroundColor: item === "All" ? "#2a1546" : categoryColor(item), color: "#fff" } : undefined} onClick={() => setCategory(item)} className="h-8 shrink-0 backdrop-blur-xl" aria-pressed={category === item}>{item}</Button>)}
         </div>
@@ -644,7 +657,7 @@ function Index() {
         </div>
       </aside>
 
-      {showPanel && (
+      {showPanel && selected && (
          <section className="paper-scroll absolute bottom-3 left-3 right-3 z-30 max-h-[56dvh] overflow-y-auto rounded-[28px] border border-border bg-card p-4 backdrop-blur-xl md:bottom-6 md:max-h-none md:overflow-visible md:p-5 md:left-auto md:right-8 md:w-[25rem]">
            <div className="flex items-start justify-between gap-4"><div><p className="text-[10px] font-semibold uppercase" style={{ color: categoryColor(selected.category) }}>{selected.kind === "Jobs" ? "Opportunity" : "Trending"} in {selected.place.split(",").at(-1)}</p><h1 className="mt-1 line-clamp-2 font-display text-xl font-black md:line-clamp-none md:text-2xl tracking-tight leading-tight">{selected.title}</h1></div><Button aria-label="Close details" variant="ghost" size="icon" onClick={() => setShowPanel(false)}><X className="size-4" /></Button></div>
            <div className="mt-3 flex flex-wrap items-center gap-3 text-xs text-muted-foreground"><span className="flex items-center gap-1"><CalendarBlank className="size-4 text-primary" weight="duotone" />{selected.date}</span><span className="flex items-center gap-1"><MapPin className="size-4 text-primary" weight="fill" />{selected.place}</span></div>
@@ -670,7 +683,7 @@ function Index() {
            </div>
            <p className="mt-2 text-center text-[11px] text-muted-foreground">{Math.round(distanceKm(origin, selected.coordinates)).toLocaleString()} km from {home ? home.label.split(",")[0] : origin === LAGOS ? "Lagos" : "you"} · {MODES.find((m) => m.id === mode)!.label}</p>
            </>}
-              <div className="mt-3 flex gap-2"><Button className="flex-1" onClick={() => showDirections(selected)}><NavigationArrow className="size-4" weight="fill" /> Show route <ArrowRight className="size-4" /></Button><Button variant="secondary" onClick={followSelected}>{selected.kind === "Jobs" ? <Briefcase className="size-4" weight="duotone" /> : <BellRinging className={`size-4 ${alerts ? "notification-bell" : ""}`} weight={alerts ? "fill" : "duotone"} />} {selected.kind === "Jobs" ? "Save" : alerts ? "Following" : "Follow"}</Button></div>
+              <div className="mt-3 flex gap-2"><Button className="flex-1" onClick={() => showDirections(selected)}><NavigationArrow className="size-4" weight="fill" /> Show route <ArrowRight className="size-4" /></Button><Button variant="secondary" onClick={followSelected}>{selected.kind === "Jobs" ? <Briefcase className="size-4" weight="duotone" /> : <BellRinging className={`size-4 ${alerts ? "notification-bell" : ""}`} weight={alerts ? "fill" : "duotone"} />} {selected.kind === "Jobs" ? "Save" : alerts ? "Following" : "Follow"}</Button><Button variant="secondary" size="icon" aria-label="View building location" title="View building location" onClick={() => mapRef.current?.flyTo({ center: selected.coordinates, ...MAP_VIEWS.street, duration: 1800, essential: true })}><Buildings className="size-4" weight="fill" /></Button></div>
         </section>
       )}
 

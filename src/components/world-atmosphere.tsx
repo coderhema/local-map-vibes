@@ -8,6 +8,8 @@ const landmarks: { name: string; coords: [number, number]; shape: string }[] = [
   { name: 'Great Pyramid of Giza', coords: [31.1342,29.9792], shape: 'pyramid' },
   { name: 'Washington Monument', coords: [-77.0353,38.8895], shape: 'obelisk' },
 ];
+// Geographic anchors keep clouds on the map surface as the camera moves.
+const cloudAnchors: [number, number][] = [[-28,12],[15,-8],[48,30],[-82,30],[112,12],[-140,-22],[5,52],[65,-24],[145,42]];
 function Monument({shape,color}:{shape:string;color:string}) {
   if(shape==='pyramid') return <mesh position={[0,20,0]} rotation-y={Math.PI/4}><coneGeometry args={[34,40,4]}/><meshStandardMaterial color={color} roughness={0.8}/></mesh>;
   if(shape==='obelisk') return <group><mesh position={[0,27,0]}><cylinderGeometry args={[5,8,54,4]}/><meshStandardMaterial color={color}/></mesh><mesh position={[0,59,0]} rotation-y={Math.PI/4}><coneGeometry args={[7,10,4]}/><meshStandardMaterial color={color}/></mesh></group>;
@@ -25,10 +27,19 @@ function Scenery({map,dark}:{map:MapLibreMap;dark:boolean}) {
    group.visible=(!globe||dot>0.22)&&p.x>30&&p.x<size.width-30&&p.y>170&&p.y<size.height-30;
    group.position.set(p.x-size.width/2,size.height/2-p.y,0); group.rotation.set(0.25,-map.getBearing()*r+0.4,0);group.scale.setScalar(Math.min(1.15,Math.max(0.45,map.getZoom()/5)));
   });
-  clouds.current.forEach((group,i)=>{if(!group)return;group.visible=globe;const angle=i/7*Math.PI*2+(reduced?0:clock.elapsedTime*0.008);group.position.set(cx+Math.cos(angle)*(radius+25),cy+Math.sin(angle)*(radius+20),15);});
+  clouds.current.forEach((group,i)=>{
+   const anchor=cloudAnchors[i];if(!group||!anchor)return;
+   const r=Math.PI/180;const drift=reduced?0:Math.sin(clock.elapsedTime*0.015+i)*0.5;
+   const coords:[number,number]=[anchor[0]+drift,anchor[1]];const p=map.project(coords);
+   const dot=Math.sin(center.lat*r)*Math.sin(coords[1]*r)+Math.cos(center.lat*r)*Math.cos(coords[1]*r)*Math.cos((coords[0]-center.lng)*r);
+   group.visible=map.getZoom()<10&&(!globe||dot>0.25)&&p.x>-90&&p.x<size.width+90&&p.y>150&&p.y<size.height+60;
+   group.position.set(p.x-size.width/2,size.height/2-p.y+10,30);
+   group.rotation.set(0.25,-map.getBearing()*r,0);
+   group.scale.setScalar(Math.min(2,Math.max(0.65,2**(map.getZoom()-2.65)*0.7)));
+  });
   stars.current?.children.forEach(star=>{star.visible=dark&&globe&&Math.hypot(star.position.x-cx,star.position.y-cy)>radius+10;});
  });
- return <><ambientLight intensity={0.9}/><directionalLight position={[-200,500,400]} intensity={2}/><Environment resolution={32}><Lightformer intensity={1.3} position={[0,200,100]} scale={[500,500,1]}/></Environment><group ref={stars}>{Array.from({length:90},(_,i)=><mesh key={i} position={[((i*137.508)%size.width)-size.width/2,((i*219.37)%size.height)-size.height/2,-20]}><sphereGeometry args={[i%5===0?1.6:0.8,5,4]}/><meshBasicMaterial color={palette.star}/></mesh>)}</group>{landmarks.map((landmark,i)=><group key={landmark.name} name={landmark.name} ref={node=>{monuments.current[i]=node;}}><Monument shape={landmark.shape} color={palette.monument}/></group>)}{Array.from({length:7},(_,i)=><group key={i} ref={node=>{clouds.current[i]=node;}}>{[-1,0,1].map(j=><mesh key={j} position={[j*18,j===0?8:0,0]} scale={[1.6,1,0.8]}><sphereGeometry args={[j===0?19:14,12,8]}/><meshStandardMaterial color={palette.cloud} transparent opacity={dark?0.48:0.78} roughness={1}/></mesh>)}</group>)}</>;
+ return <><ambientLight intensity={0.6}/><directionalLight position={[-200,500,400]} intensity={2.4}/><Environment resolution={32}><Lightformer intensity={1.3} position={[0,200,100]} scale={[500,500,1]}/></Environment><group ref={stars}>{Array.from({length:90},(_,i)=><mesh key={i} position={[((i*137.508)%size.width)-size.width/2,((i*219.37)%size.height)-size.height/2,-20]}><sphereGeometry args={[i%5===0?1.6:0.8,5,4]}/><meshBasicMaterial color={palette.star}/></mesh>)}</group>{landmarks.map((landmark,i)=><group key={landmark.name} name={landmark.name} ref={node=>{monuments.current[i]=node;}}><Monument shape={landmark.shape} color={palette.monument}/></group>)}{cloudAnchors.map((_,i)=><group key={i} name={`Surface cloud ${i+1}`} ref={node=>{clouds.current[i]=node;}}>{[-2,-1,0,1,2].map(j=><mesh key={j} position={[j*16,j===0?12:Math.abs(j)===1?6:0,j%2*7]} scale={[1.25,1,1]}><sphereGeometry args={[j===0?22:Math.abs(j)===1?17:12,16,12]}/><meshStandardMaterial color={palette.cloud} transparent opacity={dark?0.72:0.88} roughness={1}/></mesh>)}</group>)}</>;
 }
 export default function WorldAtmosphere({map,dark}:{map:MapLibreMap;dark:boolean}) {
  return <div className="world-atmosphere" aria-hidden="true"><Canvas frameloop="demand" orthographic camera={{position:[0,0,1000],zoom:1,near:0.1,far:2000}} dpr={1} gl={{alpha:true,antialias:false}}><Scenery map={map} dark={dark}/></Canvas></div>;
