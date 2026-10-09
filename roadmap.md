@@ -1,7 +1,7 @@
 # Roadmap
 
-- [ ] Add flight swirls, rail tracks, tire tracks and walking footprints
-- [ ] Show route distance on hover and verify transport switching
+- [x] Add flight swirls, rail tracks, tire tracks and walking footprints
+- [x] Show route distance on hover and verify transport switching
 
 - [x] Refine shield silhouettes, faint shadows and horizontal pulses
 - [x] Inset and group distant direction hints with +n badges
