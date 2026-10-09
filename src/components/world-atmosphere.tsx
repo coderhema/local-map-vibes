@@ -16,7 +16,7 @@ function Monument({shape,color}:{shape:string;color:string}) {
 function Scenery({map,dark}:{map:MapLibreMap;dark:boolean}) {
  const {size, invalidate}=useThree(); const monuments=useRef<(Group|null)[]>([]); const clouds=useRef<(Group|null)[]>([]); const stars=useRef<Group>(null);
  const reduced=useMemo(()=>window.matchMedia('(prefers-reduced-motion: reduce)').matches,[]);
- useEffect(()=>{map.on('render',invalidate);const timer=reduced?null:window.setInterval(()=>{if(!document.hidden&&map.getProjection().type==='globe'&&map.getZoom()<5)invalidate();},66);return()=>{map.off('render',invalidate);if(timer!==null)window.clearInterval(timer);};},[map,invalidate,reduced]);
+ useEffect(()=>{const redraw=()=>invalidate();map.on('render',redraw);const timer=reduced?null:window.setInterval(()=>{if(!document.hidden&&map.getProjection().type==='globe'&&map.getZoom()<5)invalidate();},66);return()=>{map.off('render',redraw);if(timer!==null)window.clearInterval(timer);};},[map,invalidate,reduced]);
  const palette=useMemo(()=>{const css=getComputedStyle(document.documentElement); return {cloud:css.getPropertyValue('--cloud-color').trim(),monument:css.getPropertyValue('--monument-color').trim(),star:css.getPropertyValue('--star-color').trim()};},[dark]);
  useFrame(({clock})=>{
   const center=map.getCenter(); const globe=map.getProjection().type==='globe' && map.getZoom()<5;
