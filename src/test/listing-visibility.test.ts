@@ -19,4 +19,7 @@ describe("Present and upcoming events only", () => {
   it("leaves job availability unchanged", () => {
     expect(isCurrentListing({ kind: "Jobs", startsAt: "2026-10-21T12:00:00Z" }, now)).toBe(true);
   });
+  it("removes old source dates even when an older import assigned a future timestamp", () => {
+    expect(isCurrentListing({ kind: "Events", startsAt: "2026-11-10T18:00:00Z", date: "Oct 8 · 8:30" }, now)).toBe(false);
+  });
 });

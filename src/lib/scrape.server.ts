@@ -65,7 +65,7 @@ export function parseItems(kind: "Events" | "Jobs", label: string, resultIn: unk
     if (!title || !Number.isFinite(lat) || !Number.isFinite(lng) || Math.abs(lat) > 90 || Math.abs(lng) > 180) return [];
     const cat = String(raw["category"] ?? "");
     const startsAt = Number.isFinite(Date.parse(String(raw["starts_at"] ?? ""))) ? new Date(String(raw["starts_at"])).toISOString() : null;
-    if (!isCurrentListing({ kind, startsAt })) return [];
+    if (!isCurrentListing({ kind, startsAt, date: String(raw["date_label"] ?? "") })) return [];
     return [{
       kind,
       title: title.slice(0, 140),
