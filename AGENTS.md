@@ -21,3 +21,5 @@
 - Group distant hints by side, listing kind and category with a selectable member list; update only when group membership changes to keep camera movement smooth.
 - Keep city, regional, world and street camera presets in the browser-safe map-discovery module; focus changes the camera, not listing availability, so worldwide opportunities remain accessible.
 - Keep transport geometry and local repeatable trail textures in the browser-safe route-trails module; use one shared animated source and a wider hover hit-layer for fast, consistent mode switching. Distances are direct geographic estimates, not road-network navigation.
+- Keep event eligibility in the shared listing-visibility helper, applied before listing pagination and during scrape ingestion; invalidate discovery at UTC midnight and on window focus so old listings cannot linger.
+- Fetch real OSM stop suggestions only when a route is shown or its mode changes, with bounded cached server requests; label proximity to the estimated path rather than implying a confirmed transit service.

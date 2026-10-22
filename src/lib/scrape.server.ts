@@ -1,4 +1,5 @@
 // TinyFish web-agent scraping for real events and job listings.
+import { isCurrentListing } from "./listing-visibility";
 export type ScrapedListing = {
   kind: "Events" | "Jobs";
   title: string;
@@ -27,7 +28,7 @@ const SOURCES: { kind: "Events" | "Jobs"; url: string; label: string }[] = [
 function goalFor(kind: "Events" | "Jobs") {
   const cats = kind === "Events" ? EVENT_CATS : JOB_CATS;
   const what = kind === "Events"
-    ? "up to 8 upcoming in-person events. For each: title, place (venue/neighbourhood, City), date_label (short like 'Oct 12 · 20:00'), meta (e.g. '120 going' or the organiser), starts_at (ISO 8601 start date-time)"
+    ? `up to 8 current or upcoming in-person events as of ${new Date().toISOString()}. Never include past events or invent dates; skip events without a confirmed date. For each: title, place (venue/neighbourhood, City), date_label (short like 'Oct 12 · 20:00'), meta (e.g. '120 going' or the organiser), starts_at (ISO 8601 start date-time)`
     : "up to 8 job listings. For each: title, place (Neighbourhood or company HQ, City — never just 'Remote'), date_label (e.g. 'Full-time · Remote'), meta (company name), work_mode (exactly one of: Remote, Hybrid, In-person), starts_at (ISO date of the application deadline or start date; if none shown, about 2 weeks from today)";
   return `Extract ${what}, url (absolute link), category (exactly one of: ${cats}), and lat and lng as decimal numbers for the real city location. Return JSON {"items":[...]} only.`;
 }
@@ -63,18 +64,20 @@ export function parseItems(kind: "Events" | "Jobs", label: string, resultIn: unk
     const title = String(raw["title"] ?? "").trim();
     if (!title || !Number.isFinite(lat) || !Number.isFinite(lng) || Math.abs(lat) > 90 || Math.abs(lng) > 180) return [];
     const cat = String(raw["category"] ?? "");
+    const startsAt = Number.isFinite(Date.parse(String(raw["starts_at"] ?? ""))) ? new Date(String(raw["starts_at"])).toISOString() : null;
+    if (!isCurrentListing({ kind, startsAt, date: String(raw["date_label"] ?? "") })) return [];
     return [{
       kind,
       title: title.slice(0, 140),
       place: String(raw["place"] ?? "").slice(0, 140),
       date_label: String(raw["date_label"] ?? "").slice(0, 60),
-      category: allowed.includes(cat) ? cat : allowed[0]!,
+      category: allowed.includes(cat) ? cat : (allowed[0] ?? "Community"),
       meta: String(raw["meta"] ?? "").slice(0, 80),
       lat, lng,
       source_url: typeof raw["url"] === "string" ? raw["url"] : null,
       source: label,
       work_mode: kind === "Jobs" ? (["Remote", "Hybrid", "In-person"].find((m) => m.toLowerCase() === String(raw["work_mode"] ?? "").toLowerCase()) ?? "Remote") : null,
-      starts_at: Number.isFinite(Date.parse(String(raw["starts_at"] ?? ""))) ? new Date(String(raw["starts_at"])).toISOString() : new Date(Date.now() + 14 * 864e5).toISOString(),
+      starts_at: startsAt,
     }];
   });
 }
