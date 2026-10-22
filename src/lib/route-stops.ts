@@ -4,10 +4,10 @@ export type RouteStop = { id: string; name: string; kind: string; coordinates: [
 export type StopElement = { type: string; id: number; lat?: number; lon?: number; center?: { lat: number; lon: number }; tags?: Record<string, string> };
 
 export function stopKind(tags: Record<string, string>) {
-  if (tags.aeroway) return "Airport";
-  if (tags.amenity === "fuel") return "Fuel station";
-  if (tags.amenity === "cafe") return "Rest stop";
-  if (tags.railway) return "Rail stop";
+  if (tags["aeroway"]) return "Airport";
+  if (tags["amenity"] === "fuel") return "Fuel station";
+  if (tags["amenity"] === "cafe") return "Café";
+  if (tags["railway"]) return "Rail stop";
   return "Bus stop";
 }
 
@@ -30,7 +30,7 @@ export function selectRouteStops(elements: StopElement[], points: [number, numbe
     }
     if (nearest > (mode === "flight" ? 20 : 1.2)) continue;
     const tags = element.tags ?? {}, kind = stopKind(tags);
-    const stop = { id: `${element.type}/${element.id}`, name: tags.name ?? tags.ref ?? `Unnamed ${kind.toLowerCase()}`, kind, coordinates: coords };
+    const stop = { id: `${element.type}/${element.id}`, name: tags["name"] ?? tags["ref"] ?? `Unnamed ${kind.toLowerCase()}`, kind, coordinates: coords };
     if (found.some((other) => other.stop.name === stop.name && routeDistanceKm([other.stop.coordinates, coords]) < 0.15)) continue;
     found.push({ stop, progress });
   }
