@@ -38,6 +38,7 @@ import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { MapDirections } from "@/components/map-directions";
 import { LocationAssistant } from "@/components/location-assistant";
+import { RouteStops } from "@/components/route-stops";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { pinFilledMarkup } from "@/lib/pin-icons";
 import { MAP_VIEWS } from "@/lib/map-discovery";
@@ -150,6 +151,7 @@ function Index() {
   const markerRefs = useRef(new Map<string, HTMLButtonElement>());
   const [mapReady, setMapReady] = useState(false);
   const [mode, setMode] = useState<Mode>("flight");
+  const [activeRoute, setActiveRoute] = useState<{ points: [number, number][]; mode: Mode } | null>(null);
   const [origin, setOrigin] = useState<[number, number]>(LAGOS);
   const [refreshing, setRefreshing] = useState(false);
   const [category, setCategory] = useState("All");
@@ -474,10 +476,12 @@ function Index() {
     cancelAnimationFrame(routeAnimRef.current);
     if (coordinates.length < 2) {
       routeInfoRef.current = null;
+      setActiveRoute(null);
       source?.setData({ type: "FeatureCollection", features: [] });
       setRouteEnds(map, []);
       return;
     }
+    setActiveRoute({ points: coordinates, mode: routeMode });
     setRouteTrail(map, routeMode);
     setRouteEnds(map, coordinates);
     routeInfoRef.current = { mode: routeMode, km: routeDistanceKm(coordinates) };
@@ -515,6 +519,23 @@ function Index() {
 
   const router = useRouter();
   const routeShownRef = useRef<string | null>(null);
+  useEffect(() => {
+    const tomorrow = new Date();
+    tomorrow.setUTCHours(24, 0, 0, 0);
+    const timer = window.setTimeout(() => { void router.invalidate(); }, tomorrow.getTime() - Date.now() + 100);
+    const onFocus = () => { void router.invalidate(); };
+    window.addEventListener("focus", onFocus);
+    return () => { window.clearTimeout(timer); window.removeEventListener("focus", onFocus); };
+  }, [events, router]);
+  useEffect(() => {
+    if (selected && !events.some((item) => item.id === selected.id)) {
+      setSelected(undefined);
+      setShowPanel(false);
+      routeShownRef.current = null;
+      drawRoute([], false);
+    }
+    setTour((current) => current.some((stop) => !events.some((item) => item.id === stop.id)) ? current.filter((stop) => events.some((item) => item.id === stop.id)) : current);
+  }, [events]);
   function travelMs(m: Mode) { return { flight: 2600, transit: 2200, drive: 2000, walk: 1800 }[m]; }
   function pickMode(m: Mode) {
     setMode(m);
@@ -641,7 +662,7 @@ function Index() {
           <MagnifyingGlass className="size-5 shrink-0 text-muted-foreground" weight="bold" />
           <input value={query} onChange={(event) => setQuery(event.target.value)} placeholder={`Search ${kind.toLowerCase()}, cities or regions`} className="h-12 w-full bg-transparent text-sm outline-none placeholder:text-muted-foreground" />
           {query && <Button aria-label="Clear search" variant="ghost" size="icon" className="size-8" onClick={() => setQuery("")}><X className="size-4" /></Button>}
-          <TooltipProvider><Tooltip><TooltipTrigger asChild><Button size="icon-sm" onClick={locateUser} aria-label="Near me"><svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" fill="currentColor" viewBox="0 0 256 256" className="size-4" aria-hidden="true"><path d="M104,40a24,24,0,1,1,24,24A24,24,0,0,1,104,40Zm108.49,99.51L167.17,88.13a24,24,0,0,0-18-8.13H106.83a24,24,0,0,0-18,8.13L43.51,139.51a12,12,0,0,0,17,17L96,128,73.13,214.93a12,12,0,0,0,21.75,10.14L128,168l33.12,57.07a12,12,0,0,0,21.75-10.14L160,128l35.51,28.49a12,12,0,0,0,17-17Z" opacity="0.2"></path><path d="M160,40a32,32,0,1,0-32,32A32,32,0,0,0,160,40ZM128,56a16,16,0,1,1,16-16A16,16,0,0,1,128,56Zm90.34,78.05L173.17,82.83a32,32,0,0,0-24-10.83H106.83a32,32,0,0,0-24,10.83L37.66,134.05a20,20,0,0,0,28.13,28.43l16.3-13.08L65.55,212.28A20,20,0,0,0,102,228.8l26-44.87,26,44.87a20,20,0,0,0,36.41-16.52L173.91,149.4l16.3,13.08a20,20,0,0,0,28.13-28.43Zm-11.51,16.77a4,4,0,0,1-5.66,0c-.21-.2-.42-.4-.65-.58L165,121.76A8,8,0,0,0,152.26,130L175.14,217a7.72,7.72,0,0,0,.48,1.35,4,4,0,1,1-7.25,3.38,6.25,6.25,0,0,0-.33-.63L134.92,164a8,8,0,0,0-13.84,0L88,221.05a6.25,6.25,0,0,0-.33.63,4,4,0,0,1-2.26,2.07,4,4,0,0,1-5-5.45,7.72,7.72,0,0,0,.48-1.35L103.74,130A8,8,0,0,0,91,121.76L55.48,150.24c-.23.18-.44.38-.65.58a4,4,0,1,1-5.66-5.65c.12-.12.23-.24.34-.37L94.83,93.41a16,16,0,0,1,12-5.41h42.34a16,16,0,0,1,12,5.41l45.32,51.39c.11.13.22.25.34.37A4,4,0,0,1,206.83,150.82Z"></path></svg></Button></TooltipTrigger><TooltipContent>Near me</TooltipContent></Tooltip></TooltipProvider>
+          <TooltipProvider><Tooltip><TooltipTrigger asChild><Button size="icon-sm" className="size-8 shrink-0 rounded-full p-0 aspect-square" onClick={locateUser} aria-label="Near me"><svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" fill="currentColor" viewBox="0 0 256 256" className="size-4" aria-hidden="true"><path d="M104,40a24,24,0,1,1,24,24A24,24,0,0,1,104,40Zm108.49,99.51L167.17,88.13a24,24,0,0,0-18-8.13H106.83a24,24,0,0,0-18,8.13L43.51,139.51a12,12,0,0,0,17,17L96,128,73.13,214.93a12,12,0,0,0,21.75,10.14L128,168l33.12,57.07a12,12,0,0,0,21.75-10.14L160,128l35.51,28.49a12,12,0,0,0,17-17Z" opacity="0.2"></path><path d="M160,40a32,32,0,1,0-32,32A32,32,0,0,0,160,40ZM128,56a16,16,0,1,1,16-16A16,16,0,0,1,128,56Zm90.34,78.05L173.17,82.83a32,32,0,0,0-24-10.83H106.83a32,32,0,0,0-24,10.83L37.66,134.05a20,20,0,0,0,28.13,28.43l16.3-13.08L65.55,212.28A20,20,0,0,0,102,228.8l26-44.87,26,44.87a20,20,0,0,0,36.41-16.52L173.91,149.4l16.3,13.08a20,20,0,0,0,28.13-28.43Zm-11.51,16.77a4,4,0,0,1-5.66,0c-.21-.2-.42-.4-.65-.58L165,121.76A8,8,0,0,0,152.26,130L175.14,217a7.72,7.72,0,0,0,.48,1.35,4,4,0,1,1-7.25,3.38,6.25,6.25,0,0,0-.33-.63L134.92,164a8,8,0,0,0-13.84,0L88,221.05a6.25,6.25,0,0,0-.33.63,4,4,0,0,1-2.26,2.07,4,4,0,0,1-5-5.45,7.72,7.72,0,0,0,.48-1.35L103.74,130A8,8,0,0,0,91,121.76L55.48,150.24c-.23.18-.44.38-.65.58a4,4,0,1,1-5.66-5.65c.12-.12.23-.24.34-.37L94.83,93.41a16,16,0,0,1,12-5.41h42.34a16,16,0,0,1,12,5.41l45.32,51.39c.11.13.22.25.34.37A4,4,0,0,1,206.83,150.82Z"></path></svg></Button></TooltipTrigger><TooltipContent>Near me</TooltipContent></Tooltip></TooltipProvider>
         </div>
         <div className="mx-auto mt-2 flex max-w-3xl gap-2 overflow-x-auto pb-2 [scrollbar-width:none]">
           <Button size="sm" variant="default" className="h-8 shrink-0 md:hidden" onClick={() => setShowBrowse(true)}><List className="size-4" weight="duotone" />Explore</Button>
@@ -656,6 +677,7 @@ function Index() {
           {sidebarCollapsed ? <><TooltipProvider><Tooltip><TooltipTrigger asChild><Button variant="ghost" size="icon-sm" onClick={() => setSidebarCollapsed(false)} aria-label="Expand discovery panel"><SidebarSimple className="size-4" weight="duotone" /></Button></TooltipTrigger><TooltipContent side="right">Expand panel</TooltipContent></Tooltip><Tooltip><TooltipTrigger asChild><Button variant={kind === "Events" ? "secondary" : "ghost"} size="icon-sm" onClick={() => { setKind("Events"); setCategory("All"); }} aria-label="Events"><Confetti className="size-4" weight="duotone" /></Button></TooltipTrigger><TooltipContent side="right">Events</TooltipContent></Tooltip><Tooltip><TooltipTrigger asChild><Button variant={kind === "Jobs" ? "secondary" : "ghost"} size="icon-sm" onClick={() => { setKind("Jobs"); setCategory("All"); }} aria-label="Jobs"><Briefcase className="size-4" weight="duotone" /></Button></TooltipTrigger><TooltipContent side="right">Jobs</TooltipContent></Tooltip></TooltipProvider></> : <><div className="mb-4 grid grid-cols-2 gap-1 rounded-full bg-muted p-1"><Button variant={kind === "Events" ? "secondary" : "ghost"} size="sm" className={kind === "Events" ? "border-0 bg-secondary text-foreground" : "border-0 bg-transparent"} onClick={() => { setKind("Events"); setCategory("All"); setSelected(initialEvent); }}><Confetti className="size-4" weight="duotone" />Events</Button><Button variant={kind === "Jobs" ? "secondary" : "ghost"} size="sm" className={kind === "Jobs" ? "border-0 bg-secondary text-foreground" : "border-0 bg-transparent"} onClick={() => { const firstJob = events.find((item) => item.kind === "Jobs"); setKind("Jobs"); setCategory("All"); if (firstJob) setSelected(firstJob); }}><Briefcase className="size-4" weight="duotone" />Jobs</Button></div><div className="flex items-center justify-between"><div><p className="font-display text-2xl font-black tracking-tight">In your Backyrd</p><p className="mt-1 text-xs text-muted-foreground">{filtered.length} {kind.toLowerCase()} to explore</p></div><Button className="md:hidden" aria-label="Close discovery" variant="ghost" size="icon" onClick={() => setShowBrowse(false)}><X className="size-4" /></Button><Button className="hidden md:inline-flex" aria-label="Collapse discovery panel" variant="ghost" size="icon-sm" onClick={() => setSidebarCollapsed(true)}><SidebarSimple className="size-4" weight="duotone" /></Button></div></>}
         </div>
         <div className={`paper-scroll flex-1 overflow-y-auto p-2 ${sidebarCollapsed ? "hidden" : "block"}`}>
+          {!filtered.length && <p className="px-4 py-6 text-sm text-muted-foreground">{kind === "Events" ? "No current or upcoming events found." : "No jobs found."}</p>}
           {filtered.map((event) => (
             <Button variant="ghost" key={event.id} onClick={() => { focusEvent(event); setShowBrowse(false); }} className={`mb-2 block h-auto w-full whitespace-normal rounded-2xl border p-4 text-left transition-colors ${selected?.id === event.id ? "border-primary bg-accent" : "border-transparent hover:bg-secondary"}`} aria-pressed={selected?.id === event.id}>
                <div className="flex items-start justify-between gap-3"><span className="text-[10px] font-semibold uppercase" style={{ color: categoryColor(event.category) }}>{event.category}</span><span className="text-[10px] text-muted-foreground">{event.attendees}</span></div>
@@ -689,9 +711,10 @@ function Index() {
                  <span>{tooFar ? "—" : formatDuration(km / m.kmh + m.overheadH)}</span>
                </button>); })}
            </div>
-           <p className="mt-2 text-center text-[11px] text-muted-foreground">{Math.round(distanceKm(origin, selected.coordinates)).toLocaleString()} km from {home ? home.label.split(",")[0] : origin === LAGOS ? "Lagos" : "you"} · {MODES.find((m) => m.id === mode)!.label}</p>
+           <p className="mt-2 text-center text-[11px] text-muted-foreground">{Math.round(distanceKm(origin, selected.coordinates)).toLocaleString()} km from {home ? home.label.split(",")[0] : origin === LAGOS ? "Lagos" : "you"} · {MODES.find((m) => m.id === mode)?.label}</p>
            </>}
               <div className="mt-3 flex gap-2"><Button className="flex-1" onClick={() => showDirections(selected)}><NavigationArrow className="size-4" weight="fill" /> Show route <ArrowRight className="size-4" /></Button><Button variant="secondary" onClick={followSelected}>{selected.kind === "Jobs" ? <Briefcase className="size-4" weight="duotone" /> : <BellRinging className={`size-4 ${alerts ? "notification-bell" : ""}`} weight={alerts ? "fill" : "duotone"} />} {selected.kind === "Jobs" ? "Save" : alerts ? "Following" : "Follow"}</Button><Button variant="secondary" size="icon" aria-label="View building location" title="View building location" onClick={() => mapRef.current?.flyTo({ center: selected.coordinates, ...MAP_VIEWS.street, duration: 1800, essential: true })}><Buildings className="size-4" weight="fill" /></Button></div>
+           {activeRoute && routeShownRef.current === selected.id && <RouteStops route={activeRoute} map={mapRef.current} />}
         </section>
       )}
 
@@ -718,7 +741,7 @@ function Index() {
             </button>
           </PopoverTrigger>
           <PopoverContent side="top" align="center" className="w-auto max-w-[calc(100vw-2rem)] rounded-[28px] p-3">
-            <Calendar mode="single" selected={day} onSelect={(d) => { setDay(d); setCalOpen(false); }} modifiers={{ busy: events.filter((e) => e.kind === kind && e.startsAt).map((e) => new Date(e.startsAt!)) }} modifiersClassNames={{ busy: "calendar-busy" }} />
+            <Calendar mode="single" selected={day} onSelect={(d) => { setDay(d); setCalOpen(false); }} modifiers={{ busy: events.filter((e) => e.kind === kind && e.startsAt).map((e) => new Date(e.startsAt ?? "")) }} modifiersClassNames={{ busy: "calendar-busy" }} />
             <p className="mt-2 border-t border-border px-1 pt-2 text-center text-[11px] leading-snug text-muted-foreground">Dotted days have {kind.toLowerCase()}. Pick one to filter the map.</p>
           </PopoverContent>
         </Popover>
