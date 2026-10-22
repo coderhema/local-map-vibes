@@ -1,6 +1,7 @@
 import { createServerFn } from "@tanstack/react-start";
 import { createClient } from "@supabase/supabase-js";
 import type { Database } from "@/integrations/supabase/types";
+import { isCurrentListing } from "./listing-visibility";
 
 export type WorkMode = "Remote" | "Hybrid" | "In-person";
 export type Listing = {
@@ -35,13 +36,16 @@ function publicClient() {
 const MODES: WorkMode[] = ["Remote", "Hybrid", "In-person"];
 
 export const getListings = createServerFn({ method: "GET" }).handler(async (): Promise<Listing[]> => {
+  const today = new Date();
+  today.setUTCHours(0, 0, 0, 0);
   const { data, error } = await publicClient()
     .from("listings")
     .select("id, kind, title, place, date_label, category, meta, lng, lat, source_url, work_mode, starts_at")
+    .or(`kind.eq.Jobs,starts_at.gte.${today.toISOString()}`)
     .order("created_at", { ascending: false })
     .limit(200);
   if (error) throw new Error(error.message);
-  return (data ?? []).map((r) => ({
+  return (data ?? []).map((r): Listing => ({
     id: r.id,
     kind: r.kind === "Jobs" ? "Jobs" : "Events",
     title: r.title,
@@ -53,7 +57,7 @@ export const getListings = createServerFn({ method: "GET" }).handler(async (): P
     sourceUrl: r.source_url,
     workMode: r.kind === "Jobs" ? (MODES.find((m) => m === r.work_mode) ?? "In-person") : null,
     startsAt: r.starts_at,
-  }));
+  })).filter((item) => isCurrentListing(item));
 });
 
 // Public trigger: rate-limited to once an hour so it can't drain the TinyFish wallet.
