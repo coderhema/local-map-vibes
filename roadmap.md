@@ -1,5 +1,9 @@
 # Roadmap
 
+- [ ] Show real nearby transport stops as route suggestions
+- [ ] Exclude past events from every discovery view and test date boundaries
+- [ ] Round the Near me search control and verify desktop/phone interaction
+
 - [x] Add flight swirls, rail tracks, tire tracks and walking footprints
 - [x] Show route distance on hover and verify transport switching
 
