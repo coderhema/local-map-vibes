@@ -67,32 +67,32 @@
   color-scheme: light;
   --radius: 1.25rem;
   /* Paper */
-  --background: oklch(1 0 0);
-  --foreground: oklch(0.395 0.004 145.5); /* Charcoal */
+  --background: oklch(0.982 0.008 125);
+  --foreground: oklch(0.27 0.035 165); /* Charcoal */
   /* Plum Ink #2a1546 */
-  --plum: oklch(0.300 0.095 305);
+  --plum: oklch(0.27 0.045 165);
   /* Lilac Voltage #d8b4fe */
-  --lilac: oklch(0.820 0.130 310);
-  --card: oklch(1 0 0 / 92%);
+  --lilac: oklch(0.90 0.19 125);
+  --card: oklch(0.995 0.004 125 / 92%);
   --card-foreground: var(--foreground);
-  --popover: oklch(1 0 0);
+  --popover: oklch(0.995 0.004 125);
   --popover-foreground: var(--foreground);
-  --primary: oklch(0.585 0.233 277.117); /* Sapphire Indigo #6366f1 */
+  --primary: oklch(0.64 0.14 160); /* Sapphire Indigo #6366f1 */
   --primary-foreground: oklch(0.985 0 0);
-  --secondary: oklch(0.952 0.015 277); /* Indigo Fog */
-  --secondary-foreground: oklch(0.300 0.095 305);
-  --muted: oklch(0.952 0.015 277);
-  --muted-foreground: oklch(0.529 0.010 300); /* Slate */
-  --accent: oklch(0.955 0.030 277); /* Indigo Mist */
-  --accent-foreground: oklch(0.300 0.095 305);
+  --secondary: oklch(0.95 0.025 140); /* Indigo Fog */
+  --secondary-foreground: oklch(0.27 0.045 165);
+  --muted: oklch(0.95 0.018 140);
+  --muted-foreground: oklch(0.50 0.025 160); /* Slate */
+  --accent: oklch(0.94 0.08 125); /* Indigo Mist */
+  --accent-foreground: oklch(0.27 0.045 165);
   --destructive: oklch(0.548 0.198 24.8); /* Alarm Red */
   --destructive-foreground: oklch(1 0 0);
-  --border: oklch(0.62 0.02 300 / 45%); /* Pebble hairline */
-  --input: oklch(0.62 0.02 300 / 60%);
-  --ring: oklch(0.450 0.180 277); /* Deep Indigo */
-  --surface: oklch(1 0 0 / 88%);
-  --surface-strong: oklch(1 0 0);
-  --live: oklch(0.585 0.233 277.117);
+  --border: oklch(0.60 0.03 160 / 40%); /* Pebble hairline */
+  --input: oklch(0.60 0.03 160 / 55%);
+  --ring: oklch(0.52 0.13 160); /* Deep Indigo */
+  --surface: oklch(0.995 0.004 125 / 88%);
+  --surface-strong: oklch(0.995 0.004 125);
+  --live: oklch(0.64 0.14 160);
   --live-foreground: oklch(0.985 0 0);
   --chart-1: var(--primary);
   --chart-2: oklch(0.450 0.140 305); /* Violet */
@@ -107,56 +107,56 @@
   --sidebar-accent-foreground: var(--accent-foreground);
   --sidebar-border: var(--border);
   --sidebar-ring: var(--ring);
-  --glass-border: oklch(0.75 0.03 277 / 35%);
+  --glass-border: oklch(0.75 0.04 150 / 35%);
   --glass-ghost: oklch(1 0 0 / 22%);
-  --home-pin: oklch(0.300 0.095 305);
-  --star-color: #f5f0ff;
-  --route-color: #facc15;
-  --route-shadow: #2a1546;
-  --map-land: #fbfaff;
-  --map-water: #cfe0fa;
-  --map-park: #d9f2e5;
-  --map-building: #ece9fb;
-  --map-river: #a8c6ef;
-  --map-boundary: #b3bdf0;
-  --map-road: #e9e8f8;
-  --map-water-label: #4a6ed0;
-  --map-label: #3d2a6e;
+  --home-pin: oklch(0.27 0.045 165);
+  --star-color: #f1fbe9;
+  --route-color: #c6f432;
+  --route-shadow: #0f2a22;
+  --map-land: #f8faf3;
+  --map-water: #cfe8e4;
+  --map-park: #d4efcf;
+  --map-building: #e7eee2;
+  --map-river: #a6d3cb;
+  --map-boundary: #a9cdb6;
+  --map-road: #e6ece0;
+  --map-water-label: #2e7f73;
+  --map-label: #1e4636;
   --map-halo: #ffffff;
 }
 
 .dark {
   color-scheme: dark;
-  --background: oklch(0.17 0.018 290);
-  --foreground: oklch(0.94 0.009 285);
-  --plum: oklch(0.82 0.06 305);
-  --card: oklch(0.225 0.025 290 / 91%);
-  --popover: oklch(0.235 0.025 290);
-  --primary: oklch(0.64 0.20 277);
-  --secondary: oklch(0.29 0.035 285);
+  --background: oklch(0.17 0.025 165);
+  --foreground: oklch(0.95 0.012 125);
+  --plum: oklch(0.90 0.12 125);
+  --card: oklch(0.22 0.03 165 / 91%);
+  --popover: oklch(0.23 0.03 165);
+  --primary: oklch(0.70 0.15 158);
+  --secondary: oklch(0.28 0.035 165);
   --secondary-foreground: var(--foreground);
-  --muted: oklch(0.265 0.022 290);
-  --muted-foreground: oklch(0.75 0.022 285);
-  --accent: oklch(0.32 0.055 280);
-  --accent-foreground: oklch(0.94 0.025 285);
-  --border: oklch(0.65 0.04 285 / 30%);
-  --input: oklch(0.65 0.04 285 / 45%);
-  --ring: oklch(0.75 0.14 277);
-  --surface: oklch(0.225 0.025 290 / 82%);
-  --surface-strong: oklch(0.225 0.025 290);
+  --muted: oklch(0.26 0.03 165);
+  --muted-foreground: oklch(0.76 0.03 150);
+  --accent: oklch(0.32 0.06 150);
+  --accent-foreground: oklch(0.94 0.05 125);
+  --border: oklch(0.65 0.05 155 / 28%);
+  --input: oklch(0.65 0.05 155 / 42%);
+  --ring: oklch(0.85 0.18 125);
+  --surface: oklch(0.22 0.03 165 / 82%);
+  --surface-strong: oklch(0.22 0.03 165);
   --sidebar: var(--card);
-  --glass-border: oklch(0.8 0.04 285 / 20%);
-  --glass-ghost: oklch(0.4 0.025 290 / 16%);
-  --map-land: #252630;
-  --map-water: #151f2e;
-  --map-park: #253e38;
-  --map-building: #343442;
-  --map-river: #304c62;
-  --map-boundary: #595775;
-  --map-road: #41424e;
-  --map-water-label: #8faecb;
-  --map-label: #c7c6db;
-  --map-halo: #252630;
+  --glass-border: oklch(0.8 0.05 150 / 20%);
+  --glass-ghost: oklch(0.4 0.03 165 / 16%);
+  --map-land: #16231e;
+  --map-water: #0b1714;
+  --map-park: #1d3a2b;
+  --map-building: #25332d;
+  --map-river: #1e4a42;
+  --map-boundary: #3f6553;
+  --map-road: #2c3b34;
+  --map-water-label: #7fc4b6;
+  --map-label: #cfe3d6;
+  --map-halo: #16231e;
 }
 
 .frosted-button { backdrop-filter: blur(12px) saturate(125%); }
