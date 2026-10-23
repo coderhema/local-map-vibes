@@ -6,9 +6,9 @@
 @custom-variant dark (&:is(.dark *));
 
 /*
- * Design system: Wise-inspired shapes, jewel-tone palette — plum ink on
- * paper white with sapphire-indigo primary and vivid per-category accents
- * (emerald, fuchsia, amber, tangerine). Light theme. Pills everywhere,
+ * Design system: Wise-inspired shapes, jewel-tone palette — indigo ink on
+ * lavender white with electric violet primary and coral highlights, plus
+ * vivid per-category accents (orchid, amber, sky, teal). Pills everywhere,
  * blocky 900 display type, hairline borders. All colors in oklch/hex.
  */
 
@@ -66,40 +66,39 @@
 :root {
   color-scheme: light;
   --radius: 1.25rem;
-  /* Paper */
-  --background: oklch(0.982 0.008 125);
-  --foreground: oklch(0.27 0.035 165); /* Charcoal */
-  /* Plum Ink #2a1546 */
-  --plum: oklch(0.27 0.045 165);
-  /* Lilac Voltage #d8b4fe */
-  --lilac: oklch(0.90 0.19 125);
-  --card: oklch(0.995 0.004 125 / 92%);
+  /* Lavender canvas */
+  --background: #f6f4fb;
+  --foreground: #2b2450; /* Indigo ink */
+  --plum: #2b2450;
+  /* Lilac bloom #ddd6ff */
+  --lilac: #ddd6ff;
+  --card: rgba(255, 255, 255, 0.92);
   --card-foreground: var(--foreground);
-  --popover: oklch(0.995 0.004 125);
+  --popover: #ffffff;
   --popover-foreground: var(--foreground);
-  --primary: oklch(0.64 0.14 160); /* Sapphire Indigo #6366f1 */
-  --primary-foreground: oklch(0.985 0 0);
-  --secondary: oklch(0.95 0.025 140); /* Indigo Fog */
-  --secondary-foreground: oklch(0.27 0.045 165);
-  --muted: oklch(0.95 0.018 140);
-  --muted-foreground: oklch(0.50 0.025 160); /* Slate */
-  --accent: oklch(0.94 0.08 125); /* Indigo Mist */
-  --accent-foreground: oklch(0.27 0.045 165);
-  --destructive: oklch(0.548 0.198 24.8); /* Alarm Red */
+  --primary: #7c5cff; /* Electric violet */
+  --primary-foreground: #ffffff;
+  --secondary: #edeaf8; /* Violet fog */
+  --secondary-foreground: #2b2450;
+  --muted: #efedf7;
+  --muted-foreground: #6f6890; /* Dusk slate */
+  --accent: #e9e5fa;
+  --accent-foreground: #2b2450;
+  --destructive: oklch(0.548 0.198 24.8); /* Alarm red */
   --destructive-foreground: oklch(1 0 0);
-  --border: oklch(0.60 0.03 160 / 40%); /* Pebble hairline */
-  --input: oklch(0.60 0.03 160 / 55%);
-  --ring: oklch(0.52 0.13 160); /* Deep Indigo */
-  --surface: oklch(0.995 0.004 125 / 88%);
-  --surface-strong: oklch(0.995 0.004 125);
-  --live: oklch(0.64 0.14 160);
-  --live-foreground: oklch(0.985 0 0);
+  --border: rgba(90, 80, 150, 0.28); /* Hairline dusk */
+  --input: rgba(90, 80, 150, 0.42);
+  --ring: #5f45e6; /* Deep violet */
+  --surface: rgba(255, 255, 255, 0.88);
+  --surface-strong: #ffffff;
+  --live: #ff7a59; /* Coral */
+  --live-foreground: #ffffff;
   --chart-1: var(--primary);
-  --chart-2: oklch(0.450 0.140 305); /* Violet */
-  --chart-3: oklch(0.399 0.088 241.4); /* Signal Blue */
+  --chart-2: #b388ff; /* Orchid */
+  --chart-3: #38bdf8; /* Sky */
   --chart-4: var(--foreground);
   --chart-5: var(--muted-foreground);
-  --sidebar: oklch(1 0 0 / 96%);
+  --sidebar: rgba(255, 255, 255, 0.96);
   --sidebar-foreground: var(--foreground);
   --sidebar-primary: var(--primary);
   --sidebar-primary-foreground: var(--primary-foreground);
@@ -107,56 +106,72 @@
   --sidebar-accent-foreground: var(--accent-foreground);
   --sidebar-border: var(--border);
   --sidebar-ring: var(--ring);
-  --glass-border: oklch(0.75 0.04 150 / 35%);
-  --glass-ghost: oklch(1 0 0 / 22%);
-  --home-pin: oklch(0.27 0.045 165);
-  --star-color: #f1fbe9;
-  --route-color: #c6f432;
-  --route-shadow: #0f2a22;
-  --map-land: #f8faf3;
-  --map-water: #cfe8e4;
-  --map-park: #d4efcf;
-  --map-building: #e7eee2;
-  --map-river: #a6d3cb;
-  --map-boundary: #a9cdb6;
-  --map-road: #e6ece0;
-  --map-water-label: #2e7f73;
-  --map-label: #1e4636;
+  --glass-border: rgba(120, 110, 190, 0.35);
+  --glass-ghost: rgba(255, 255, 255, 0.22);
+  --home-pin: #2b2450;
+  --star-color: #efeaff;
+  --route-color: #ff7a59;
+  --route-shadow: #1b1930;
+  --map-land: #f7f5fc;
+  --map-water: #d4d6f2;
+  --map-park: #e4e0f4;
+  --map-building: #eceaf6;
+  --map-river: #c6c1ef;
+  --map-boundary: #b5afe2;
+  --map-road: #efedf8;
+  --map-water-label: #5a53a8;
+  --map-label: #2f2a55;
   --map-halo: #ffffff;
+  --header-bg: #2b2450; /* Deep indigo ink */
+  --header-foreground: #f6f4fb;
 }
 
 .dark {
   color-scheme: dark;
-  --background: oklch(0.17 0.025 165);
-  --foreground: oklch(0.95 0.012 125);
-  --plum: oklch(0.90 0.12 125);
-  --card: oklch(0.22 0.03 165 / 91%);
-  --popover: oklch(0.23 0.03 165);
-  --primary: oklch(0.70 0.15 158);
-  --secondary: oklch(0.28 0.035 165);
+  --background: #1b1930; /* Midnight indigo */
+  --foreground: #f0edfb;
+  --plum: #b9a8ff; /* Lilac bloom */
+  --card: rgba(38, 35, 67, 0.91);
+  --popover: #282545;
+  --primary: #8f74ff;
+  --secondary: #2a2749;
   --secondary-foreground: var(--foreground);
-  --muted: oklch(0.26 0.03 165);
-  --muted-foreground: oklch(0.76 0.03 150);
-  --accent: oklch(0.32 0.06 150);
-  --accent-foreground: oklch(0.94 0.05 125);
-  --border: oklch(0.65 0.05 155 / 28%);
-  --input: oklch(0.65 0.05 155 / 42%);
-  --ring: oklch(0.85 0.18 125);
-  --surface: oklch(0.22 0.03 165 / 82%);
-  --surface-strong: oklch(0.22 0.03 165);
+  --muted: #272443;
+  --muted-foreground: #a59ec8;
+  --accent: #353163;
+  --accent-foreground: #ece8ff;
+  --border: rgba(160, 150, 220, 0.28);
+  --input: rgba(160, 150, 220, 0.42);
+  --ring: #a68bff;
+  --surface: rgba(38, 35, 67, 0.82);
+  --surface-strong: #262343;
   --sidebar: var(--card);
-  --glass-border: oklch(0.8 0.05 150 / 20%);
-  --glass-ghost: oklch(0.4 0.03 165 / 16%);
-  --map-land: #16231e;
-  --map-water: #0b1714;
-  --map-park: #1d3a2b;
-  --map-building: #25332d;
-  --map-river: #1e4a42;
-  --map-boundary: #3f6553;
-  --map-road: #2c3b34;
-  --map-water-label: #7fc4b6;
-  --map-label: #cfe3d6;
-  --map-halo: #16231e;
+  --glass-border: rgba(180, 170, 240, 0.2);
+  --glass-ghost: rgba(70, 64, 120, 0.16);
+  --map-land: #221e3d;
+  --map-water: #141228;
+  --map-park: #2e2956;
+  --map-building: #302b58;
+  --map-river: #262153;
+  --map-boundary: #4c4494;
+  --map-road: #332e5b;
+  --map-water-label: #9a93e0;
+  --map-label: #ded9f7;
+  --map-halo: #221e3d;
+  --header-bg: #131120; /* Deeper than the midnight canvas */
+  --header-foreground: #f0edfb;
+}
+
+@utility header-deep {
+  background: var(--header-bg);
+  border-color: rgba(240, 237, 251, 0.16);
+  color: var(--header-foreground);
+  & button {
+    color: var(--header-foreground);
+  }
+  & button:hover {
+    background: rgba(240, 237, 251, 0.12);
+  }
 }
 
 .frosted-button { backdrop-filter: blur(12px) saturate(125%); }

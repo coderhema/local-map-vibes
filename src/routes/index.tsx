@@ -93,15 +93,15 @@ const jobCategories = ["All", "Design", "Technology", "Community"];
 
 /* Jewel-tone accent per category — pins, chips and labels each get their own color */
 const CATEGORY_COLORS: Record<string, string> = {
-  Music: "#d946ef", /* amethyst fuchsia */
+  Music: "#c084fc", /* orchid */
   Culture: "#f59e0b", /* citrine amber */
-  Technology: "#6366f1", /* sapphire indigo */
-  Food: "#f97316", /* tangerine */
-  Sports: "#10b981", /* emerald */
-  Design: "#ec4899", /* rose */
-  Community: "#06b6d4", /* topaz cyan */
+  Technology: "#7c5cff", /* electric violet */
+  Food: "#ff8a5c", /* coral */
+  Sports: "#38bdf8", /* sky */
+  Design: "#f472b6", /* pink */
+  Community: "#2dd4bf", /* teal */
 };
-const categoryColor = (c: string) => CATEGORY_COLORS[c] ?? "#0f2a22";
+const categoryColor = (c: string) => CATEGORY_COLORS[c] ?? "#2b2450";
 
 function pinIconSvg(category: string) {
   const markup = pinFilledMarkup[category] ?? pinFilledMarkup["Briefcase"] ?? "";
@@ -632,7 +632,7 @@ function Index() {
       {mapReady && mapRef.current && <Suspense fallback={null}><WorldAtmosphere map={mapRef.current} dark={darkMode} /></Suspense>}
       <MapDirections map={mapReady ? mapRef.current : null} listings={filtered} onSelect={selectDistant} collapsed={sidebarCollapsed} />
 
-      <header className="absolute left-4 right-4 top-4 z-40 flex h-14 items-center justify-between rounded-[1.25rem] border border-border bg-card/90 px-4 backdrop-blur-xl md:left-6 md:right-6 md:px-4">
+      <header className="header-deep absolute left-4 right-4 top-4 z-40 flex h-14 items-center justify-between rounded-[1.25rem] border px-4 backdrop-blur-xl md:left-6 md:right-6 md:px-4">
         <div className="flex min-w-0 items-center">
           <div><p className="truncate font-display text-xl md:text-2xl font-black tracking-tight leading-none">Backyrd</p></div>
         </div>
@@ -668,11 +668,11 @@ function Index() {
           <Button size="sm" variant="default" className="h-8 shrink-0 md:hidden" onClick={() => setShowBrowse(true)}><List className="size-4" weight="duotone" />Explore</Button>
           <Popover><PopoverTrigger asChild><Button size="sm" variant="secondary" className="h-8 shrink-0" aria-label="Map focus"><Crosshair className="size-4" weight="fill" />{focus === "city" ? "City" : focus === "region" ? "Region" : "World"}</Button></PopoverTrigger><PopoverContent className="w-44 p-1"><div className="flex flex-col">{(["city", "region", "world"] as const).map((view) => <Button key={view} variant={focus === view ? "secondary" : "ghost"} className="justify-start" aria-pressed={focus === view} onClick={() => focusArea(view)}>{view === "city" ? <Buildings weight="fill" /> : view === "region" ? <MapTrifold weight="fill" /> : <GlobeHemisphereWest weight="fill" />}{view === "city" ? "City" : view === "region" ? "Region" : "World"}</Button>)}</div></PopoverContent></Popover>
           {day && <Button size="sm" variant="default" onClick={() => setDay(undefined)} className="h-8 shrink-0"><CalendarBlank className="size-4" weight="fill" />{day.toLocaleDateString(undefined, { month: "short", day: "numeric" })}<X className="size-3" /></Button>}
-          {(kind === "Events" ? eventCategories : jobCategories).map((item) => <Button key={item} size="sm" variant={category === item ? "default" : "secondary"} style={category === item ? { backgroundColor: item === "All" ? "#0f2a22" : categoryColor(item), color: "#fff" } : undefined} onClick={() => setCategory(item)} className="h-8 shrink-0 backdrop-blur-xl" aria-pressed={category === item}>{item}</Button>)}
+          {(kind === "Events" ? eventCategories : jobCategories).map((item) => <Button key={item} size="sm" variant={category === item ? "default" : "secondary"} style={category === item ? { backgroundColor: item === "All" ? "#5f45e6" : categoryColor(item), color: "#fff" } : undefined} onClick={() => setCategory(item)} className="h-8 shrink-0 backdrop-blur-xl" aria-pressed={category === item}>{item}</Button>)}
         </div>
       </section>
 
-      <aside className={`absolute bottom-4 left-4 top-[5.2rem] z-30 w-[calc(100%-2rem)] flex-col overflow-hidden rounded-[28px] border border-border bg-card/95 backdrop-blur-xl transition-[width] duration-300 md:left-6 md:flex ${sidebarCollapsed ? "md:w-14" : "md:w-80"} ${showBrowse ? "flex" : "hidden"}`}>
+      <aside className={`absolute bottom-4 left-4 top-[5.2rem] z-[60] w-[calc(100%-2rem)] flex-col overflow-hidden rounded-[28px] border border-border bg-card/95 backdrop-blur-xl transition-[width] duration-300 md:left-6 md:flex ${sidebarCollapsed ? "md:w-14" : "md:w-80"} ${showBrowse ? "flex" : "hidden"}`}>
         <div className={`border-b border-border ${sidebarCollapsed ? "hidden md:flex md:flex-col md:items-center md:gap-2 md:p-2" : "px-4 py-4"}`}>
           {sidebarCollapsed ? <><TooltipProvider><Tooltip><TooltipTrigger asChild><Button variant="ghost" size="icon-sm" onClick={() => setSidebarCollapsed(false)} aria-label="Expand discovery panel"><SidebarSimple className="size-4" weight="duotone" /></Button></TooltipTrigger><TooltipContent side="right">Expand panel</TooltipContent></Tooltip><Tooltip><TooltipTrigger asChild><Button variant={kind === "Events" ? "secondary" : "ghost"} size="icon-sm" onClick={() => { setKind("Events"); setCategory("All"); }} aria-label="Events"><Confetti className="size-4" weight="duotone" /></Button></TooltipTrigger><TooltipContent side="right">Events</TooltipContent></Tooltip><Tooltip><TooltipTrigger asChild><Button variant={kind === "Jobs" ? "secondary" : "ghost"} size="icon-sm" onClick={() => { setKind("Jobs"); setCategory("All"); }} aria-label="Jobs"><Briefcase className="size-4" weight="duotone" /></Button></TooltipTrigger><TooltipContent side="right">Jobs</TooltipContent></Tooltip></TooltipProvider></> : <><div className="mb-4 grid grid-cols-2 gap-1 rounded-full bg-muted p-1"><Button variant={kind === "Events" ? "secondary" : "ghost"} size="sm" className={kind === "Events" ? "border-0 bg-secondary text-foreground" : "border-0 bg-transparent"} onClick={() => { setKind("Events"); setCategory("All"); setSelected(initialEvent); }}><Confetti className="size-4" weight="duotone" />Events</Button><Button variant={kind === "Jobs" ? "secondary" : "ghost"} size="sm" className={kind === "Jobs" ? "border-0 bg-secondary text-foreground" : "border-0 bg-transparent"} onClick={() => { const firstJob = events.find((item) => item.kind === "Jobs"); setKind("Jobs"); setCategory("All"); if (firstJob) setSelected(firstJob); }}><Briefcase className="size-4" weight="duotone" />Jobs</Button></div><div className="flex items-center justify-between"><div><p className="font-display text-2xl font-black tracking-tight">In your Backyrd</p><p className="mt-1 text-xs text-muted-foreground">{filtered.length} {kind.toLowerCase()} to explore</p></div><Button className="md:hidden" aria-label="Close discovery" variant="ghost" size="icon" onClick={() => setShowBrowse(false)}><X className="size-4" /></Button><Button className="hidden md:inline-flex" aria-label="Collapse discovery panel" variant="ghost" size="icon-sm" onClick={() => setSidebarCollapsed(true)}><SidebarSimple className="size-4" weight="duotone" /></Button></div></>}
         </div>
