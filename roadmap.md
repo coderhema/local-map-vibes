@@ -33,3 +33,7 @@
 - [x] Calendar filter + add-to-calendar
 - [x] Hourly real-listing refresh
 - [x] User-chosen location with home pin
+
+## New requests (Oct 23)
+- [ ] Explore button's dialog/list panel renders above every other overlay (z-index above pins/cards)
+- [ ] Header bar (Backyrd logo strip) uses the deepest palette color with lighter text/icons
