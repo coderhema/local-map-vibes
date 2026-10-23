@@ -93,15 +93,15 @@ const jobCategories = ["All", "Design", "Technology", "Community"];
 
 /* Jewel-tone accent per category — pins, chips and labels each get their own color */
 const CATEGORY_COLORS: Record<string, string> = {
-  Music: "#d946ef", /* amethyst fuchsia */
+  Music: "#c084fc", /* orchid */
   Culture: "#f59e0b", /* citrine amber */
-  Technology: "#6366f1", /* sapphire indigo */
-  Food: "#f97316", /* tangerine */
-  Sports: "#10b981", /* emerald */
-  Design: "#ec4899", /* rose */
-  Community: "#06b6d4", /* topaz cyan */
+  Technology: "#7c5cff", /* electric violet */
+  Food: "#ff8a5c", /* coral */
+  Sports: "#38bdf8", /* sky */
+  Design: "#f472b6", /* pink */
+  Community: "#2dd4bf", /* teal */
 };
-const categoryColor = (c: string) => CATEGORY_COLORS[c] ?? "#0f2a22";
+const categoryColor = (c: string) => CATEGORY_COLORS[c] ?? "#2b2450";
 
 function pinIconSvg(category: string) {
   const markup = pinFilledMarkup[category] ?? pinFilledMarkup["Briefcase"] ?? "";
