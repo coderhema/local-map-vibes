@@ -1,0 +1,67 @@
+# Render Blueprint for Backyrd (TanStack Start, Node server output).
+# Deploy: Render Dashboard → New → Blueprint → pick this repo. Secrets marked
+# `sync: false` are prompted for on first deploy and never stored in git.
+services:
+  - type: web
+    name: backyrd
+    runtime: node
+    plan: free
+    branch: main
+    buildCommand: bun install --frozen-lockfile && bun run build:node
+    startCommand: node .output/server/index.mjs
+    healthCheckPath: /api/health
+    autoDeploy: true
+    envVars:
+      - key: NODE_VERSION
+        value: "22"
+      - key: NITRO_PRESET
+        value: node-server
+      - key: SHOW_SAMPLE_LISTINGS
+        value: "true"
+      # Supabase (your own project once you leave Lovable Cloud)
+      - key: SUPABASE_URL
+        sync: false
+      - key: SUPABASE_PUBLISHABLE_KEY
+        sync: false
+      - key: SUPABASE_SERVICE_ROLE_KEY
+        sync: false
+      # Browser copies, inlined at build time by Vite
+      - key: VITE_SUPABASE_URL
+        sync: false
+      - key: VITE_SUPABASE_PUBLISHABLE_KEY
+        sync: false
+      - key: VITE_SUPABASE_PROJECT_ID
+        sync: false
+      # Listing refresh (TinyFish) and its cron hook
+      - key: TINYFISH_API_KEY
+        sync: false
+      - key: CRON_SECRET
+        generateValue: true
+      # Yard Guide AI (any OpenAI-compatible API)
+      - key: OPENAI_API_KEY
+        sync: false
+      - key: OPENAI_BASE_URL
+        sync: false
+      - key: AI_MODEL
+        sync: false
+
+  # Optional (uncomment to enable): hourly listing refresh. Replaces the Supabase pg_cron job that
+  # called the Lovable URL. Cron jobs are a paid Render service; delete this
+  # block if you'd rather schedule the call with pg_cron on your own Supabase.
+# - type: cron
+#   name: backyrd-refresh-listings
+#   runtime: node
+#   plan: starter
+#   schedule: "7 * * * *"
+#   buildCommand: "true"
+#   startCommand: >-
+#     curl -fsS -X POST "$APP_URL/api/public/hooks/refresh-listings"
+#     -H "Authorization: Bearer $CRON_SECRET"
+#   envVars:
+#     - key: APP_URL
+#       sync: false
+#     - key: CRON_SECRET
+#       fromService:
+#         type: web
+#         name: backyrd
+#         envVarKey: CRON_SECRET

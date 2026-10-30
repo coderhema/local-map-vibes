@@ -30,7 +30,7 @@ import {
   Crosshair,
   HandPointing,
 } from "@phosphor-icons/react";
-import { lazy, Suspense, useCallback, useEffect, useRef, useState } from "react";
+import { lazy, Suspense, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { toast } from "sonner";
 
 import { Button } from "@/components/ui/button";
@@ -45,8 +45,22 @@ import { rendererColor } from "@/lib/css-color";
 import { MAP_VIEWS } from "@/lib/map-discovery";
 import { installRouteTrails, setRouteTrail, setRouteEnds, routePath, routeDistanceKm, ROUTE_LABELS, type RouteMode } from "@/lib/route-trails";
 import { collectListings, getListings, refreshListings, type Listing } from "@/lib/listings.functions";
+import { LAGOS, distanceKm } from "@/lib/listing-cleanup";
 
 const WorldAtmosphere = lazy(() => import("@/components/world-atmosphere"));
+
+const STYLE_URL = "https://tiles.openfreemap.org/styles/positron";
+// Start downloading the map library and basemap style as soon as this module runs in the
+// browser, instead of waiting for React to hydrate and run the mount effect.
+let mapAssets: Promise<[typeof import("maplibre-gl"), unknown]> | undefined;
+function loadMapAssets() {
+  mapAssets ??= Promise.all([
+    import("maplibre-gl"),
+    fetch(STYLE_URL).then((r) => (r.ok ? r.json() : null)).catch(() => null),
+  ]);
+  return mapAssets;
+}
+if (typeof window !== "undefined") void loadMapAssets();
 
 export const Route = createFileRoute("/")({
   head: () => ({
@@ -71,17 +85,50 @@ export const Route = createFileRoute("/")({
 
 type EventItem = Listing;
 type Mode = RouteMode;
-const LAGOS: [number, number] = [3.3792, 6.5244];
 const MODES: { id: Mode; label: string; kmh: number; overheadH: number }[] = [
   { id: "flight", label: "Fly", kmh: 820, overheadH: 2.5 },
   { id: "transit", label: "Transit", kmh: 75, overheadH: 0.3 },
   { id: "drive", label: "Drive", kmh: 65, overheadH: 0 },
   { id: "walk", label: "Walk", kmh: 4.8, overheadH: 0 },
 ];
-function distanceKm(a: [number, number], b: [number, number]) {
-  const r = Math.PI / 180;
-  const h = Math.sin(((b[1] - a[1]) * r) / 2) ** 2 + Math.cos(a[1] * r) * Math.cos(b[1] * r) * Math.sin(((b[0] - a[0]) * r) / 2) ** 2;
-  return 12742 * Math.asin(Math.sqrt(h));
+/** Walk/drive/transit are only offered where they make sense for the distance. */
+function modeAvailable(m: Mode, km: number) {
+  if (m === "walk") return km <= 60;
+  if (m === "drive" || m === "transit") return km <= 4000;
+  return km > 150;
+}
+function bestMode(km: number): Mode {
+  if (km <= 3) return "walk";
+  if (km <= 600) return "drive";
+  return "flight";
+}
+type PinEntry = { marker: import("maplibre-gl").Marker; event: { id: string; coordinates: [number, number] } };
+/**
+ * Fans out pins that land on (almost) the same spot on screen at the current zoom,
+ * so every pin stays visible and clickable instead of one hiding the others.
+ */
+function declutterPins(map: import("maplibre-gl").Map, pins: Map<string, PinEntry>) {
+  const points = [...pins.values()]
+    .filter((pin) => pin.marker.getElement().style.display !== "none")
+    .map((pin) => ({ pin, xy: map.project(pin.event.coordinates) }));
+  const groups: (typeof points)[] = [];
+  for (const point of points) {
+    const group = groups.find((g) => Math.hypot(g[0]!.xy.x - point.xy.x, g[0]!.xy.y - point.xy.y) < 26);
+    if (group) group.push(point);
+    else groups.push([point]);
+  }
+  for (const group of groups) {
+    group.forEach(({ pin }, i) => {
+      let next: [number, number] = [0, 0];
+      if (group.length > 1) {
+        const angle = (2 * Math.PI * i) / group.length - Math.PI / 2;
+        const radius = 20 + Math.min(group.length, 12) * 3;
+        next = [Math.round(Math.cos(angle) * radius), Math.round(Math.sin(angle) * radius)];
+      }
+      const current = pin.marker.getOffset();
+      if (current.x !== next[0] || current.y !== next[1]) pin.marker.setOffset(next);
+    });
+  }
 }
 function formatDuration(hours: number) {
   if (hours < 1) return `${Math.max(1, Math.round(hours * 60))} min`;
@@ -145,9 +192,15 @@ function Index() {
   const mapContainer = useRef<HTMLDivElement>(null);
   const mapRef = useRef<import("maplibre-gl").Map | null>(null);
   const events = Route.useLoaderData();
-  const initialEvent = events.find((e) => e.kind === "Events") ?? events[0];
+  // Lagos is the default market: open on the nearest upcoming event to Lagos.
+  const initialEvent = useMemo(() => {
+    const nearest = (kind: "Events" | "Jobs") => events.filter((e) => e.kind === kind && e.onMap).sort((a, b) => distanceKm(LAGOS, a.coordinates) - distanceKm(LAGOS, b.coordinates))[0];
+    return nearest("Events") ?? nearest("Jobs") ?? events[0];
+  }, [events]);
+  const mapListings = useMemo(() => events.filter((e) => e.onMap), [events]);
   const markerRefs = useRef(new Map<string, HTMLButtonElement>());
   const [mapReady, setMapReady] = useState(false);
+  const [mapLoaded, setMapLoaded] = useState(false);
   const [mode, setMode] = useState<Mode>("flight");
   const [activeRoute, setActiveRoute] = useState<{ points: [number, number][]; mode: Mode } | null>(null);
   const [origin, setOrigin] = useState<[number, number]>(LAGOS);
@@ -174,7 +227,7 @@ function Index() {
   const [day, setDay] = useState<Date | undefined>();
   const [calOpen, setCalOpen] = useState(false);
   const [darkMode, setDarkMode] = useState(false);
-  const [focus, setFocus] = useState<"city" | "region" | "world">("world");
+  const [focus, setFocus] = useState<"city" | "region" | "world">("city");
   const selectDistant = useCallback((item: EventItem) => { setSelected(item); setShowPanel(true); mapRef.current?.flyTo({ center: item.coordinates, zoom: 11, pitch: 45, duration: 1800, essential: true }); }, []);
   useEffect(() => {
     let dark = window.matchMedia("(prefers-color-scheme: dark)").matches;
@@ -199,29 +252,33 @@ function Index() {
     try { const saved = localStorage.getItem("backyard-home"); if (saved) { const h = JSON.parse(saved); setHome(h); setOrigin(h.coords); } } catch { /* ignore */ }
   }, []);
 
-  const filtered = events.filter((event) => {
-    const inCategory = category === "All" || event.category === category;
-    const matches = `${event.title} ${event.place}`.toLowerCase().includes(query.toLowerCase());
-    const onDay = !day || (event.startsAt !== null && sameDay(new Date(event.startsAt), day));
-    return event.kind === kind && inCategory && matches && onDay;
-  });
+  // Closest first, measured from the user's location (Lagos until they set one).
+  // Remote jobs without a location sort after everything that has one.
+  const filtered = events
+    .filter((event) => {
+      const inCategory = category === "All" || event.category === category;
+      const matches = `${event.title} ${event.place}`.toLowerCase().includes(query.toLowerCase());
+      const onDay = !day || (event.startsAt !== null && sameDay(new Date(event.startsAt), day));
+      return event.kind === kind && inCategory && matches && onDay;
+    })
+    .map((event) => ({ event, km: event.onMap ? distanceKm(origin, event.coordinates) : Infinity }))
+    .sort((a, b) => a.km - b.km)
+    .map(({ event }) => event);
 
   useEffect(() => {
     let disposed = false;
     async function mountMap() {
       if (!mapContainer.current || mapRef.current) return;
-      // Load the map library and the basemap style at the same time instead of one after the other.
-      const stylePromise = fetch("https://tiles.openfreemap.org/styles/positron")
-        .then((r) => (r.ok ? r.json() : null))
-        .catch(() => null);
-      const [maplibregl, styleJson] = await Promise.all([import("maplibre-gl"), stylePromise]);
+      // The map library and basemap style were already requested in parallel at module load.
+      const [maplibregl, styleJson] = await loadMapAssets();
       if (disposed || !mapContainer.current) return;
       maplibregl.setWorkerUrl("/maplibre/maplibre-gl-worker.mjs");
       const map = new maplibregl.Map({
         container: mapContainer.current,
-        style: styleJson ?? "https://tiles.openfreemap.org/styles/positron",
-        center: [10, 8],
-        zoom: 2.65,
+        style: (styleJson as import("maplibre-gl").StyleSpecification | null) ?? STYLE_URL,
+        // Lagos is the default market: open on the city, not the whole world.
+        center: LAGOS,
+        zoom: MAP_VIEWS.city.zoom,
         pitch: 45,
         maxPitch: 65,
         minZoom: 0.8,
@@ -265,7 +322,7 @@ function Index() {
       const observer = new ResizeObserver(() => map.resize());
       map.once("remove", () => observer.disconnect());
       observer.observe(mapContainer.current);
-      map.once("load", () => map.resize());
+      map.once("load", () => { map.resize(); setMapLoaded(true); });
     }
     void mountMap();
     return () => {
@@ -288,7 +345,7 @@ function Index() {
       if (cancelled) return;
       const pins = pinsRef.current;
       const seen = new Set<string>();
-      events.forEach((event) => {
+      mapListings.forEach((event) => {
         seen.add(event.id);
         const key = `${event.title}|${event.category}|${event.kind}`;
         const existing = pins.get(event.id);
@@ -302,7 +359,8 @@ function Index() {
         node.className = `event-marker${event.id === selectedRef.current ? " active" : ""}`;
         node.setAttribute("aria-label", `Open ${event.title}`);
         node.style.setProperty("--pin-accent", categoryColor(event.category));
-        node.innerHTML = `<span class="pin-pulse"></span><span class="pin-shape">${pinIconSvg(event.kind === "Jobs" ? "Briefcase" : event.category)}</span><span class="pin-shadow"></span><span class="pin-label">${event.title}</span>`;
+        const safeTitle = event.title.replace(/[<>&]/g, (c) => ({ "<": "&lt;", ">": "&gt;", "&": "&amp;" })[c] ?? c);
+        node.innerHTML = `<span class="pin-pulse"></span><span class="pin-shape">${pinIconSvg(event.kind === "Jobs" ? "Briefcase" : event.category)}</span><span class="pin-shadow"></span><span class="pin-label">${event.sample ? "Sample · " : ""}${safeTitle}</span>`;
         const current = () => pins.get(event.id)?.event ?? event;
         let pressTimer = 0;
         let longPressed = false;
@@ -334,7 +392,16 @@ function Index() {
       setFilterTick((t) => t + 1);
     });
     return () => { cancelled = true; };
-  }, [mapReady, events]);
+  }, [mapReady, mapListings]);
+  useEffect(() => {
+    const map = mapRef.current;
+    if (!mapReady || !map) return;
+    const run = () => declutterPins(map, pinsRef.current);
+    map.on("zoomend", run);
+    map.on("pitchend", run);
+    map.on("rotateend", run);
+    return () => { map.off("zoomend", run); map.off("pitchend", run); map.off("rotateend", run); };
+  }, [mapReady]);
   const [, setFilterTick] = useState(0);
 
   // Save any background scrapes that finished since the last visit.
@@ -427,7 +494,7 @@ function Index() {
     setSelected(event);
     setShowPanel(true);
     markerRefs.current.forEach((marker, id) => marker.classList.toggle("active", id === event.id));
-    mapRef.current?.flyTo({ center: event.coordinates, zoom: 11, pitch: 45, duration: 1400, essential: true });
+    if (event.onMap) mapRef.current?.flyTo({ center: event.coordinates, zoom: 11, pitch: 45, duration: 1400, essential: true });
   }
 
   function focusArea(next: "city" | "region" | "world") {
@@ -534,6 +601,12 @@ function Index() {
     }
     setTour((current) => current.some((stop) => !events.some((item) => item.id === stop.id)) ? current.filter((stop) => events.some((item) => item.id === stop.id)) : current);
   }, [events]);
+  // Pick a sensible transport mode per listing: walking/driving around Lagos, flying abroad.
+  useEffect(() => {
+    if (!selected?.onMap) return;
+    const km = distanceKm(origin, selected.coordinates);
+    setMode((current) => (modeAvailable(current, km) && !(current === "flight" && km < 600) ? current : bestMode(km)));
+  }, [selected, origin]);
   function travelMs(m: Mode) { return { flight: 2600, transit: 2200, drive: 2000, walk: 1800 }[m]; }
   function pickMode(m: Mode) {
     setMode(m);
@@ -581,6 +654,7 @@ function Index() {
       const item = events.find((e) => e.id === id);
       node.style.display = item && filtered.some((f) => f.id === id) ? "" : "none";
     });
+    if (mapRef.current && mapReady) declutterPins(mapRef.current, pinsRef.current);
   });
 
   function playNotificationPing() {
@@ -626,9 +700,12 @@ function Index() {
   return (
     <main className="relative h-dvh min-h-[640px] overflow-hidden bg-background text-foreground">
       <div ref={mapContainer} className="map-shell absolute inset-0" aria-label="Interactive map showing events and jobs" />
+      <div aria-hidden={mapLoaded} className={`map-loading pointer-events-none absolute inset-0 z-[5] grid place-items-center transition-opacity duration-500 ${mapLoaded ? "opacity-0" : "opacity-100"}`}>
+        {!mapLoaded && <p className="breathe-shimmer rounded-full border border-border bg-card/90 px-4 py-2 text-sm font-semibold backdrop-blur-xl">Loading the map…</p>}
+      </div>
 
       {mapReady && mapRef.current && <Suspense fallback={null}><WorldAtmosphere map={mapRef.current} dark={darkMode} /></Suspense>}
-      <MapDirections map={mapReady ? mapRef.current : null} listings={filtered} onSelect={selectDistant} collapsed={sidebarCollapsed} />
+      <MapDirections map={mapReady ? mapRef.current : null} listings={filtered.filter((item) => item.onMap)} onSelect={selectDistant} collapsed={sidebarCollapsed} />
 
       <header className="header-deep absolute left-4 right-4 top-4 z-40 flex h-14 items-center justify-between rounded-[1.25rem] border px-4 backdrop-blur-xl md:left-6 md:right-6 md:px-4">
         <div className="flex min-w-0 items-center">
@@ -678,7 +755,7 @@ function Index() {
           {!filtered.length && <p className="px-4 py-6 text-sm text-muted-foreground">{kind === "Events" ? "No current or upcoming events found." : "No jobs found."}</p>}
           {filtered.map((event) => (
             <Button variant="ghost" key={event.id} onClick={() => { focusEvent(event); setShowBrowse(false); }} className={`mb-2 block h-auto w-full whitespace-normal rounded-2xl border p-4 text-left transition-colors ${selected?.id === event.id ? "border-primary bg-accent" : "border-transparent hover:bg-secondary"}`} aria-pressed={selected?.id === event.id}>
-               <div className="flex items-start justify-between gap-3"><span className="text-[10px] font-semibold uppercase" style={{ color: categoryColor(event.category) }}>{event.category}</span><span className="text-[10px] text-muted-foreground">{event.attendees}</span></div>
+               <div className="flex items-start justify-between gap-3"><span className="text-[10px] font-semibold uppercase" style={{ color: categoryColor(event.category) }}>{event.category}</span><span className="flex items-center gap-1.5 text-[10px] text-muted-foreground">{event.sample && <span className="rounded-full border border-border px-1.5 py-0.5 font-semibold uppercase">Sample</span>}{event.attendees}</span></div>
                <p className="mt-1 font-display text-base font-semibold leading-tight">{event.title}</p><p className="mt-2 flex items-center gap-1 text-xs text-muted-foreground"><MapPin className="size-3" weight="duotone" />{event.place}</p><p className="mt-2 text-xs font-semibold">{event.date}</p>
             </Button>
           ))}
@@ -687,7 +764,7 @@ function Index() {
 
       {showPanel && selected && (
          <section className="listing-details paper-scroll absolute bottom-3 left-3 right-3 z-40 max-h-[56dvh] overflow-y-auto rounded-[28px] border border-border bg-card p-4 backdrop-blur-xl md:bottom-6 md:max-h-none md:overflow-visible md:p-5 md:left-auto md:right-8 md:w-[25rem]">
-           <div className="flex items-start justify-between gap-2 md:gap-3"><div className="min-w-0 flex-1"><p className="text-[10px] font-semibold uppercase" style={{ color: categoryColor(selected.category) }}>{selected.kind === "Jobs" ? "Opportunity" : "Trending"} in {selected.place.split(",").at(-1)}</p><h1 className="mt-1 line-clamp-2 font-display text-xl font-semibold md:line-clamp-none md:text-2xl tracking-tight leading-tight">{selected.title}</h1></div><Button aria-label="Close details" variant="ghost" size="icon" className="shrink-0" onClick={() => setShowPanel(false)}><X className="size-4" /></Button></div>
+           <div className="flex items-start justify-between gap-2 md:gap-3"><div className="min-w-0 flex-1"><p className="text-[10px] font-semibold uppercase" style={{ color: categoryColor(selected.category) }}>{selected.sample ? "Sample listing · " : ""}{selected.kind === "Jobs" ? "Opportunity" : "Trending"} in {selected.onMap ? selected.place.split(",").at(-1)?.trim() : selected.place.replace(/^Remote · /, "")}</p><h1 className="mt-1 line-clamp-2 font-display text-xl font-semibold md:line-clamp-none md:text-2xl tracking-tight leading-tight">{selected.title}</h1></div><Button aria-label="Close details" variant="ghost" size="icon" className="shrink-0" onClick={() => setShowPanel(false)}><X className="size-4" /></Button></div>
            <div className="mt-3 flex flex-wrap items-center gap-3 text-xs text-muted-foreground"><span className="flex items-center gap-1"><CalendarBlank className="size-4 text-primary" weight="duotone" />{selected.date}</span><span className="flex items-center gap-1"><MapPin className="size-4 text-primary" weight="fill" />{selected.place}</span></div>
            {selected.kind === "Jobs" && (
              <div className="mt-4 grid grid-cols-3 gap-1 rounded-full bg-muted p-1" aria-label="Work arrangement">
@@ -701,9 +778,9 @@ function Index() {
                <Button variant="ghost" size="sm" onClick={() => downloadIcs(selected)} aria-label="Add to calendar"><CalendarPlus className="size-4" weight="duotone" />Add</Button>
              </div>
            )}
-           {selected.workMode !== "Remote" && <>
+           {selected.workMode !== "Remote" && selected.onMap && <>
            <div className="mt-4 grid grid-cols-4 gap-1 rounded-full bg-muted p-1" role="radiogroup" aria-label="Mode of transport">
-             {MODES.map((m) => { const Icon = { flight: AirplaneTilt, transit: Train, drive: Car, walk: PersonSimpleWalk }[m.id]; const km = distanceKm(origin, selected.coordinates); const tooFar = (m.id === "walk" && km > 60) || ((m.id === "drive" || m.id === "transit") && km > 4000); return (
+             {MODES.map((m) => { const Icon = { flight: AirplaneTilt, transit: Train, drive: Car, walk: PersonSimpleWalk }[m.id]; const km = distanceKm(origin, selected.coordinates); const tooFar = !modeAvailable(m.id, km); return (
                <button key={m.id} type="button" role="radio" aria-checked={mode === m.id} disabled={tooFar} onClick={() => pickMode(m.id)} className={`flex flex-col items-center gap-0.5 rounded-full px-2 py-1.5 text-[11px] font-semibold transition-colors disabled:opacity-40 ${mode === m.id ? "bg-card text-foreground" : "text-muted-foreground hover:text-foreground"}`}>
                  <Icon className="size-4" weight={mode === m.id ? "fill" : "duotone"} />
                  <span>{tooFar ? "—" : formatDuration(km / m.kmh + m.overheadH)}</span>
@@ -711,7 +788,7 @@ function Index() {
            </div>
            <p className="mt-2 text-center text-[11px] text-muted-foreground">{Math.round(distanceKm(origin, selected.coordinates)).toLocaleString()} km from {home ? home.label.split(",")[0] : origin === LAGOS ? "Lagos" : "you"} · {MODES.find((m) => m.id === mode)?.label}</p>
            </>}
-              <div className="mt-3 flex gap-2"><Button className="flex-1" onClick={() => showDirections(selected)}><NavigationArrow className="size-4" weight="fill" /> Show route <ArrowRight className="size-4" /></Button><Button variant="secondary" onClick={followSelected}>{selected.kind === "Jobs" ? <Briefcase className="size-4" weight="duotone" /> : <BellRinging className={`size-4 ${alerts ? "notification-bell" : ""}`} weight={alerts ? "fill" : "duotone"} />} {selected.kind === "Jobs" ? "Save" : alerts ? "Following" : "Follow"}</Button><Button variant="secondary" size="icon" aria-label="View building location" title="View building location" onClick={() => mapRef.current?.flyTo({ center: selected.coordinates, ...MAP_VIEWS.street, duration: 1800, essential: true })}><Buildings className="size-4" weight="fill" /></Button></div>
+              <div className="mt-3 flex gap-2">{selected.onMap ? <Button className="flex-1" onClick={() => showDirections(selected)}><NavigationArrow className="size-4" weight="fill" /> Show route <ArrowRight className="size-4" /></Button> : selected.sourceUrl ? <Button className="flex-1" asChild><a href={selected.sourceUrl} target="_blank" rel="noreferrer">View listing <ArrowRight className="size-4" /></a></Button> : <span className="flex-1" />}<Button variant="secondary" onClick={followSelected}>{selected.kind === "Jobs" ? <Briefcase className="size-4" weight="duotone" /> : <BellRinging className={`size-4 ${alerts ? "notification-bell" : ""}`} weight={alerts ? "fill" : "duotone"} />} {selected.kind === "Jobs" ? "Save" : alerts ? "Following" : "Follow"}</Button>{selected.onMap && <Button variant="secondary" size="icon" aria-label="View building location" title="View building location" onClick={() => mapRef.current?.flyTo({ center: selected.coordinates, ...MAP_VIEWS.street, duration: 1800, essential: true })}><Buildings className="size-4" weight="fill" /></Button>}</div>
            {activeRoute && routeShownRef.current === selected.id && <RouteStops route={activeRoute} map={mapRef.current} />}
         </section>
       )}

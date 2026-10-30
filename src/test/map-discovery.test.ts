@@ -2,7 +2,7 @@ import { describe, expect, it } from "vitest";
 import { groupDirections, MAP_VIEWS } from "@/lib/map-discovery";
 import type { Listing } from "@/lib/listings.functions";
 
-const listing = (id: string, category = "Music", kind: "Events" | "Jobs" = "Events"): Listing => ({ id, category, kind, title: id, place: id, coordinates: [3, 6], date: "", attendees: "", sourceUrl: null, startsAt: null, workMode: null });
+const listing = (id: string, category = "Music", kind: "Events" | "Jobs" = "Events"): Listing => ({ id, category, kind, title: id, place: id, coordinates: [3, 6], date: "", attendees: "", sourceUrl: null, startsAt: null, workMode: null, sample: false, onMap: true });
 describe("Map discovery", () => {
   it("groups similar events in different locations with an additional-count badge", () => {
     const groups = groupDirections([{ item: listing("Lagos"), side: "left" }, { item: listing("Berlin"), side: "left" }, { item: listing("Tokyo"), side: "left" }]);

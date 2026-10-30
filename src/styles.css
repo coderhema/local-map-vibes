@@ -418,3 +418,16 @@
 .discovery-panel { background: var(--card); }
 .discovery-heading { font-weight: 600; }
 .font-display { letter-spacing: 0; }
+
+/* Only the visible pin shape takes clicks, so a pin's transparent box or label never
+   steals a click meant for a neighbouring pin; the hovered/selected pin sits on top. */
+.event-marker { pointer-events: none; }
+.event-marker .pin-shape { pointer-events: auto; }
+.maplibregl-marker.event-marker:hover,
+.maplibregl-marker.event-marker:focus-visible { z-index: 4; }
+.maplibregl-marker.event-marker.active { z-index: 3; }
+.map-loading { background: radial-gradient(circle at 50% 70%, color-mix(in oklab, var(--primary) 10%, transparent), transparent 60%), var(--secondary); }
+.dark .map-loading { background: radial-gradient(circle at 50% 70%, color-mix(in oklab, var(--primary) 12%, transparent), transparent 60%), var(--background); }
+/* Pins on the far side of the globe are covered: hide them so they can't catch clicks. */
+.maplibregl-marker.maplibregl-marker-covered { opacity: 0 !important; pointer-events: none !important; }
+.maplibregl-marker.maplibregl-marker-covered .pin-shape { pointer-events: none; }
