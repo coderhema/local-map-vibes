@@ -23,3 +23,7 @@
 - Keep transport geometry and local repeatable trail textures in the browser-safe route-trails module; use one shared animated source and a wider hover hit-layer for fast, consistent mode switching. Distances are direct geographic estimates, not road-network navigation.
 - Keep event eligibility in the shared listing-visibility helper, applied before listing pagination and during scrape ingestion; invalidate discovery at UTC midnight and on window focus so old listings cannot linger.
 - Fetch real OSM stop suggestions only when a route is shown or its mode changes, with bounded cached server requests; label proximity to the estimated path rather than implying a confirmed transit service.
+
+- Resolve listing category colours through semantic CSS variables for both React controls and DOM map markers so theme changes stay consistent without rebuilding pins.
+- Keep the logo font token independent from heading/body font tokens so typography refreshes preserve brand lettering.
+- Convert CSS colour tokens to sRGB at map/3D renderer boundaries because those renderers do not accept every modern CSS colour format.

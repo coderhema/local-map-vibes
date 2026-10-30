@@ -6,8 +6,8 @@
 @custom-variant dark (&:is(.dark *));
 
 /*
- * Design system: Wise-inspired shapes, jewel-tone palette — indigo ink on
- * lavender white with electric violet primary and coral highlights, plus
+ * Design system: Wise-inspired shapes, Ink & Citron palette — charcoal ink on
+ * cool white with citron actions and sage supporting accents, plus
  * vivid per-category accents (orchid, amber, sky, teal). Pills everywhere,
  * blocky 900 display type, hairline borders. All colors in oklch/hex.
  */
@@ -59,46 +59,55 @@
   --color-live-foreground: var(--live-foreground);
   --color-plum: var(--plum);
   --color-lilac: var(--lilac);
-  --font-sans: "Inter", ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-  --font-display: "Inter", ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  --font-sans: "DM Sans", ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  --color-pin-foreground: var(--pin-foreground);
+  --color-category-music: var(--category-music);
+  --color-category-culture: var(--category-culture);
+  --color-category-technology: var(--category-technology);
+  --color-category-food: var(--category-food);
+  --color-category-sports: var(--category-sports);
+  --color-category-design: var(--category-design);
+  --color-category-community: var(--category-community);
+  --font-logo: "Inter", ui-sans-serif, system-ui, sans-serif;
+  --font-display: "Space Grotesk", ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
 }
 
 :root {
   color-scheme: light;
   --radius: 1.25rem;
-  /* Lavender canvas */
-  --background: #f6f4fb;
-  --foreground: #2b2450; /* Indigo ink */
-  --plum: #2b2450;
-  /* Lilac bloom #ddd6ff */
-  --lilac: #ddd6ff;
-  --card: rgba(255, 255, 255, 0.92);
+  /* Cool white canvas */
+  --background: oklch(0.9798 0.0045 134.85);
+  --foreground: oklch(0.2527 0.0048 174.03);
+  --plum: oklch(0.3993 0.0311 164.09);
+  /* Soft citron tint */
+  --lilac: oklch(0.9264 0.0429 117.27);
+  --card: oklch(1.0000 0.0000 89.88 / .94);
   --card-foreground: var(--foreground);
-  --popover: #ffffff;
+  --popover: oklch(1.0000 0.0000 89.88);
   --popover-foreground: var(--foreground);
-  --primary: #7c5cff; /* Electric violet */
-  --primary-foreground: #ffffff;
-  --secondary: #edeaf8; /* Violet fog */
-  --secondary-foreground: #2b2450;
-  --muted: #efedf7;
-  --muted-foreground: #6f6890; /* Dusk slate */
-  --accent: #e9e5fa;
-  --accent-foreground: #2b2450;
+  --primary: oklch(0.9100 0.1526 118.20);
+  --primary-foreground: oklch(0.2527 0.0048 174.03);
+  --secondary: oklch(0.9406 0.0096 140.52);
+  --secondary-foreground: oklch(0.3214 0.0234 159.70);
+  --muted: oklch(0.9542 0.0086 128.56);
+  --muted-foreground: oklch(0.5201 0.0220 157.37);
+  --accent: oklch(0.9542 0.0388 118.17);
+  --accent-foreground: oklch(0.3481 0.0492 136.42);
   --destructive: oklch(0.548 0.198 24.8); /* Alarm red */
   --destructive-foreground: oklch(1 0 0);
-  --border: rgba(90, 80, 150, 0.28); /* Hairline dusk */
-  --input: rgba(90, 80, 150, 0.42);
-  --ring: #5f45e6; /* Deep violet */
-  --surface: rgba(255, 255, 255, 0.88);
-  --surface-strong: #ffffff;
-  --live: #ff7a59; /* Coral */
-  --live-foreground: #ffffff;
+  --border: oklch(0.8565 0.0190 137.80);
+  --input: oklch(0.8110 0.0280 140.17);
+  --ring: oklch(0.5508 0.0282 156.18);
+  --surface: oklch(1.0000 0.0000 89.88 / .9);
+  --surface-strong: oklch(1.0000 0.0000 89.88);
+  --live: oklch(0.5508 0.0282 156.18);
+  --live-foreground: oklch(1.0000 0.0000 89.88);
   --chart-1: var(--primary);
-  --chart-2: #b388ff; /* Orchid */
-  --chart-3: #38bdf8; /* Sky */
+  --chart-2: oklch(0.7102 0.1349 313.16);
+  --chart-3: oklch(0.6763 0.0915 217.15);
   --chart-4: var(--foreground);
   --chart-5: var(--muted-foreground);
-  --sidebar: rgba(255, 255, 255, 0.96);
+  --sidebar: oklch(1.0000 0.0000 89.88 / .96);
   --sidebar-foreground: var(--foreground);
   --sidebar-primary: var(--primary);
   --sidebar-primary-foreground: var(--primary-foreground);
@@ -106,71 +115,90 @@
   --sidebar-accent-foreground: var(--accent-foreground);
   --sidebar-border: var(--border);
   --sidebar-ring: var(--ring);
-  --glass-border: rgba(120, 110, 190, 0.35);
-  --glass-ghost: rgba(255, 255, 255, 0.22);
-  --home-pin: #2b2450;
-  --star-color: #efeaff;
-  --route-color: #ff7a59;
-  --route-shadow: #1b1930;
-  --map-land: #f7f5fc;
-  --map-water: #d4d6f2;
-  --map-park: #e4e0f4;
-  --map-building: #eceaf6;
-  --map-river: #c6c1ef;
-  --map-boundary: #b5afe2;
-  --map-road: #efedf8;
-  --map-water-label: #5a53a8;
-  --map-label: #2f2a55;
-  --map-halo: #ffffff;
-  --header-bg: #2b2450; /* Deep indigo ink */
-  --header-foreground: #f6f4fb;
+  --glass-border: oklch(0.8509 0.0249 135.70);
+  --glass-ghost: oklch(1.0000 0.0000 89.88 / .22);
+  --home-pin: oklch(0.2527 0.0048 174.03);
+  --star-color: oklch(0.9617 0.0347 117.62);
+  --route-color: oklch(0.8083 0.1665 119.59);
+  --route-shadow: oklch(0.2527 0.0048 174.03);
+  --map-land: oklch(0.9632 0.0085 128.56);
+  --map-water: oklch(0.8918 0.0187 209.43);
+  --map-park: oklch(0.9104 0.0329 128.02);
+  --map-building: oklch(0.9244 0.0144 128.63);
+  --map-river: oklch(0.8216 0.0329 208.75);
+  --map-boundary: oklch(0.7533 0.0321 136.18);
+  --map-road: oklch(1.0000 0.0000 89.88);
+  --map-water-label: oklch(0.5533 0.0467 213.30);
+  --map-label: oklch(0.3949 0.0273 159.05);
+  --map-halo: oklch(0.9798 0.0045 134.85);
+  --header-bg: oklch(0.2527 0.0048 174.03);
+  --header-foreground: oklch(0.9798 0.0045 134.85);
+  --pin-foreground: oklch(1 0 0);
+  --category-music: oklch(0.5784 0.1769 311.07);
+  --category-culture: oklch(0.5595 0.1120 76.55);
+  --category-technology: oklch(0.5376 0.1418 274.07);
+  --category-food: oklch(0.5785 0.1281 45.85);
+  --category-sports: oklch(0.5525 0.0936 226.10);
+  --category-design: oklch(0.5839 0.1558 353.24);
+  --category-community: oklch(0.5513 0.0964 174.39);
+  --header-border: oklch(0.95 0.015 120 / .16);
+  --header-hover: oklch(0.95 0.015 120 / .12);
+  --shadow-panel: 0 12px 32px oklch(0.25 0.02 140 / .08);
 }
 
 .dark {
   color-scheme: dark;
-  --background: #1b1930; /* Midnight indigo */
-  --foreground: #f0edfb;
-  --plum: #b9a8ff; /* Lilac bloom */
-  --card: rgba(38, 35, 67, 0.91);
-  --popover: #282545;
-  --primary: #8f74ff;
-  --secondary: #2a2749;
+  --background: oklch(0.2527 0.0048 174.03);
+  --foreground: oklch(0.9657 0.0110 123.46);
+  --plum: oklch(0.8493 0.0405 127.62);
+  --card: oklch(0.3019 0.0110 156.51 / .94);
+  --popover: oklch(0.3019 0.0110 156.51);
+  --primary: oklch(0.9100 0.1526 118.20);
+  --secondary: oklch(0.3566 0.0181 148.35);
   --secondary-foreground: var(--foreground);
-  --muted: #272443;
-  --muted-foreground: #a59ec8;
-  --accent: #353163;
-  --accent-foreground: #ece8ff;
-  --border: rgba(160, 150, 220, 0.28);
-  --input: rgba(160, 150, 220, 0.42);
-  --ring: #a68bff;
-  --surface: rgba(38, 35, 67, 0.82);
-  --surface-strong: #262343;
+  --muted: oklch(0.3141 0.0174 151.91);
+  --muted-foreground: oklch(0.7732 0.0284 140.17);
+  --accent: oklch(0.4006 0.0478 128.62);
+  --accent-foreground: oklch(0.9345 0.0707 119.80);
+  --border: oklch(0.4453 0.0253 147.26);
+  --input: oklch(0.5508 0.0282 156.18);
+  --ring: oklch(0.9100 0.1526 118.20);
+  --surface: oklch(0.3019 0.0110 156.51 / .9);
+  --surface-strong: oklch(0.3019 0.0110 156.51);
   --sidebar: var(--card);
-  --glass-border: rgba(180, 170, 240, 0.2);
-  --glass-ghost: rgba(70, 64, 120, 0.16);
-  --map-land: #221e3d;
-  --map-water: #141228;
-  --map-park: #2e2956;
-  --map-building: #302b58;
-  --map-river: #262153;
-  --map-boundary: #4c4494;
-  --map-road: #332e5b;
-  --map-water-label: #9a93e0;
-  --map-label: #ded9f7;
-  --map-halo: #221e3d;
-  --header-bg: #131120; /* Deeper than the midnight canvas */
-  --header-foreground: #f0edfb;
+  --glass-border: oklch(0.4900 0.0408 136.21);
+  --glass-ghost: oklch(0.4247 0.0362 134.73 / .16);
+  --map-land: oklch(0.2904 0.0165 156.05);
+  --map-water: oklch(0.2608 0.0234 219.47);
+  --map-park: oklch(0.3653 0.0325 141.57);
+  --map-building: oklch(0.3620 0.0223 147.61);
+  --map-river: oklch(0.3739 0.0362 212.21);
+  --map-boundary: oklch(0.4939 0.0465 137.36);
+  --map-road: oklch(0.4157 0.0270 145.07);
+  --map-water-label: oklch(0.7633 0.0451 214.70);
+  --map-label: oklch(0.8972 0.0264 130.93);
+  --map-halo: oklch(0.2904 0.0165 156.05);
+  --header-bg: oklch(0.2287 0.0094 159.26);
+  --header-foreground: oklch(0.9657 0.0110 123.46);
+  --route-color: oklch(0.9100 0.1526 118.20);
+  --category-music: oklch(0.7217 0.1767 305.50);
+  --category-culture: oklch(0.8062 0.1285 81.90);
+  --category-technology: oklch(0.7870 0.1096 279.56);
+  --category-food: oklch(0.8113 0.1174 48.94);
+  --category-sports: oklch(0.7892 0.0954 223.09);
+  --category-design: oklch(0.7937 0.1158 353.83);
+  --category-community: oklch(0.8113 0.1129 169.88);
 }
 
 @utility header-deep {
   background: var(--header-bg);
-  border-color: rgba(240, 237, 251, 0.16);
+  border-color: var(--header-border);
   color: var(--header-foreground);
   & button {
     color: var(--header-foreground);
   }
   & button:hover {
-    background: rgba(240, 237, 251, 0.12);
+    background: var(--header-hover);
   }
 }
 
@@ -269,14 +297,14 @@
   animation: float-pin 2.8s ease-in-out infinite;
   transition: background-color 180ms ease, border-color 180ms ease, outline-color 180ms ease;
 }
-.event-marker .pin-icon { width: 0.95rem; height: 0.95rem; color: var(--primary-foreground); transform: translateY(-2px); transition: color 180ms ease; }
+.event-marker .pin-icon { width: 0.95rem; height: 0.95rem; color: var(--pin-foreground); transform: translateY(-2px); transition: color 180ms ease; }
 .event-marker .pin-shadow { position: absolute; left: 50%; bottom: -0.14rem; width: 1.45rem; height: 0.22rem; border-radius: 999px; background: color-mix(in oklab, var(--plum) 8%, transparent); filter: blur(3px); transform: translateX(-50%); }
 .event-marker .pin-pulse { position: absolute; left: 50%; top: 100%; width: 2.7rem; height: 0.7rem; border: 1px solid var(--pin-accent, var(--primary)); border-radius: 50%; opacity: 0; transform: translate(-50%, -50%); }
 .event-marker .pin-label { position: absolute; left: 50%; bottom: 2.7rem; width: max-content; max-width: 11rem; overflow: hidden; border: 1px solid var(--border); border-radius: 999px; background: var(--popover); color: var(--popover-foreground); padding: 0.3rem 0.6rem; font-family: var(--font-sans); font-size: 0.62rem; font-weight: 700; line-height: 1; opacity: 0; pointer-events: none; text-overflow: ellipsis; white-space: nowrap; box-shadow: 0 5px 16px color-mix(in oklab, var(--plum) 14%, transparent); transform: translate(-50%, 4px); transition: opacity 150ms ease, transform 150ms ease; }
 .event-marker:hover .pin-label,
 .event-marker:focus-visible .pin-label { opacity: 1; transform: translate(-50%, 0); }
 .event-marker.active .pin-shape { background: var(--pin-accent, var(--primary)); border-color: var(--pin-accent, var(--primary)); outline-color: color-mix(in oklab, var(--pin-accent, var(--primary)) 45%, transparent); }
-.event-marker.active .pin-icon { color: var(--primary-foreground); }
+.event-marker.active .pin-icon { color: var(--pin-foreground); }
 .event-marker.active .pin-pulse { animation: pin-pulse 1.8s ease-out infinite; }
 .maplibregl-popup-content {
   background: var(--popover);
@@ -384,3 +412,9 @@
   100% { background-position: 0 0; opacity: 0.55; }
 }
 @media (prefers-reduced-motion: reduce) { .breathe-shimmer { animation: none; color: var(--muted-foreground); } }
+
+/* Floating surfaces retain the map-first layout with a restrained lift. */
+.discovery-panel, .discovery-search, .listing-details { box-shadow: var(--shadow-panel); }
+.discovery-panel { background: var(--card); }
+.discovery-heading { font-weight: 600; }
+.font-display { letter-spacing: 0; }

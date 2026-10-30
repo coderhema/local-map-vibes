@@ -1,12 +1,13 @@
 import { Canvas, useThree } from '@react-three/fiber';
 import { useMemo } from 'react';
 import type { Map as MapLibreMap } from 'maplibre-gl';
+import { rendererColor } from '@/lib/css-color';
 
 function Stars({ map, dark }: { map: MapLibreMap; dark: boolean }) {
   const { size, invalidate } = useThree();
   const palette = useMemo(() => {
     const css = getComputedStyle(document.documentElement);
-    return { star: css.getPropertyValue('--star-color').trim() };
+    return { star: rendererColor(css.getPropertyValue('--star-color').trim()) };
   }, [dark]);
   useMemo(() => invalidate(), [invalidate, size.width, size.height]);
   const radius = 512 * 2 ** map.getZoom() / (2 * Math.PI);

@@ -1,5 +1,9 @@
 # Roadmap
 
+## Ink & Citron refresh
+- [ ] Apply the chosen light/dark colours and typography, preserving the logo
+- [ ] Refine the existing floating panels and verify discovery on desktop and phone
+
 - [ ] Show real nearby transport stops as route suggestions
 - [ ] Exclude past events from every discovery view and test date boundaries
 - [ ] Round the Near me search control and verify desktop/phone interaction

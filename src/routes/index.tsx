@@ -41,6 +41,7 @@ import { LocationAssistant } from "@/components/location-assistant";
 import { RouteStops } from "@/components/route-stops";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { pinFilledMarkup } from "@/lib/pin-icons";
+import { rendererColor } from "@/lib/css-color";
 import { MAP_VIEWS } from "@/lib/map-discovery";
 import { installRouteTrails, setRouteTrail, setRouteEnds, routePath, routeDistanceKm, ROUTE_LABELS, type RouteMode } from "@/lib/route-trails";
 import { collectListings, getListings, refreshListings, type Listing } from "@/lib/listings.functions";
@@ -91,17 +92,14 @@ function formatDuration(hours: number) {
 const eventCategories = ["All", "Music", "Culture", "Technology", "Food", "Sports"];
 const jobCategories = ["All", "Design", "Technology", "Community"];
 
-/* Jewel-tone accent per category — pins, chips and labels each get their own color */
+/* Category roles resolve through the current theme, including marker DOM. */
 const CATEGORY_COLORS: Record<string, string> = {
-  Music: "#c084fc", /* orchid */
-  Culture: "#f59e0b", /* citrine amber */
-  Technology: "#7c5cff", /* electric violet */
-  Food: "#ff8a5c", /* coral */
-  Sports: "#38bdf8", /* sky */
-  Design: "#f472b6", /* pink */
-  Community: "#2dd4bf", /* teal */
+  Music: "var(--category-music)", Culture: "var(--category-culture)",
+  Technology: "var(--category-technology)", Food: "var(--category-food)",
+  Sports: "var(--category-sports)", Design: "var(--category-design)",
+  Community: "var(--category-community)",
 };
-const categoryColor = (c: string) => CATEGORY_COLORS[c] ?? "#2b2450";
+const categoryColor = (c: string) => CATEGORY_COLORS[c] ?? "var(--plum)";
 
 function pinIconSvg(category: string) {
   const markup = pinFilledMarkup[category] ?? pinFilledMarkup["Briefcase"] ?? "";
@@ -634,7 +632,7 @@ function Index() {
 
       <header className="header-deep absolute left-4 right-4 top-4 z-40 flex h-14 items-center justify-between rounded-[1.25rem] border px-4 backdrop-blur-xl md:left-6 md:right-6 md:px-4">
         <div className="flex min-w-0 items-center">
-          <div><p className="truncate font-display text-xl md:text-2xl font-black tracking-tight leading-none">Backyrd</p></div>
+          <div><p className="truncate font-logo text-xl md:text-2xl font-black leading-none">Backyrd</p></div>
         </div>
         <div className="ml-auto flex shrink-0 items-center gap-1 mr-3 md:mr-5 md:gap-2">
           <Popover open={locOpen} onOpenChange={setLocOpen}>
@@ -658,7 +656,7 @@ function Index() {
       </header>
 
       <section className={`absolute left-4 right-4 top-[5.2rem] z-30 transition-[left] duration-300 md:right-6 ${sidebarCollapsed ? "md:left-[6.5rem]" : "md:left-[23rem]"}`}>
-        <div className="mx-auto flex max-w-3xl items-center gap-2 rounded-full border border-border bg-card/90 px-4 backdrop-blur-xl">
+        <div className="mx-auto flex discovery-search max-w-3xl items-center gap-2 rounded-full border border-border bg-card/90 px-4 backdrop-blur-xl">
           <MagnifyingGlass className="size-5 shrink-0 text-muted-foreground" weight="bold" />
           <input value={query} onChange={(event) => setQuery(event.target.value)} placeholder={`Search ${kind.toLowerCase()}, cities or regions`} className="h-12 w-full bg-transparent text-sm outline-none placeholder:text-muted-foreground" />
           {query && <Button aria-label="Clear search" variant="ghost" size="icon" className="size-8" onClick={() => setQuery("")}><X className="size-4" /></Button>}
@@ -668,13 +666,13 @@ function Index() {
           <Button size="sm" variant="default" className="h-8 shrink-0 md:hidden" onClick={() => setShowBrowse(true)}><List className="size-4" weight="duotone" />Explore</Button>
           <Popover><PopoverTrigger asChild><Button size="sm" variant="secondary" className="h-8 shrink-0" aria-label="Map focus"><Crosshair className="size-4" weight="fill" />{focus === "city" ? "City" : focus === "region" ? "Region" : "World"}</Button></PopoverTrigger><PopoverContent className="w-44 p-1"><div className="flex flex-col">{(["city", "region", "world"] as const).map((view) => <Button key={view} variant={focus === view ? "secondary" : "ghost"} className="justify-start" aria-pressed={focus === view} onClick={() => focusArea(view)}>{view === "city" ? <Buildings weight="fill" /> : view === "region" ? <MapTrifold weight="fill" /> : <GlobeHemisphereWest weight="fill" />}{view === "city" ? "City" : view === "region" ? "Region" : "World"}</Button>)}</div></PopoverContent></Popover>
           {day && <Button size="sm" variant="default" onClick={() => setDay(undefined)} className="h-8 shrink-0"><CalendarBlank className="size-4" weight="fill" />{day.toLocaleDateString(undefined, { month: "short", day: "numeric" })}<X className="size-3" /></Button>}
-          {(kind === "Events" ? eventCategories : jobCategories).map((item) => <Button key={item} size="sm" variant={category === item ? "default" : "secondary"} style={category === item ? { backgroundColor: item === "All" ? "#5f45e6" : categoryColor(item), color: "#fff" } : undefined} onClick={() => setCategory(item)} className="h-8 shrink-0 backdrop-blur-xl" aria-pressed={category === item}>{item}</Button>)}
+          {(kind === "Events" ? eventCategories : jobCategories).map((item) => <Button key={item} size="sm" variant={category === item ? "default" : "secondary"} style={category === item && item !== "All" ? { backgroundColor: categoryColor(item), color: "var(--pin-foreground)" } : undefined} onClick={() => setCategory(item)} className="h-8 shrink-0 backdrop-blur-xl" aria-pressed={category === item}>{item}</Button>)}
         </div>
       </section>
 
-      <aside className={`absolute bottom-4 left-4 top-[5.2rem] z-[60] w-[calc(100%-2rem)] flex-col overflow-hidden rounded-[28px] border border-border bg-card/95 backdrop-blur-xl transition-[width] duration-300 md:left-6 md:flex ${sidebarCollapsed ? "md:w-14" : "md:w-80"} ${showBrowse ? "flex" : "hidden"}`}>
+      <aside className={`discovery-panel absolute bottom-4 left-4 top-[5.2rem] z-[60] w-[calc(100%-2rem)] flex-col overflow-hidden rounded-[28px] border border-border bg-card/95 backdrop-blur-xl transition-[width] duration-300 md:left-6 md:flex ${sidebarCollapsed ? "md:w-14" : "md:w-80"} ${showBrowse ? "flex" : "hidden"}`}>
         <div className={`border-b border-border ${sidebarCollapsed ? "hidden md:flex md:flex-col md:items-center md:gap-2 md:p-2" : "px-4 py-4"}`}>
-          {sidebarCollapsed ? <><TooltipProvider><Tooltip><TooltipTrigger asChild><Button variant="ghost" size="icon-sm" onClick={() => setSidebarCollapsed(false)} aria-label="Expand discovery panel"><SidebarSimple className="size-4" weight="duotone" /></Button></TooltipTrigger><TooltipContent side="right">Expand panel</TooltipContent></Tooltip><Tooltip><TooltipTrigger asChild><Button variant={kind === "Events" ? "secondary" : "ghost"} size="icon-sm" onClick={() => { setKind("Events"); setCategory("All"); }} aria-label="Events"><Confetti className="size-4" weight="duotone" /></Button></TooltipTrigger><TooltipContent side="right">Events</TooltipContent></Tooltip><Tooltip><TooltipTrigger asChild><Button variant={kind === "Jobs" ? "secondary" : "ghost"} size="icon-sm" onClick={() => { setKind("Jobs"); setCategory("All"); }} aria-label="Jobs"><Briefcase className="size-4" weight="duotone" /></Button></TooltipTrigger><TooltipContent side="right">Jobs</TooltipContent></Tooltip></TooltipProvider></> : <><div className="mb-4 grid grid-cols-2 gap-1 rounded-full bg-muted p-1"><Button variant={kind === "Events" ? "secondary" : "ghost"} size="sm" className={kind === "Events" ? "border-0 bg-secondary text-foreground" : "border-0 bg-transparent"} onClick={() => { setKind("Events"); setCategory("All"); setSelected(initialEvent); }}><Confetti className="size-4" weight="duotone" />Events</Button><Button variant={kind === "Jobs" ? "secondary" : "ghost"} size="sm" className={kind === "Jobs" ? "border-0 bg-secondary text-foreground" : "border-0 bg-transparent"} onClick={() => { const firstJob = events.find((item) => item.kind === "Jobs"); setKind("Jobs"); setCategory("All"); if (firstJob) setSelected(firstJob); }}><Briefcase className="size-4" weight="duotone" />Jobs</Button></div><div className="flex items-center justify-between"><div><p className="font-display text-2xl font-black tracking-tight">In your Backyrd</p><p className="mt-1 text-xs text-muted-foreground">{filtered.length} {kind.toLowerCase()} to explore</p></div><Button className="md:hidden" aria-label="Close discovery" variant="ghost" size="icon" onClick={() => setShowBrowse(false)}><X className="size-4" /></Button><Button className="hidden md:inline-flex" aria-label="Collapse discovery panel" variant="ghost" size="icon-sm" onClick={() => setSidebarCollapsed(true)}><SidebarSimple className="size-4" weight="duotone" /></Button></div></>}
+          {sidebarCollapsed ? <><TooltipProvider><Tooltip><TooltipTrigger asChild><Button variant="ghost" size="icon-sm" onClick={() => setSidebarCollapsed(false)} aria-label="Expand discovery panel"><SidebarSimple className="size-4" weight="duotone" /></Button></TooltipTrigger><TooltipContent side="right">Expand panel</TooltipContent></Tooltip><Tooltip><TooltipTrigger asChild><Button variant={kind === "Events" ? "secondary" : "ghost"} size="icon-sm" onClick={() => { setKind("Events"); setCategory("All"); }} aria-label="Events"><Confetti className="size-4" weight="duotone" /></Button></TooltipTrigger><TooltipContent side="right">Events</TooltipContent></Tooltip><Tooltip><TooltipTrigger asChild><Button variant={kind === "Jobs" ? "secondary" : "ghost"} size="icon-sm" onClick={() => { setKind("Jobs"); setCategory("All"); }} aria-label="Jobs"><Briefcase className="size-4" weight="duotone" /></Button></TooltipTrigger><TooltipContent side="right">Jobs</TooltipContent></Tooltip></TooltipProvider></> : <><div className="mb-4 grid grid-cols-2 gap-1 rounded-full bg-muted p-1"><Button variant={kind === "Events" ? "secondary" : "ghost"} size="sm" className={kind === "Events" ? "border-0 bg-secondary text-foreground" : "border-0 bg-transparent"} onClick={() => { setKind("Events"); setCategory("All"); setSelected(initialEvent); }}><Confetti className="size-4" weight="duotone" />Events</Button><Button variant={kind === "Jobs" ? "secondary" : "ghost"} size="sm" className={kind === "Jobs" ? "border-0 bg-secondary text-foreground" : "border-0 bg-transparent"} onClick={() => { const firstJob = events.find((item) => item.kind === "Jobs"); setKind("Jobs"); setCategory("All"); if (firstJob) setSelected(firstJob); }}><Briefcase className="size-4" weight="duotone" />Jobs</Button></div><div className="flex items-center justify-between"><div><p className="discovery-heading font-display text-2xl">In your Backyrd</p><p className="mt-1 text-xs text-muted-foreground">{filtered.length} {kind.toLowerCase()} to explore</p></div><Button className="md:hidden" aria-label="Close discovery" variant="ghost" size="icon" onClick={() => setShowBrowse(false)}><X className="size-4" /></Button><Button className="hidden md:inline-flex" aria-label="Collapse discovery panel" variant="ghost" size="icon-sm" onClick={() => setSidebarCollapsed(true)}><SidebarSimple className="size-4" weight="duotone" /></Button></div></>}
         </div>
         <div className={`paper-scroll flex-1 overflow-y-auto p-2 ${sidebarCollapsed ? "hidden" : "block"}`}>
           {!filtered.length && <p className="px-4 py-6 text-sm text-muted-foreground">{kind === "Events" ? "No current or upcoming events found." : "No jobs found."}</p>}
@@ -688,8 +686,8 @@ function Index() {
       </aside>
 
       {showPanel && selected && (
-         <section className="paper-scroll absolute bottom-3 left-3 right-3 z-40 max-h-[56dvh] overflow-y-auto rounded-[28px] border border-border bg-card p-4 backdrop-blur-xl md:bottom-6 md:max-h-none md:overflow-visible md:p-5 md:left-auto md:right-8 md:w-[25rem]">
-           <div className="flex items-start justify-between gap-2 md:gap-3"><div className="min-w-0 flex-1"><p className="text-[10px] font-semibold uppercase" style={{ color: categoryColor(selected.category) }}>{selected.kind === "Jobs" ? "Opportunity" : "Trending"} in {selected.place.split(",").at(-1)}</p><h1 className="mt-1 line-clamp-2 font-display text-xl font-black md:line-clamp-none md:text-2xl tracking-tight leading-tight">{selected.title}</h1></div><Button aria-label="Close details" variant="ghost" size="icon" className="shrink-0" onClick={() => setShowPanel(false)}><X className="size-4" /></Button></div>
+         <section className="listing-details paper-scroll absolute bottom-3 left-3 right-3 z-40 max-h-[56dvh] overflow-y-auto rounded-[28px] border border-border bg-card p-4 backdrop-blur-xl md:bottom-6 md:max-h-none md:overflow-visible md:p-5 md:left-auto md:right-8 md:w-[25rem]">
+           <div className="flex items-start justify-between gap-2 md:gap-3"><div className="min-w-0 flex-1"><p className="text-[10px] font-semibold uppercase" style={{ color: categoryColor(selected.category) }}>{selected.kind === "Jobs" ? "Opportunity" : "Trending"} in {selected.place.split(",").at(-1)}</p><h1 className="mt-1 line-clamp-2 font-display text-xl font-semibold md:line-clamp-none md:text-2xl tracking-tight leading-tight">{selected.title}</h1></div><Button aria-label="Close details" variant="ghost" size="icon" className="shrink-0" onClick={() => setShowPanel(false)}><X className="size-4" /></Button></div>
            <div className="mt-3 flex flex-wrap items-center gap-3 text-xs text-muted-foreground"><span className="flex items-center gap-1"><CalendarBlank className="size-4 text-primary" weight="duotone" />{selected.date}</span><span className="flex items-center gap-1"><MapPin className="size-4 text-primary" weight="fill" />{selected.place}</span></div>
            {selected.kind === "Jobs" && (
              <div className="mt-4 grid grid-cols-3 gap-1 rounded-full bg-muted p-1" aria-label="Work arrangement">
@@ -726,7 +724,7 @@ function Index() {
             <Button variant="ghost" size="sm" onClick={() => setTour([])}><X className="size-4" /> Clear</Button>
           </div>
           <div className="mt-2 flex gap-2 overflow-x-auto [scrollbar-width:none]">
-            {tour.map((stop, index) => <span key={stop.id} className="flex shrink-0 items-center gap-2 rounded-full bg-accent px-3 py-1 text-xs font-semibold text-accent-foreground"><span className="grid size-5 place-items-center rounded-full text-[10px] text-white" style={{ background: categoryColor(stop.category) }}>{index + 1}</span>{stop.title}</span>)}
+            {tour.map((stop, index) => <span key={stop.id} className="flex shrink-0 items-center gap-2 rounded-full bg-accent px-3 py-1 text-xs font-semibold text-accent-foreground"><span className="grid size-5 place-items-center rounded-full text-[10px] text-pin-foreground" style={{ background: categoryColor(stop.category) }}>{index + 1}</span>{stop.title}</span>)}
           </div>
           {tour.length === 1 && <p className="mt-2 text-xs text-muted-foreground">Hold Shift and press-and-hold another pin to add the next stop.</p>}
         </section>
@@ -754,7 +752,7 @@ function Index() {
 // Theme the existing vector layers without reloading tiles.
 function tintBasemap(map: { getStyle: () => { layers?: { id: string; type: string }[] }; setPaintProperty: (id: string, prop: string, value: unknown) => void }) {
   const palette = getComputedStyle(document.documentElement);
-  const color = (role: string) => palette.getPropertyValue(`--map-${role}`).trim();
+  const color = (role: string) => rendererColor(palette.getPropertyValue(`--map-${role}`).trim());
   const layers = map.getStyle().layers ?? [];
   const set = (id: string, prop: string, value: unknown) => { try { map.setPaintProperty(id, prop, value); } catch { /* ignore */ } };
   for (const layer of layers) {
