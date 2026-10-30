@@ -75,11 +75,11 @@
 :root {
   color-scheme: light;
   --radius: 1.25rem;
-  /* Lavender canvas */
+  /* Cool white canvas */
   --background: oklch(0.9798 0.0045 134.85);
   --foreground: oklch(0.2527 0.0048 174.03);
   --plum: oklch(0.3993 0.0311 164.09);
-  /* Lilac bloom #ddd6ff */
+  /* Soft citron tint */
   --lilac: oklch(0.9264 0.0429 117.27);
   --card: oklch(1.0000 0.0000 89.88 / .94);
   --card-foreground: var(--foreground);

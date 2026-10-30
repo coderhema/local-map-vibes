@@ -1,4 +1,5 @@
 import type { Map as LibreMap } from "maplibre-gl";
+import { rendererColor } from "@/lib/css-color";
 
 export type RouteMode = "flight" | "transit" | "drive" | "walk";
 export type RouteCoordinate = [number, number];
@@ -49,7 +50,7 @@ export function routePath(a: RouteCoordinate, b: RouteCoordinate, mode: RouteMod
 // Small locally generated, seamless textures: no downloads or per-frame DOM work.
 export function installRouteTrails(map: LibreMap) {
   const palette = getComputedStyle(document.documentElement);
-  const color = palette.getPropertyValue("--route-color").trim();
+  const color = rendererColor(palette.getPropertyValue("--route-color").trim());
   for (const mode of ["transit", "drive", "walk"] as const) {
     const canvas = document.createElement("canvas");
     canvas.width = 128; canvas.height = 64;
@@ -92,7 +93,7 @@ export function installRouteTrails(map: LibreMap) {
     map.addImage(`route-${mode}`, ctx.getImageData(0, 0, 128, 64), { pixelRatio: 2 });
   }
   map.addSource("event-route", { type: "geojson", data: { type: "FeatureCollection", features: [] } });
-  map.addLayer({ id: "event-route-shadow", type: "line", source: "event-route", layout: { "line-cap": "round", "line-join": "round" }, paint: { "line-color": palette.getPropertyValue("--route-shadow").trim(), "line-width": 10, "line-opacity": 0.1, "line-blur": 4 } });
+  map.addLayer({ id: "event-route-shadow", type: "line", source: "event-route", layout: { "line-cap": "round", "line-join": "round" }, paint: { "line-color": rendererColor(palette.getPropertyValue("--route-shadow").trim()), "line-width": 10, "line-opacity": 0.1, "line-blur": 4 } });
   map.addLayer({ id: "event-route", type: "line", source: "event-route", layout: { "line-cap": "round", "line-join": "round" }, paint: { "line-color": color, "line-width": 5, "line-opacity": 0.95 } });
   map.addSource("event-route-ends", { type: "geojson", data: { type: "FeatureCollection", features: [] } });
   map.addLayer({ id: "event-route-podium-glow", type: "circle", source: "event-route-ends", paint: { "circle-radius": 22, "circle-color": color, "circle-opacity": 0.25, "circle-blur": 0.6, "circle-pitch-alignment": "map" } });

@@ -41,6 +41,7 @@ import { LocationAssistant } from "@/components/location-assistant";
 import { RouteStops } from "@/components/route-stops";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { pinFilledMarkup } from "@/lib/pin-icons";
+import { rendererColor } from "@/lib/css-color";
 import { MAP_VIEWS } from "@/lib/map-discovery";
 import { installRouteTrails, setRouteTrail, setRouteEnds, routePath, routeDistanceKm, ROUTE_LABELS, type RouteMode } from "@/lib/route-trails";
 import { collectListings, getListings, refreshListings, type Listing } from "@/lib/listings.functions";
@@ -751,7 +752,7 @@ function Index() {
 // Theme the existing vector layers without reloading tiles.
 function tintBasemap(map: { getStyle: () => { layers?: { id: string; type: string }[] }; setPaintProperty: (id: string, prop: string, value: unknown) => void }) {
   const palette = getComputedStyle(document.documentElement);
-  const color = (role: string) => palette.getPropertyValue(`--map-${role}`).trim();
+  const color = (role: string) => rendererColor(palette.getPropertyValue(`--map-${role}`).trim());
   const layers = map.getStyle().layers ?? [];
   const set = (id: string, prop: string, value: unknown) => { try { map.setPaintProperty(id, prop, value); } catch { /* ignore */ } };
   for (const layer of layers) {
