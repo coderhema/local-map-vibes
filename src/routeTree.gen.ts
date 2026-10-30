@@ -11,6 +11,7 @@
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as ApiChatRouteImport } from './routes/api/chat'
+import { Route as ApiHealthRouteImport } from './routes/api/health'
 import { Route as ApiPublicHooksRefreshListingsRouteImport } from './routes/api/public/hooks/refresh-listings'
 
 const IndexRoute = IndexRouteImport.update({
@@ -23,6 +24,11 @@ const ApiChatRoute = ApiChatRouteImport.update({
   path: '/api/chat',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiHealthRoute = ApiHealthRouteImport.update({
+  id: '/api/health',
+  path: '/api/health',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ApiPublicHooksRefreshListingsRoute =
   ApiPublicHooksRefreshListingsRouteImport.update({
     id: '/api/public/hooks/refresh-listings',
@@ -33,30 +39,40 @@ const ApiPublicHooksRefreshListingsRoute =
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/api/chat': typeof ApiChatRoute
+  '/api/health': typeof ApiHealthRoute
   '/api/public/hooks/refresh-listings': typeof ApiPublicHooksRefreshListingsRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/api/chat': typeof ApiChatRoute
+  '/api/health': typeof ApiHealthRoute
   '/api/public/hooks/refresh-listings': typeof ApiPublicHooksRefreshListingsRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/api/chat': typeof ApiChatRoute
+  '/api/health': typeof ApiHealthRoute
   '/api/public/hooks/refresh-listings': typeof ApiPublicHooksRefreshListingsRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/api/chat' | '/api/public/hooks/refresh-listings'
+  fullPaths:
+    '/' | '/api/chat' | '/api/health' | '/api/public/hooks/refresh-listings'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/api/chat' | '/api/public/hooks/refresh-listings'
-  id: '__root__' | '/' | '/api/chat' | '/api/public/hooks/refresh-listings'
+  to: '/' | '/api/chat' | '/api/health' | '/api/public/hooks/refresh-listings'
+  id:
+    | '__root__'
+    | '/'
+    | '/api/chat'
+    | '/api/health'
+    | '/api/public/hooks/refresh-listings'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   ApiChatRoute: typeof ApiChatRoute
+  ApiHealthRoute: typeof ApiHealthRoute
   ApiPublicHooksRefreshListingsRoute: typeof ApiPublicHooksRefreshListingsRoute
 }
 
@@ -76,6 +92,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiChatRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/health': {
+      id: '/api/health'
+      path: '/api/health'
+      fullPath: '/api/health'
+      preLoaderRoute: typeof ApiHealthRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/public/hooks/refresh-listings': {
       id: '/api/public/hooks/refresh-listings'
       path: '/api/public/hooks/refresh-listings'
@@ -89,6 +112,7 @@ declare module '@tanstack/react-router' {
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   ApiChatRoute: ApiChatRoute,
+  ApiHealthRoute: ApiHealthRoute,
   ApiPublicHooksRefreshListingsRoute: ApiPublicHooksRefreshListingsRoute,
 }
 export const routeTree = rootRouteImport
